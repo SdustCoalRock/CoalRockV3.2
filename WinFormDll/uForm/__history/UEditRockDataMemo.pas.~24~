@@ -1,0 +1,166 @@
+unit UEditRockDataMemo;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls
+  ,UMainDataModule
+  ;
+
+type
+  TFormEditRockDataMemo = class(TForm)
+    GroupBox1: TGroupBox;
+    Memo1: TMemo;
+    SaveMemoButton: TButton;
+    Button1: TButton;
+    GroupBox2: TGroupBox;
+    Splitter1: TSplitter;
+    Memo2: TMemo;
+    Button2: TButton;
+    Button3: TButton;
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure SaveMemoButtonClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Memo1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+  private
+    { Private declarations }
+     MySqlDataSet1:TMyDataSet;
+     MyCommand1:TMyCommand;
+     procedure FillKyxx_Used_Phsae;
+     procedure DeleteKyxx_Used_Phase(Str:String);
+     procedure InsertKyxx_Used_Phase(str:string);
+  public
+    { Public declarations }
+    procedure SetMemoValue(Caption,STD:String);
+    procedure  ReturnEditMemo;
+  end;
+  function CreateEditRockDataMemo(AHandle:THandle;Wid,Hi:integer;Cap,STD:String):integer;stdcall;
+var
+  FormEditRockDataMemo: TFormEditRockDataMemo;
+
+implementation
+
+{$R *.dfm}
+
+uses UPressureGraph;
+function CreateEditRockDataMemo(AHandle:THandle;Wid,Hi:integer;Cap,STD:String):integer;
+begin
+       Result:=0;//函数值
+
+        FormEditRockDataMemo:=TFormEditRockDataMemo.Create(nil);
+        try
+           with FormEditRockDataMemo do begin
+                WindowState:= wsNormal;
+                ParentWindow:=Ahandle;
+                if Hi >FormEditRockDataMemo.Height then
+                       FormEditRockDataMemo.Top :=Round((Hi-FormEditRockDataMemo.Height)/3)
+                       else   FormEditRockDataMemo.Top :=0;
+                if Wid> FormEditRockDataMemo.Width then
+                       FormEditRockDataMemo.Left:=Round((Wid-FormEditRockDataMemo.Width)/2)
+                       else   FormEditRockDataMemo.Left:=0;
+
+                SetMemoValue(Caption,STD);
+                Show;
+           end;
+
+            Result:=1;//函数值
+        except
+            FreeAndNil(FormEditRockDataMemo);
+        end;
+end;
+
+{ TFormEditRockDataMemo }
+
+procedure TFormEditRockDataMemo.Button1Click(Sender: TObject);
+begin
+   Memo1.Clear ;
+end;
+
+procedure TFormEditRockDataMemo.DeleteKyxx_Used_Phase(Str: String);
+begin
+
+end;
+
+procedure TFormEditRockDataMemo.FillKyxx_Used_Phsae;
+begin
+    Memo2.Clear ;
+    MySqlDataSet1.Close ;
+    try
+        MySqlDataSet1.CommandText :='select * from Kyxx_Used_Phase ';
+        MySqlDataSet1.Open ;
+        while not MySqlDataSet1.Eof  do  begin
+          Memo2.Lines.Add(MySqlDataSet1.FieldByName('Used_Phase').AsString  );
+          MySqlDataSet1.Next ;
+        end;
+    finally
+      MySqlDataSet1.Close ;
+    end;
+end;
+
+procedure TFormEditRockDataMemo.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+   ReturnEditMemo;
+   if Assigned(FormEditRockDataMemo) then  FreeAndNil(FormEditRockDataMemo);
+end;
+
+procedure TFormEditRockDataMemo.FormCreate(Sender: TObject);
+begin
+    MySqlDataSet1:=TMyDataSet.Create(nil);
+    MySqlDataSet1.MySqlConnection :=MainDataModule.ExConn;
+
+    MyCommand1:=TMyCommand.Create (nil);
+    MyCommand1.MySqlConnection :=MainDataModule.ExConn;
+end;
+
+procedure TFormEditRockDataMemo.FormDestroy(Sender: TObject);
+begin
+    FreeAndNil(MySqlDataSet1);
+    FreeAndNil(MyCommand1);
+end;
+
+procedure TFormEditRockDataMemo.FormShow(Sender: TObject);
+begin
+   FillKyxx_Used_Phsae;
+end;
+
+procedure TFormEditRockDataMemo.InsertKyxx_Used_Phase(str: string);
+begin
+
+end;
+
+procedure TFormEditRockDataMemo.Memo1Click(Sender: TObject);
+begin
+    Memo1.SetFocus;
+end;
+
+procedure TFormEditRockDataMemo.ReturnEditMemo;
+var
+ Retu_Str:string;
+begin
+    if length(Memo1.Text)> 192  then  begin
+        Retu_Str:=Copy(Memo1.Text,0,190)
+    end else if length(Trim(Memo1.Text))<2 then begin
+         Retu_Str:='';
+    end else  begin
+         Retu_Str:= Memo1.Text;
+    end;
+    DrawBmp_From.Return_CallEditRockPressMemo(Retu_Str);
+end;
+
+procedure TFormEditRockDataMemo.SaveMemoButtonClick(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TFormEditRockDataMemo.SetMemoValue(Caption, STD: String);
+begin
+    GroupBox1.Caption :=Caption;
+    Memo1.Text :=STD;
+end;
+
+end.

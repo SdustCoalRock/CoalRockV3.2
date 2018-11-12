@@ -1,0 +1,46 @@
+unit Start;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls;
+
+type
+  TKcover = class(TForm)
+    Image1: TImage;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+     ExePath:AnsiString;
+  end;
+
+var
+  Kcover: TKcover;
+
+implementation
+
+{$R *.dfm}
+
+procedure TKcover.FormCreate(Sender: TObject);
+var
+fileStr:tstringlist;
+begin
+    fileStr:=tstringlist.Create;
+    ExePath:=ExtractFilePath(Application.Exename);
+    fileStr.LoadFromFile(ExePath+'Client.dat');
+    if (fileStr[9]='LOGBMP_1')then   begin
+       self.Image1.Picture.LoadFromFile(ExePath+'BJTP/LOGBMP_1.bmp') ;
+    end else if  fileStr[4]='LOGBMP_2' then    begin
+       self.Image1.Picture.LoadFromFile(ExePath+'BJTP/LOGBMP_2.bmp') ;
+    end else if  fileStr[4]='LOGBMP_3' then    begin
+       self.Image1.Picture.LoadFromFile(ExePath+'BJTP/LOGBMP_3.bmp') ;
+    end else if  fileStr[4]='LOGBMP_4' then    begin
+       self.Image1.Picture.LoadFromFile(ExePath+'BJTP/LOGBMP_4.bmp') ;
+    end;
+   fileStr.Free ;
+end;
+
+end.

@@ -1,0 +1,1180 @@
+unit MYProperty;
+
+interface
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Dialogs, Vcl.StdCtrls,system.RTTI,Vcl.ExtCtrls,Vcl.Forms,
+  RockPressBasicClass
+
+  ;
+
+type
+  TMouseRecord= class
+     vRect:TRect;
+     Col:integer;
+     Row:integer;
+     OpenOrClose:Boolean;
+     constructor Create;
+     destructor Destroy;
+  end;
+  TBasicUseClass= Class
+
+   private
+       FGzm:TG_stope;
+       Fimm:TImmediate_roof;
+       FOld:TOld_roof;
+       FSup:TZJ_Class;
+       FZk: array of TZk_bore;
+       FControlGridCount:integer;
+      //-----
+       FScrollPanel:TScrollBox;
+       FParentPan:TPanel;
+       FParentImage:TImage;
+       FTitleImage:TImage;
+       FTitleHeigth:integer;
+       FBottomHeigth:integer;
+       FDefaultHeigth:Integer;
+       FLeftBlank:integer;
+       FRigthBlank:integer;
+       FPenWidth:integer;
+       FBMpColumLeft:integer;
+       FBMpColumWidth:integer;
+       FFirstColumLeft:integer;
+       FFirstColumWidth:integer;
+       FSecondColumLeft:integer;
+       FSecondColumWidth:integer;
+       FThirdColumLefe:integer;
+       FThirdColumWidth:integer;
+
+       FMouseRectCount:Integer;
+
+      //--------------
+      FEdit:TEdit;
+      FComboBox:TComboBox;
+      //---------------
+
+      Open_Bit:TBitmap; // - 号
+      Close_bit:TBitmap; // + 号
+      procedure LoadBMPTOFile;
+      procedure InitGrid;
+      function SelBmpStateFromMouseRectArry(col,row:integer;Var Open :Boolean):Boolean;
+      function SelColAndRowFromMouseRectArry(x,y:integer;var Col,Row :integer):Boolean;
+      procedure SetFScrollPanel(Value: TScrollBox);
+      procedure SetparentPanel(Value:TPanel);
+      procedure SettitltImage;
+   public
+      FMouseRect:array of TMouseRecord;
+
+      property t_gzm:TG_stope  read FGzm write FGzm;
+      property t_imm:TImmediate_roof  read Fimm write Fimm;
+      property t_old:TOld_roof  read FOld write FOld;
+      property t_sup:TZJ_Class  read FSup write FSup;
+      property ParentPanel:TPanel  read FParentPan write SetparentPanel;
+      property DefaultRowHeigth:Integer  read FDefaultHeigth write FDefaultHeigth;
+      property LeftBlank:Integer  read FLeftBlank write FLeftBlank;
+      property RigthBlank:Integer  read FRigthBlank write FRigthBlank;
+      property PenWidth:Integer  read FPenWidth write FPenWidth;
+      property BMpColumLeft:Integer  read FBMpColumLeft write FBMpColumLeft;
+      property BMpColumWidth:Integer  read FBMpColumWidth write FBMpColumWidth;
+      property FirstColumLeft:Integer  read FFirstColumLeft write FFirstColumLeft;
+      property FirstColumWidth:Integer  read FFirstColumWidth write FFirstColumWidth;
+      property SecondColumLeft:Integer  read FSecondColumLeft write FSecondColumLeft;
+      property SecondColumWidth:Integer  read FSecondColumWidth write FSecondColumWidth;
+      property ThirdColumLefe:Integer  read FThirdColumLefe write FThirdColumLefe;
+      property ThirdColumWidth:Integer  read FThirdColumWidth write FThirdColumWidth;
+      property MouseRectCount:Integer  read FMouseRectCount write FMouseRectCount;
+      property ScrollPanel:TScrollBox  read FScrollPanel write SetFScrollPanel;
+      property ParentImage:TImage  read FParentImage write FParentImage;
+      property MyEdit:TEdit  read FEdit write FEdit;
+      property MyComboBox:TComboBox  read FComboBox write FComboBox;
+
+      function  FromStringGetFieldStr(ClName,FieldName:string):string;
+      function  RetureRect(col,ColNumber,Row:integer):TRect;
+      procedure SetGridBMP(col,Row:integer;Open:Boolean);
+      procedure SetGridText(col,Row:integer;strText:string);
+      function  ReturnInitInputString:String;
+
+      function  AddMouseRect(vRect:TRect;Number,Col,Row:integer;OpenOrClose:Boolean):integer;
+      procedure ClearMouseRect;
+      //-----
+      procedure RefreshPanel;
+      procedure SetPlaneHeihth(RowCount:integer);
+      procedure SetOpenOrCloseBmp(Colnumber,RowCount:integer;Open:Boolean);
+      procedure SetTextToRect(FirstOrSecondCol,Colnumber,RowCount:integer;sText:String);
+      procedure DrawLine(fPoint,tPoint:TPoint;lineStyle:integer);
+      procedure FParentPanelMouseUp(Sender: TObject; Button: TMouseButton;
+                                Shift: TShiftState; X, Y: Integer);
+      constructor Create;
+      destructor Destroy;
+  End;
+
+  TBaseUnit=Class
+     FinBUC:TBasicUseClass;
+     FRowCount:integer;
+     FColNumber:integer;
+     FIndex:integer;
+     FSelected:Boolean;
+     FCaption:String;
+     FEX_Field:string;
+     FCompentType:String;  // list, edit,
+     FFieldType:string; // ineger, double, string,boolean;
+     FInputString:string;
+     FListDropString:TStringList;
+     FValue:string;
+     Fvisible:Boolean;
+     FClassName:String;
+     FParentPanel:TPanel;
+     procedure SetComboItems(StrList:string);
+     procedure SetFieldType(FTStr:string);
+     procedure EditOnKeyPress(Sender: TObject; var Key: Char) ;
+     procedure EditOnExit(Sender: TObject);
+     procedure DisPlayCompent;
+
+
+  public
+//     Edit:TEdit;
+//     ComboBox:TComboBox;
+
+     property RowCount:Integer  read FRowCount write FRowCount;
+     property ColNumber:Integer  read FColNumber write FColNumber;
+     property IndexN:integer  read FIndex write FIndex;
+     property Selected:Boolean  read FSelected write FSelected;
+     property Caption:String  read FCaption write FCaption;
+     property ExField:String  read FEX_Field write FEX_Field;
+     property FieldType:String  read FFieldType write SetFieldType;
+     property CompentType:String  read FCompentType write FCompentType;
+    // property ComboList:String  read FListString write SetComboItems;
+     property Value:string read FValue write FValue;
+     property visible:Boolean read Fvisible write Fvisible;
+     property NameClass:String read FClassName write FClassName;
+     property ParentPanel:TPanel read FParentPanel write FParentPanel;
+
+     function Update(CurtRow,SelCol,SelRow:integer):integer;
+     procedure SplitInputString(ClName,Str:String);
+     constructor Create(inBuc:TBasicUseClass);
+     destructor Destroy;
+  End;
+
+
+   TFieldClass=Class
+     private
+         FinBuc:TBasicUseClass;
+         ExsitChild:integer;     // 0 代表 下面没有孩子，直接 显示TBasicUnit  1 代表下面有孩子
+         FiledName:string;     //  如果 DispChild 是 0  表示 的 是 字段的名字
+         Caption:String;      // 显示的汉字名
+         CompType:String;    // 控件 的类型 Edit  还是 List
+         FiledType:string;    // 字段变量的数据类型 double,integer or bool string
+         visible:boolean;     // 是否显示
+         ClassName:string;    //主类的名字
+         ChildString:String; // 如果DispChild =1 表示 该类下面有分类   显示分类孩子的变量字符串的名字
+         SecondString:String;     // 传过来带逗号的字符串
+         FirstString:String; // 传过来 带分号的字符串
+         ComentListName:string; //控件的字符串名字
+         //-----
+         FRowNumber:Integer;
+         FLeftTopPoint:TPoint;
+         FRightBottomPoint:TPoint;
+         FParent:TFieldClass;
+         FBasicUnitCount:integer;
+         FCompentUnit:Array of TBaseUnit;
+         FFieldUnit:TBaseUnit;
+
+         FChildCount:integer;  //
+         FChildArray:Array of  TFieldClass;
+         ChildDisp:Boolean;
+         FParentClassNumber:integer;
+
+         procedure CreateBasicUnit;
+         procedure DeleteBasicUnit;
+         function  DisplayToSGCell(RowC:integer):Integer;
+         procedure SetPointValue;
+         procedure createChildGuidProedure;
+         procedure CreateChildCompent;
+         procedure CreateChildArray(AOwn:TFieldClass);
+         procedure DeleteChildArray;
+
+         procedure SplitSecondStr(SecondStr:string);
+
+     published
+         property  SelfParent:TFieldClass  read FParent write FParent;
+         property  RowNumber:Integer  read FRowNumber write FRowNumber;
+         property  LeftTopPoint:TPoint  read FLeftTopPoint write FLeftTopPoint;
+         property  RightBottomPoint:TPoint  read FRightBottomPoint write FRightBottomPoint;
+
+
+
+
+    public
+         function  GetTotalRowCount:integer;
+         function  update(CurtRow,SelCol,SelRow:integer):integer;
+         procedure SplitfirstStr(AWon:TFieldClass;FirstStr:string);
+         function  SetChildDisplayFromFieldClass(Row:integer;Var Open:Boolean):Boolean;
+
+         constructor Create(AOwn:TFieldClass;inBuc:TBasicUseClass);
+         destructor Destroy;override;
+   end;
+
+
+
+  TPropertyGrid=Class
+
+     private
+       FBUC:TBasicUseClass;
+       FFieldClass:TFieldClass;
+       FparentFieldClass:TFieldClass;
+       Ex_Input_FisrtString:string;
+       FTotalRowCount:integer;
+
+       //FParentPanel:TImage;
+
+
+       procedure SetGridHead;
+       function GetTotalRowCount:integer;
+       procedure Inner_Update(Selcol,SelRow:integer);
+       function SetChildDisplayFromFieldClass(Row:integer;Var Open:Boolean):Boolean;
+
+   published
+       property TotalRowCount:Integer  read FTotalRowCount write FTotalRowCount;
+
+       property ParentClass:TFieldClass  read FparentFieldClass write FparentFieldClass;
+       property BasicClass:TBasicUseClass  read FBUC write FBUC;
+       //property ParentPanel:TImage  read FParentPanel write FParentPanel;
+
+   public
+       procedure Clear;
+       procedure AddGridItem(InputStr:string);
+       procedure Update(Selcol,SelRow:integer);
+
+       procedure FParentImageMouseUp(Sender: TObject; Button: TMouseButton;
+                                Shift: TShiftState; X, Y: Integer);
+       procedure FParentPanelResize(Sender: TObject);
+
+       constructor Create(Buc:TBasicUseClass);
+       destructor  Destroy;override;
+  End;
+
+
+
+implementation
+
+{ BaseUnit }
+
+uses Lu_Public_BasicModual;
+
+constructor TBaseUnit.Create(inBuc:TBasicUseClass);
+begin
+    FinBUC:=inBuc;
+    FListDropString:=TStringList.Create ;
+//    if not assigned(Edit) then  Edit:=TEdit.Create(nil);
+//    if not assigned(ComboBox) then ComboBox:=TComboBox.Create(nil);
+//    Edit.OnKeyPress :=EditOnKeyPress;
+//    Edit.Visible :=False;
+//    Edit.Text :='';
+//    ComboBox.Visible :=false;
+//    ComboBox.Style :=csDropDownList;
+end;
+
+destructor TBaseUnit.Destroy;
+begin
+  FreeAndNil(FListDropString);
+//   if assigned(Edit) then  FreeAndNil(Edit);
+//   if assigned(ComboBox) then  FreeAndNil(ComboBox);
+
+end;
+
+procedure TBaseUnit.DisPlayCompent;
+var
+  FT:String;
+  vRect:  TRect;
+begin
+//  FT:=lowercase(FCompentType);
+//     if FSelected then  begin
+//        vRect := inSGrid.CellRect(FColNumber,FRowCount);
+//        if (Ft='list') then  begin
+//           ComboBox.Parent:=inSGrid.Parent;
+//                  OffsetRect(vRect, inSGrid.left+1, inSGrid.Top+inSGrid.DefaultRowHeight*1);
+//           ComboBox.BoundsRect := vRect;
+//           ComboBox.Color :=clBtnFace;
+//           ComboBox.Visible := true;
+//           ComboBox.ItemIndex :=Public_Basic.StrToInt_lu(FValue);
+//        end else begin
+//           Edit.Parent:=inSGrid.Parent;
+//              OffsetRect(vRect, inSGrid.left+1, inSGrid.Top+inSGrid.DefaultRowHeight*1);
+//           Edit.BoundsRect := vRect;
+//           Edit.Color :=Clwhite;
+//           Edit.Visible := true;
+//           Edit.Text:=FValue;
+//        end;
+//     end else begin
+//       Edit.Visible :=False;
+//       ComboBox.Visible :=False;
+//     end;
+
+end;
+
+procedure TBaseUnit.EditOnExit(Sender: TObject);
+begin
+
+end;
+
+procedure TBaseUnit.EditOnKeyPress(Sender: TObject; var Key: Char);
+var
+  FT:String;
+begin
+  FT:=lowercase(FFieldType);
+   if FT='integer' then   begin
+      if not (key in ['0'..'9',#8]) then key:=#0 ;
+   end else if FT='float' then begin
+      if not (key in ['0'..'9','.',#8]) then key:=#0 ;
+   end;
+
+end;
+
+
+
+procedure TBaseUnit.SetComboItems(StrList: string);
+var
+   s_temp:Str_DT_array;
+   C1,i:integer;
+begin
+  FListDropString.Clear ;
+  s_temp:=Public_Basic.split(StrList,',',C1);
+  for I := 0 to C1-1 do
+      if Trim(s_temp[i] )<>''then
+         FListDropString.Add(s_Temp[i]);
+end;
+
+
+
+
+
+procedure TBaseUnit.SetFieldType(FTStr: string);
+begin
+  FFieldType:= FTStr;
+  if (lowerCase(FTStr)='boolean') or (lowerCase(FTStr)='bool') then
+      setComboItems('Flase,true');
+end;
+
+procedure TBaseUnit.SplitInputString(ClName,Str: String);
+{  str 字符串  一共有七个个字符组成，中间用 ，隔开
+   第一个 是数字  0 代表 本级 是最后一级，可以显示 TBasicUnit的类
+                  1 代表是 导引级， 后面有孩子节点， 继续便利
+
+   第二 个 字符串 如果 第一个是 1 是代表 是 该类的 名， 是 具体定义的名字
+                 如果 第一个是 0 代表 指示需要显示类中的变量名
+   第三个 字符串  属性框显示的Caption
+   第四个 字符串  如果第一个字符 为 0 代表   TBasicUnit 显示的录入是 Edit 还是 List
+                  如果 第一个字符为 1 可以代表 该类中有多个显示
+
+   第五个字符 代表 是否显示  1 代表显示  0 或者其他 代表不显示
+
+   第六个 字符串 意思是 如果 第五个是 List 那么 ComboBox. Items遍历的 字符串 在那一的变量里面
+
+
+   第七个 字符串 如果 第一个是1 代表是类的变量名
+                 如果 第一个是0 代表变量 的数据类型
+
+  '1,gzm_b,工作面基本尺寸,,1,;
+ }
+var
+   temp_2:Str_DT_array;
+   c2,i:integer;
+   DispChild:integer;
+   Str_Temp:String;
+begin
+  if Str='' then exit;
+  temp_2:=Public_Basic.split(Str,',',C2);
+  if C2 <7 then  exit;
+    DispChild:=Public_Basic.StrToInt_lu(temp_2[0]) ;
+    if DispChild=0 then  begin   // 指示下面还有具体的子类
+        if (Trim(temp_2[1])<> '') then   // 该处  含义不同
+           ExField:=Trim(temp_2[1]);
+        Caption :=temp_2[2];
+        CompentType :=temp_2[3];
+        if public_Basic.StrToInt_lu(temp_2[4])=1 then
+              visible:=true else visible:=False;
+        if (Trim(temp_2[5])<> '') and (lowerCase(CompentType)='list') then
+              FInputString:= Trim(temp_2[5]) ;
+        if (Trim(temp_2[6])<> '')  then      // 变量的数据类型
+              FieldType:= Trim(temp_2[6]) ;
+
+    end;
+
+    NameClass:=ClName;
+    // 设置List的列表
+    if (lowerCase(CompentType)='list') then   begin
+        Str_Temp:=FinBUC.FromStringGetFieldStr(NameClass,FInputString);
+        SetComboItems(Str_Temp) ;
+    end;
+
+
+
+end;
+
+function TBaseUnit.Update(CurtRow,SelCol,SelRow:integer):integer;
+var
+  FT:String;
+begin
+//   //更新控件显示
+//   RowCount:= CurrentRow;
+//   ColNumber:=5; // 显示控件 的位置
+//   DisPlayCompent;
+//   FT:=lowercase(FCompentType);
+//   if CurrentRow= SelectedRow then  begin
+//     if (FT='list')  then begin
+//         ComboBox.Visible :=True;
+//     end else begin
+//         Edit.Visible:=True;
+//     end;
+//   end else  begin
+//     ComboBox.Visible :=false;
+//     Edit.Visible:=false;
+//   end;
+//
+//   //更新数值
+//   if (FT='list') or (lowerCase(FieldType)='boolean') or (lowerCase(FieldType)='bool')
+//      then   begin
+//      Value:=intTostr(ComboBox.ItemIndex);
+//   end   else begin
+//      Value:=Edit.Text ;
+//   end;
+//   Result:=CurrentRow+1;
+end;
+
+
+
+{ TPropertyGrid }
+
+procedure TPropertyGrid.AddGridItem(InputStr: string);
+begin
+     if trim(InputStr)<> ''then
+     FFieldClass.FirstString:=FFieldClass.FirstString+';'+InputStr;
+     //FFieldClass.SplitfirstStr(FFieldClass,Inputstr);
+end;
+
+
+
+procedure TPropertyGrid.Clear;
+begin
+  FFieldClass.FirstString:='';
+  FFieldClass.DeleteChildArray ;
+  FFieldClass.DeleteBasicUnit ;
+  FBUC.ClearMouseRect ;
+end;
+
+
+constructor TPropertyGrid.Create(Buc:TBasicUseClass);
+begin
+   FFieldClass:=TFieldClass.Create(nil,Buc);
+   FBUC:=Buc;
+   FBUC.FParentImage.OnMouseUp :=FParentImageMouseUp;
+   FBUC.ParentPanel.OnResize :=FParentPanelResize;
+   FFieldClass.Caption :='属性名称';
+   FFieldClass.ExsitChild:=1;
+   FFieldClass.ChildDisp :=true;
+
+end;
+
+destructor TPropertyGrid.Destroy;
+begin
+    FreeAndNil(FFieldClass);
+end;
+
+
+
+
+
+
+procedure TPropertyGrid.FParentImageMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  col,Row:integer;
+  Open:Boolean;
+begin
+    if FBUC.SelColAndRowFromMouseRectArry (x,y,col,row) then begin
+       FBUC.SelBmpStateFromMouseRectArry(col,Row,Open);// 更新图片
+       SetChildDisplayFromFieldClass(Row,Open);
+       Inner_Update(Col,Row);
+    end;
+end;
+
+procedure TPropertyGrid.FParentPanelResize(Sender: TObject);
+begin
+  Inner_Update(-1,-1);
+end;
+
+function TPropertyGrid.GetTotalRowCount: integer;
+var
+  i:integer;
+begin
+
+
+end;
+
+procedure TPropertyGrid.Inner_Update(Selcol,SelRow:integer);
+begin
+   // 清理屏幕
+   FBUC.RefreshPanel;
+   //清理树注册单元格
+   FBUC.ClearMouseRect ;
+   //获取 表格总行数
+   TotalRowCount := FFieldClass.GetTotalRowCount ;
+   // 定制Image的 高 与宽
+   FBUC.SetPlaneHeihth(TotalRowCount);
+   // 刷新界面的类
+   FFieldClass.update(0,SelCol,SelRow);
+
+end;
+
+function TPropertyGrid.SetChildDisplayFromFieldClass(Row: integer;
+  var Open: Boolean): Boolean;
+begin
+  Result:=FFieldClass.SetChildDisplayFromFieldClass(Row,Open);
+end;
+
+procedure TPropertyGrid.SetGridHead;
+begin
+
+
+
+
+end;
+procedure TPropertyGrid.Update(Selcol,SelRow:integer);
+var
+  RowC:integer;
+begin
+   // 清理屏幕
+   FBUC.RefreshPanel;
+
+  //初始化字符串
+   FFieldClass.SplitfirstStr(FFieldClass,'');
+   //获取 表格总行数
+   TotalRowCount := FFieldClass.GetTotalRowCount ;
+   // 定制Image的 高 与宽
+   FBUC.SetPlaneHeihth(TotalRowCount);
+   // 刷新界面的类
+   RowC:=0;
+   FFieldClass.update(RowC,SelCol,SelRow);
+
+end;
+
+{ TFieldRecord }
+
+constructor TFieldClass.Create(AOwn:TFieldClass;inBuc:TBasicUseClass);
+begin
+    FParent:=AOwn;
+    FinBuc:=inBuc;
+    FBasicUnitCount:=0;
+    ChildDisp:=false;
+    if FParent=nil then begin
+        FParentClassNumber :=0 ;
+    end else begin
+        FParentClassNumber:=FParent.FParentClassNumber+1;
+    end;
+    FFieldUnit:=TBaseUnit.Create(FinBUC);
+end;
+
+procedure TFieldClass.CreateBasicUnit;
+begin
+   FBasicUnitCount:=FBasicUnitCount+1;
+   setlength(FCompentUnit,FBasicUnitCount) ;
+       FCompentUnit[FBasicUnitCount-1]:=TBaseUnit.Create(FinBUC) ;
+end;
+
+procedure TFieldClass.CreateChildArray(AOwn:TFieldClass);
+begin
+    FChildCount:=FChildCount+1;
+    Setlength(FChildArray,FChildCount);
+        FChildArray[FChildCount-1]:=TFieldClass.Create(AOwn,FinBUC);
+
+end;
+
+procedure TFieldClass.CreateChildCompent;
+begin
+    if ExsitChild=1 then  exit;
+    CreateBasicUnit;
+    if lowerCase(CompType) ='list' then
+       if  ComentListName <>'' then  begin
+           FCompentUnit[FBasicUnitCount-1].SplitInputString(FParent.ClassName,SecondString );
+       end;
+end;
+
+procedure TFieldClass.CreateChildGuidProedure;
+var
+  S_Child:String;
+begin
+   if (Trim(ClassName)='') or (Trim(ChildString)='') then exit;
+
+   S_Child:=FinBUC.FromStringGetFieldStr(ClassName,ChildString );
+   SplitfirstStr(self,S_Child);
+
+end;
+
+procedure TFieldClass.DeleteBasicUnit;
+var
+  i:integer;
+begin
+   for i := 0 to FBasicUnitCount-1 do begin
+       FreeAndNil(FCompentUnit[i]) ;
+   end;
+   FBasicUnitCount:=0;
+end;
+
+procedure TFieldClass.DeleteChildArray;
+var
+  i:integer;
+begin
+    for I := 0 to FChildCount-1 do  begin
+       FChildArray[i].DeleteChildArray ;
+       FreeAndnil(FChildArray[i]) ;
+    end;
+    FChildCount:=0;
+
+end;
+
+destructor TFieldClass.Destroy;
+begin
+  DeleteBasicUnit;
+  DeleteChildArray;
+  FreeAndNil(FFieldUnit);
+  inherited;
+end;
+
+function TFieldClass.DisplayToSGCell(RowC:integer):integer;
+begin
+
+   if FParent<> nil then begin // 最初一级不打印
+        //添加文字
+        FinBUC.SetTextToRect(1,FParentClassNumber,RowC,Caption);
+        //添加打开 与关闭 图片
+        if ExsitChild=1  then   begin // 存在孩子节点
+           FinBUC.SetOpenOrCloseBmp (FParentClassNumber,RowC,ChildDisp);
+        end else begin // 没有孩子节点
+
+        end;
+        
+   end;
+   Result:=RowC+1;
+end;
+
+function TFieldClass.GetTotalRowCount: integer;
+var
+  i:integer;
+  RowCou:integer;
+begin
+   RowCou:=1;
+   if ChildDisp then   begin
+      for I := 0 to FChildCount-1 do
+       RowCou:=FChildArray[i].GetTotalRowCount+
+                RowCou;
+   end;
+
+   Result:=RowCou;
+
+end;
+
+function TFieldClass.SetChildDisplayFromFieldClass(Row: integer;
+  var Open: Boolean): Boolean;
+var
+  i:integer;
+begin
+   Result:=False;
+    if FRowNumber=Row then  begin
+        ChildDisp:=not ChildDisp;
+        Open:=ChildDisp;
+        Result:=true;
+        exit;
+    end;
+   for I := 0 to FChildCount-1 do
+       if FChildArray[i].FRowNumber=Row then  begin
+          FChildArray[i].ChildDisp:=not FChildArray[i].ChildDisp;
+          Open:=FChildArray[i].ChildDisp;
+          Result:=true;
+          break;
+       end;
+end;
+
+procedure TFieldClass.SetPointValue;
+var
+  Rect:TRect;
+begin
+    if FParent=nil then begin
+       //Rect:=FinBUC.RetureRect(0,FRowNumber);
+      // FPoint:=Rect.BottomRight;
+    end;
+
+end;
+
+procedure TFieldClass.SplitfirstStr(AWon:TFieldClass;FirstStr:string );
+var
+   s_temp,temp_2:Str_DT_array;
+   C1,c2,i:integer;
+begin
+  if FirstStr<> '' then  FirstString:=FirstString+';'+FirstStr;
+  s_temp:=Public_Basic.split(FirstString,';',C1);
+  if C1 < 1 then  exit;
+  for I := 0 to C1-1 do   begin
+      if S_temp[i] ='' then  continue;
+      CreateChildArray(Awon);
+      FChildArray[FChildCount-1].SplitSecondStr(S_temp[i]);
+  end;
+end;
+
+
+
+procedure TFieldClass.SplitSecondStr(SecondStr:string);
+{  str 字符串  一共有七个个字符组成，中间用 ，隔开
+   第一个 是数字  0 代表 本级 是最后一级，可以显示 TBasicUnit的类
+                  1 代表是 导引级， 后面有孩子节点， 继续便利
+
+   第二 个 字符串 如果 第一个是 1 是代表 是 该类的 名， 是 具体定义的名字
+                 如果 第一个是 0 代表 指示需要显示类中的变量名
+   第三个 字符串  属性框显示的Caption
+   第四个 字符串  如果第一个字符 为 0 代表   TBasicUnit 显示的录入是 Edit 还是 List
+                  如果 第一个字符为 1 可以代表 该类中有多个显示
+
+   第五个字符 代表 是否显示  1 代表显示  0 或者其他 代表不显示
+
+   第六个 字符串 意思是 如果 第五个是 List 那么 ComboBox. Items遍历的 字符串 在那一的变量里面
+
+
+   第七个 字符串 如果 第一个是1 代表是类的变量名
+                 如果 第一个是0 代表变量 的数据类型
+
+  '1,gzm_b,工作面基本尺寸,,1,;
+ }
+var
+   temp_2:Str_DT_array;
+   c2,i:integer;
+begin
+  if SecondStr='' then
+    if SecondString= '' then begin
+       exit;
+    end else begin
+       SecondStr:=SecondString;
+    end;
+
+    SecondString:=SecondStr;
+    temp_2:=Public_Basic.split(SecondStr,',',C2);
+    if C2 <7 then  exit;
+    ExsitChild:=Public_Basic.StrToInt_lu(temp_2[0]) ;
+    if ExsitChild=1 then  begin   // 指示下面还有具体的子类
+        if (Trim(temp_2[1])<> '') then  // 该处  含义不同
+              ClassName:=Trim(temp_2[1]);
+        Caption :=temp_2[2];
+        //不解析第三个
+        if public_Basic.StrToInt_lu(temp_2[4])=1 then
+              visible:=true else visible:=False;
+        if (Trim(temp_2[5])<> '') and (lowerCase(FiledType)='list') then
+              ComentListName:= Trim(temp_2[5]) ;
+        if (Trim(temp_2[6])<> '') then
+              ChildString:=Trim(temp_2[6]);
+        //创建下一级子类
+        createChildGuidProedure ;
+    end else begin  // 代表下面没有孩子 直接进入TBasicUnit
+        if (Trim(temp_2[1])<> '') then   // 该处  含义不同
+              self.FiledName:=Trim(temp_2[1]);
+        Caption :=temp_2[2];
+        CompType :=temp_2[3];
+        if public_Basic.StrToInt_lu(temp_2[4])=1 then
+              visible:=true else visible:=False;
+        if (Trim(temp_2[5])<> '') and (lowerCase(FiledType)='list') then
+              ComentListName:= Trim(temp_2[5]) ;
+        if (Trim(temp_2[6])<> '')  then      // 变量的数据类型
+              FiledType:= Trim(temp_2[6]) ;
+        //创建 控件的函数
+       // CreateChildCompent;
+        FFieldUnit.SplitInputString(FParent.ClassName,SecondString );
+    end;
+
+
+
+end;
+
+
+function TFieldClass.update(CurtRow,SelCol,SelRow:integer): integer;
+var
+  CurRowNumber:integer;
+  i:integer;
+begin
+   CurRowNumber:= CurtRow;
+   FRowNumber:=CurRowNumber;
+   // 显示内容
+    CurRowNumber:=DisplayToSGCell(CurRowNumber);
+   // 显示孩子的类
+   if ExsitChild =1 then   begin   //代表下面有孩子
+     if ChildDisp  then
+        for I := 0 to FChildCount -1 do  begin
+           CurRowNumber:=self.FChildArray[i].Update(CurRowNumber,SelCol,selRow);
+
+        end;
+   end else begin // 带别下面没有孩子， 具体到了控件
+     if ChildDisp  then
+        for I := 0 to FBasicUnitCount -1 do begin
+           CurRowNumber:=FCompentUnit[i].Update(CurRowNumber,SelCol,selRow);
+
+        end;
+   end;
+
+   Result:=CurRowNumber;
+end;
+
+{ TBasicUseClass }
+
+function TBasicUseClass.AddMouseRect(vRect: TRect; Number, Col,
+  Row: integer;OpenOrClose:Boolean): integer;
+begin
+    Number:=Number+1;
+    setlength(FMouseRect,Number);
+     FMouseRect[Number-1]:= TMouseRecord.Create ;
+    FMouseRect[Number-1].vRect :=vRect;
+    FMouseRect[Number-1].Col :=Col;
+    FMouseRect[Number-1].Row :=Row;
+    FMouseRect[Number-1].OpenOrClose :=OpenOrClose;
+    Result:=Number;
+end;
+
+procedure TBasicUseClass.ClearMouseRect;
+var
+  i:integer;
+begin
+   for I := 0 to FMouseRectCount-1 do
+    FreeAndNil(FMouseRect[i]);
+   FMouseRectCount:=0;
+
+end;
+
+constructor TBasicUseClass.Create;
+begin
+   FParentImage:=TImage.Create(nil);
+   FTitleImage:=TImage.Create(nil);
+   FScrollPanel:=TScrollBox.Create(nil);
+
+   Open_Bit:=TBitmap.Create ;
+   Close_bit:=TBitmap.Create ;
+   LoadBMPTOFile;
+
+end;
+
+destructor TBasicUseClass.Destroy;
+begin
+   FreeAndNil(Open_Bit);
+   FreeAndNil(Close_bit);
+   FreeAndNil(FParentImage);
+   FreeAndNil(FTitleImage);
+   FreeAndNil(FScrollPanel);
+end;
+
+procedure TBasicUseClass.DrawLine(fPoint, tPoint: TPoint;lineStyle:integer);
+begin
+    if  lineStyle =1 then begin
+        FParentImage.Canvas.Pen.Width :=1;
+        FParentImage.Canvas.Pen.Style:=psDash;
+    end else begin
+        FParentImage.Canvas.Pen.Width :=Fpenwidth;
+        FParentImage.Canvas.Pen.Style:=psSolid;
+    end;
+    FParentImage.Canvas.MoveTo(fPoint.X,FPoint.y) ;
+    FParentImage.Canvas.LineTo(tPoint.x,Fpoint.y) ;
+
+end;
+
+procedure TBasicUseClass.FParentPanelMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+end;
+
+function TBasicUseClass.FromStringGetFieldStr(ClName,
+  FieldName: string): string;
+var
+  t:TRttiType;
+  r:TValue;
+  f:TRttiField;
+begin
+    {  FGzm:TG_stope;
+       Fimm:TImmediate_roof;
+       FOld:TOld_roof;
+       FSup:TZJ_Class;
+       FZk: array of TZk_bore;    }
+   Result:='';
+   try
+        ClName:=lowerCase(ClName);
+        if ClName ='tg_stope' then  begin
+           t:=TRttiContext.Create.GetType(TG_stope);
+           f:=t.GetField(FieldName);
+           r:=f.GetValue(t_gzm);
+        end else if ClName ='tzj_class' then  begin
+           t:=TRttiContext.Create.GetType(TZJ_Class);
+           f:=t.GetField(FieldName);
+           r:=f.GetValue(t_sup);
+        end else if ClName ='timmendiate_roof' then  begin
+           t:=TRttiContext.Create.GetType(TImmediate_roof);
+           f:=t.GetField(FieldName);
+           r:=f.GetValue(t_imm);
+        end else if ClName ='told_roof' then  begin
+           t:=TRttiContext.Create.GetType(TOld_roof);
+           f:=t.GetField(FieldName);
+           r:=f.GetValue(t_old);
+        end else if ClName ='tzk_bore' then  begin
+           //t:=TRttiContext.Create.GetType(TZk_bore);
+
+        end ;
+       Result:=r.AsString;
+   finally
+     if Assigned(t) then  FreeAndNil(t);
+     if Assigned(f) then  FreeAndNil(f);
+
+   end;
+
+
+end;
+
+procedure TBasicUseClass.InitGrid;
+begin
+//    StringGrid.Align :=alClient;
+//    StringGrid.ColCount :=7;
+//    StringGrid.RowCount:=20;
+//    StringGrid.FixedCols:=0;
+//    StringGrid.FixedRows :=1;
+//    StringGrid.DefaultRowHeight :=18;
+//    StringGrid.Font.Size:=8;
+//    StringGrid.Options := StringGrid.Options - [goVertLine] -[goHorzLine]
+//              -[goFixedVertLine];
+end;
+
+procedure TBasicUseClass.LoadBMPTOFile;
+begin
+   Open_Bit.LoadFromFile('open.bmp');
+   Close_Bit.LoadFromFile('Close.bmp');
+end;
+
+procedure TBasicUseClass.RefreshPanel;
+begin
+
+     FTitleImage.Transparent :=true;
+     FTitleImage.Align :=alTop;
+     FScrollPanel.Align:=alClient;
+
+     FParentImage.Parent:=FScrollPanel;
+     FParentImage.Left :=0;
+     FParentImage.Top :=0;
+     FParentImage.Width:=FScrollPanel.Width-30 ;
+     FParentImage.Height:= FScrollPanel.Height ;
+     FParentImage.Visible :=true;
+
+
+   // 清除图片
+
+   FParentImage.Picture.Graphic:=nil;
+   FParentImage.Canvas.Refresh;
+   FParentImage.Canvas.FillRect(FParentImage.ClientRect);
+   // 设置初始变量
+   FTitleHeigth:=30;
+   FDefaultHeigth:=20;
+   FLeftBlank:=5;
+   FRigthBlank:=5;
+   FPenWidth:=1;
+   FBottomHeigth:=20;
+
+   FBMpColumLeft:=FLeftBlank+FPenWidth;
+   FBMpColumWidth:=10;
+
+   FFirstColumLeft:=FLeftBlank+FPenWidth+FBMpColumWidth;
+   FFirstColumWidth:=trunc((FParentImage.Width-FLeftBlank-FRigthBlank)*3/5);
+   FSecondColumLeft:=FLeftBlank+FPenWidth+FBMpColumWidth+FFirstColumWidth+FPenWidth;
+   FSecondColumWidth:=FParentImage.Width-FLeftBlank-FRigthBlank-FFirstColumWidth;
+   FThirdColumWidth:=20;;
+   FThirdColumLefe:=FParentImage.Width-FRigthBlank-FPenWidth;
+   // 设置标题
+   SettitltImage;
+end;
+
+function TBasicUseClass.RetureRect(col,ColNumber, Row: integer): TRect;
+var
+  sLeft,sTop,sRight,sBottom:integer;
+begin
+   sTop:=(Row-1)*FDefaultHeigth ;
+   SBottom:=(Row)*FDefaultHeigth ;
+   if Col=0 then begin
+      sLeft:=self.FBMpColumLeft;
+      sRight:=FBMpColumLeft+FBMpColumWidth+ColNumber*10
+   end else if Col=1 then begin
+      sLeft:=self.FFirstColumLeft+ ColNumber*10;
+      sRight:=sLeft+self.FFirstColumWidth;
+   end else if Col=2 then begin
+      sLeft:=self.FSecondColumLeft;
+      sRight:=sLeft+self.FSecondColumWidth ;
+   end else if Col=3 then begin
+      sLeft:=self.FThirdColumLefe;
+      sRight:=sLeft+self.FThirdColumWidth;
+   end ;
+
+   Result:= Bounds(sLeft,sTop,SRight-sleft,SBottom-STop);
+end;
+
+function TBasicUseClass.ReturnInitInputString: String;
+var
+  temp:string;
+begin
+    temp:='1,TG_stope,工作面基本尺寸,,1,,gzm_b;'    //  1工作面基本参数
+                +'1,TG_stope,工作面开采参数,,1,,gzm_k;'    //  2工作面开采参数
+                +'1,TG_stope,工作面地质情况,,1,,gzm_d;'    //  3工作面地质情况
+                +'1,TZJ_Class,支架基本参数,,1,,;'    //  4支架基本参数
+                +'1,TImmediate_roof,直接顶参数信息,,1,,;'    // 5 直接顶参数信息
+                +'1,TOld_roof,老顶参数信息,,1,,;'    //  6老顶参数信息
+                +'1,TZk_bore,周边钻孔基本信息,,1,,;'    // .。。7 周边钻孔基本信息
+                + '' ;
+    Result:=temp;
+
+end;
+
+function TBasicUseClass.SelBmpStateFromMouseRectArry(col,row:integer;
+    Var Open :Boolean):Boolean;
+var
+  i:integer;
+begin
+   Result:=False;
+   for I := 0 to self.MouseRectCount-1  do
+       if (FMouseRect[i].Col =col) and (FMouseRect[i].row =Row) then begin
+          FMouseRect[i].OpenOrClose:=not FMouseRect[i].OpenOrClose; // 先把相反的进行保存
+          Open:=FMouseRect[i].OpenOrClose;
+          Result:=true;
+       end;
+
+
+end;
+
+function TBasicUseClass.SelColAndRowFromMouseRectArry(x, y: integer; var Col,
+  Row: integer): Boolean;
+var
+  i:integer;
+begin
+   Result:=False;
+   for I := 0 to self.MouseRectCount-1  do
+      if (x>=FMouseRect[i].vRect.Left ) and (x<=FMouseRect[i].vRect.Right )
+          and(y>=FMouseRect[i].vRect.Top ) and (y<=FMouseRect[i].vRect.Bottom)
+      then  begin
+          col:=FMouseRect[i].Col ;
+          Row:=FMouseRect[i].Row ;
+          Result:=true;
+          break;
+       end;
+
+end;
+
+procedure TBasicUseClass.SetFScrollPanel(Value: TScrollBox);
+begin
+
+end;
+
+procedure TBasicUseClass.SetGridBMP(col, Row: integer; Open: Boolean);
+var
+  Rect,Rtemp:TRect;
+begin
+//    Rect:=inGrid.CellRect(Col,Row);
+//    Rect.TopLeft.X :=Rect.BottomRight.X-10;
+//    Rect.TopLeft.Y :=Rect.BottomRight.Y-10;
+//    if Open then    begin
+//        Rtemp:=Bounds(0,0,Open_bit.Width ,Open_Bit.Height );
+//    end else begin
+//        Rtemp:=Bounds(0,0,Close_bit.Width ,Close_Bit.Height );
+//    end;
+//   inGrid.Canvas.CopyRect(Rect,Open_bit.Canvas,Rtemp  );
+end;
+
+procedure TBasicUseClass.SetGridText(col, Row: integer; strText: string);
+begin
+//   inGrid.Cells[col,Row]:=StrText;
+end;
+
+procedure TBasicUseClass.SetOpenOrCloseBmp(Colnumber, RowCount: integer;Open:Boolean);
+var
+  vRect,Rtemp:TRect;
+begin
+    vRect:=self.RetureRect(0,Colnumber,RowCount);
+    FMouseRectCount:=AddMouseRect(vRect,FMouseRectCount,0,RowCount,Open);
+    vRect.Left :=vRect.Right -10;
+    vRect.Top :=vRect.Bottom -10;
+    if  Open then    begin
+        Rtemp:=Bounds(0,0,Open_bit.Width ,Open_Bit.Height);
+        FParentImage.Canvas.CopyRect(vRect,Open_bit.Canvas,Rtemp);
+    end else begin
+        Rtemp:=Bounds(0,0,Close_bit.Width ,Close_Bit.Height );
+        FParentImage.Canvas.CopyRect(vRect,Close_Bit.Canvas,Rtemp);
+    end;
+
+end;
+
+procedure TBasicUseClass.SetparentPanel(Value: TPanel);
+begin
+     FParentPan:=Value;
+     FScrollPanel.Parent :=FParentPan;
+     FTitleImage.Parent :=FParentPan;
+
+end;
+
+procedure TBasicUseClass.SetPlaneHeihth(RowCount: integer);
+var
+  Heigth:integer;
+begin
+   Heigth:=FTitleHeigth +RowCount*(FDefaultHeigth+2)+FBottomHeigth;
+   if Heigth> FParentImage.Height then
+       FParentImage.Height:=Heigth+50;
+
+end;
+
+procedure TBasicUseClass.SetTextToRect(FirstOrSecondCol,Colnumber,RowCount:integer;
+       sText: String);
+var
+  vRect:TRect;
+  p2:Tpoint;
+begin
+   vRect:=self.RetureRect(FirstOrSecondCol,Colnumber,RowCount);
+   FParentImage.Canvas.Font.Size := 10;
+   if RowCount=0 then    begin  //第一行表头
+      FParentImage.Canvas.TextOut(VRect.TopLeft.X+30,vRect.BottomRight.Y-15,sText);
+      p2.X:=vRect.Right;P2.Y :=vRect.Top  ;
+      DrawLine(vRect.TopLeft,p2,0 );
+      p2.X:=vRect.Left ;P2.Y :=vRect.Bottom ;
+      DrawLine(p2,vRect.BottomRight,0 );
+   end else begin
+     FParentImage.Canvas.TextOut(VRect.TopLeft.X+15,vRect.BottomRight.Y-12,sText);
+   end;
+
+
+end;
+
+procedure TBasicUseClass.SettitltImage;
+begin
+   FTitleImage.Picture.Graphic:=nil;
+   FTitleImage.Canvas.Refresh;
+   FTitleImage.Canvas.FillRect(FTitleImage.ClientRect);
+   FTitleImage.Height :=FTitleHeigth ;
+   FTitleImage.Canvas.MoveTo(FLeftBlank,5) ;
+   FTitleImage.Canvas.Lineto(FTitleImage.Width-Self.FRigthBlank-30 ,5) ;
+   FTitleImage.Canvas.MoveTo(FLeftBlank,FTitleHeigth-5) ;
+   FTitleImage.Canvas.Lineto(FTitleImage.Width-Self.FRigthBlank-30 ,FTitleHeigth-5) ;
+   //第一根线
+//   FTitleImage.Canvas.MoveTo(FBMpColumLeft+FBMpColumWidth ,5) ;
+//   FTitleImage.Canvas.Lineto(FBMpColumLeft+FBMpColumWidth ,FTitleHeigth) ;
+//   FTitleImage.Canvas.MoveTo(FFirstColumLeft+FFirstColumWidth ,5) ;
+//   FTitleImage.Canvas.Lineto(FFirstColumLeft+FFirstColumWidth ,FTitleHeigth) ;
+   // 写标题
+   FTitleImage.Canvas.Font.Size :=10;
+   FTitleImage.Canvas.TextOut(FFirstColumLeft+FFirstColumWidth div 2 -30, FTitleHeigth-22,'属性名称');
+   FTitleImage.Canvas.TextOut(FSecondColumLeft+FSecondColumWidth div 2-20, FTitleHeigth-22,'属性值');
+end;
+
+{ TMouseRecord }
+
+constructor TMouseRecord.Create;
+begin
+
+end;
+
+destructor TMouseRecord.Destroy;
+begin
+
+end;
+
+end.

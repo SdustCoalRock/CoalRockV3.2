@@ -1,0 +1,859 @@
+unit UGuidMap;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.ImageList, Vcl.ImgList,ComObj,System.StrUtils,
+  Vcl.ComCtrls, Vcl.ToolWin, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, Vcl.Grids,
+  Vcl.OleCtrls, SHDocVw,mshtml,ActiveX, Vcl.Menus, Vcl.AppEvnts;
+
+type
+  TForm_MapMain = class(TForm)
+    CoolBar1: TCoolBar;
+    ToolBar1: TToolBar;
+    ToolButton1: TToolButton;
+    ToolButton2: TToolButton;
+    ToolButton4: TToolButton;
+    ToolButton3: TToolButton;
+    ToolButton11: TToolButton;
+    ToolButton12: TToolButton;
+    ToolButton13: TToolButton;
+    ImageList1: TImageList;
+    PanelLeft: TPanel;
+    PageControl1: TPageControl;
+    TabSheetDz: TTabSheet;
+    SG_WBZ: TStringGrid;
+    Panel1: TPanel;
+    BitBtn1: TBitBtn;
+    TabSheetZj: TTabSheet;
+    SG_YBZ: TStringGrid;
+    Panel2: TPanel;
+    BitBtn2: TBitBtn;
+    PanelMap: TPanel;
+    Splitter1: TSplitter;
+    StatusBar1: TStatusBar;
+    OpenDialog1: TOpenDialog;
+    WebBrowser: TWebBrowser;
+    Timer1: TTimer;
+    ToolButton14: TToolButton;
+    Panel_Text: TPanel;
+    ToolButton5: TToolButton;
+    ToolButton6: TToolButton;
+    ToolButton7: TToolButton;
+    Popup_Map: TPopupMenu;
+    Pop_LoadAll: TMenuItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    Pop_Open: TMenuItem;
+    ApplicationEvents1: TApplicationEvents;
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure ToolButton1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure ToolButton2Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure ToolButton4Click(Sender: TObject);
+    procedure ToolButton14Click(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure SG_WBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure ToolButton11Click(Sender: TObject);
+    procedure ToolButton5Click(Sender: TObject);
+    procedure ToolButton7Click(Sender: TObject);
+    procedure ToolButton6Click(Sender: TObject);
+    procedure ToolButton12Click(Sender: TObject);
+    procedure BitBtn2Click(Sender: TObject);
+    procedure SG_YBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure Pop_LoadAllClick(Sender: TObject);
+    procedure ApplicationEvents1Message(var Msg: tagMSG; var Handled: Boolean);
+  private
+    { Private declarations }
+    Mapx_Out_in,MarkOrSelect:Boolean;
+    wholeScreen:Boolean;
+    SelectRad:string;
+    MyJingdu,Myweidu: string;
+    Click_Jd,Click_Wd,Click_Coalid:string;
+    SelectbZj_bh, Select_J,Select_M,Select_A:string;
+
+    procedure loadexcel(rowCount,colCount:integer; fileName:String; var grid:TStringGrid);
+    procedure initPanelLeft;
+    procedure InitSG_StringGrid;
+    procedure InitPanleMap;
+
+    function  CreateClass:Boolean;
+    procedure OptionTip(Str:String);
+    function  MarkerSupportMap(coalbh,jd,wd,Jituan,MeiKuang,Address:string):Boolean;
+    procedure MapVisual(Value:Boolean);
+    function searchByStationName(AName:string):Boolean;
+    //baidu Map
+     procedure AppMsg(var Msg: TagMsg; var Handled: Boolean);
+     procedure GetWebContent();
+     procedure loadweb();
+     procedure ClearMapMarker;
+     procedure AddAllMarker;
+     procedure SetLocalMarker;
+
+     procedure MakeWindowsSingle(Single: integer);
+     Procedure DispMapPop(Px,Py:Integer);//显示MapPop控制快捷菜单
+     procedure GenerateJPEGfromBrowser(browser: iWebBrowser2;
+                                  jpegFQFilename: string; srcHeight:
+                                  integer; srcWidth: integer;
+                                  tarHeight: integer; tarWidth: integer);
+      procedure SaveWebBrowserToBmp;
+
+  public
+    { Public declarations }
+     procedure ExAddmarker;
+     procedure SetMapDisplayScale(Value:integer);
+  end;
+
+var
+  Form_MapMain: TForm_MapMain;
+  function CreateMapFrom(AHandle:THandle;ACaption:string;Wid,Hi,single:integer):integer;stdcall;
+
+  //========
+   const
+  Doc1: string = '<html>'
+  + '<head>'
+  + '<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />'
+  + '<meta http-equiv="Content-Type" content="text/html; charset=gb2312" />'
+  + '<title>BAIDU MAP</title>'
+  + '<style type="text/css">'
+  + 'html{height:100%}' + 'body{height:100%;margin:0px;padding:0px}'
+  + '#container{height:100%}'
+  + '</style>'
+  + '<script type="text/javascript"src="http://api.map.baidu.com/api?v=2.0 & '
+  + ' ak=e6DTW515NZFjXnFxhrGiUGhfm83DewTN"></script>'
+  + '</head>'
+
+  + '<body>'
+  + '  <style="background:#0000FF"></style>'
+  + '  <div id="container"></div>'
+  +'   <div id="centerweidu" style="visibility:hidden; display:none"></div>'
+  +'   <div id="centerjingdu" style="visibility:hidden; display:none"></div>'
+  +'   <div id="weidutemp" style="visibility:hidden;display:none"></div>'
+  +'   <div id="jingdutemp" style="visibility:hidden;display:none"></div>'
+  +'   <div id="weidu" style="visibility:hidden;display:none"></div>'
+  +'   <div id="jingdu" style="visibility:hidden;display:none"></div>'
+  +'   <div id="Distance" style="visibility:hidden;display:none"></div>'
+  +'   <div id="Coalid" style="visibility:hidden;display:none"></div>'
+
+  +    '<script language="JavaScript" type="text/javascript">'
+  +       'var map = new BMap.Map("container");'  // 创建地图实例
+  +       'map.addControl(new BMap.NavigationControl());'
+  +       'map.addControl(new BMap.ScaleControl());'
+  +       'map.addControl(new BMap.OverviewMapControl());'
+  +       'map.addControl(new BMap.MapTypeControl(BMAP_ANCHOR_BOTTOM_RIGHT));'   // 将标注添加到地图中
+  +       'map.enableScrollWheelZoom();'                  // 启用滚轮放大缩小。
+  +       'map.enableKeyboard();'                         // 启用键盘操作。
+  +       'var centerpoint = new BMap.Point(120.128294,36.005593);' // 创建点坐标  126.666431, 45.764502
+  +       'marker = new BMap.Marker(centerpoint);'        // 创建标注
+  +       'map.addOverlay(marker);'
+  +       'var label = new BMap.Label("山东科技大学",{offset:new BMap.Size(20,-10)});'
+  +       'marker.setLabel(label);'
+//  +       'var centerpoint = new BMap.Point(113.774579,34.712104);'  //  创建中心坐标点让地图居中
+  +       ' map.centerAndZoom("太原", 5);' // 初始化地图，设置中心点坐标和地图级别'
+
+  +       ' map.addEventListener("mousemove", function(e){'
+  +       ' document.getElementById("weidutemp").innerHTML = e.point.lng;'
+  +       ' document.getElementById("jingdutemp").innerHTML =  e.point.lat;});'
+
+  +       ' map.addEventListener("click", function(f){'
+  +       ' document.getElementById("weidu").innerHTML = f.point.lng;'
+  +       ' document.getElementById("jingdu").innerHTML =  f.point.lat;});'
+  +       ' map.setMapStyle({style:"light"});' // 地图风格  midnight    bluish  dark   light
+
+  +       'map.addEventListener("click", function(e){  ' //点击事件
+  +       'if(!e.overlay){'
+  +       '      var myIcon = new BMap.Icon("http://api.map.baidu.com/img/markers.png", new BMap.Size(23, 25), {  '
+  +       '                      offset: new BMap.Size(10, 25),'   // 指定定位位置
+  +       '                      imageOffset: new BMap.Size(0, 0 - 10 * 25) ' // 设置图片偏移
+  +       '                   });  '
+  +       '      var marker=new BMap.Marker(e.point,{icon:myIcon});  '
+  +       '      map.removeOverlay(preMarker);'
+  +       '      map.addOverlay(marker);   '
+  +       '     preMarker=marker;    }});'
+
+  + '</script>'
+  + '</body>'
+
+  //===============
+  +'<script>'
+
+  +   'function SetLocalPoint(){'    //标注厂址坐标
+  +       'centerpoint=new BMap.Point(120.128294,36.005593);'
+  +       'var marker = new BMap.Marker(centerpoint);'
+  +       'map.addOverlay(marker);'
+  +       'var label = new BMap.Label("山东科技大学",{offset:new BMap.Size(20,-10)});'
+  +       'marker.setLabel(label);'
+  +       ' map.centerAndZoom(centerpoint, 15);' // 初始化地图，设置中心点坐标和地图级别'
+  +     '}'
+
+  +   'function SetCenterView(newlng,newlat){'    //设置视图中心坐标
+  +        ' centerpoint=new BMap.Point(newlng,newlat);'
+  +        ' map.centerAndZoom(centerpoint, 15);' // 初始化地图，设置中心点坐标和地图级别'
+  +'    }'
+
+  +    ' function searchByStationName(AddrName) {  ' //按照名称查找坐标点
+  +      '　　　map.centerAndZoom(AddrName, 15); '
+  +      '}'
+
+  +    ' function SetDisplayScale(bl) {  ' //设置显示比例
+  +      ' map.centerAndZoom("北京", bl);' // 初始化地图，设置中心点坐标和地图级别'
+  +      '}'
+
+  +    'function SetMeiKuangAddr(bh,newlng,newlat,Jituan,MeiKuang,AddressText){'
+  +          'centerpoint=new BMap.Point(newlng,newlat);'
+  +          'var marker = new BMap.Marker(centerpoint);'
+  +          'map.addOverlay(marker);'
+  +          'var label = new BMap.Label(Jituan,{offset:new BMap.Size(20,-10)});'
+  +          'marker.setLabel(label);'
+  +          'marker.setTitle(MeiKuang);'
+  +          'marker.addEventListener("click",getAttr);  '
+  +          'function getAttr(){   '
+	+               '  var p = marker.getPosition();     '  //获取marker的位置
+	+               '  alert("当前点击【" + Jituan+ " 】" + MeiKuang + "  位于【"+AddressText+"】");'
+ 	+               '  document.getElementById("Coalid").innerHTML = bh;'  //得到煤矿编号
+  +             ' }'
+  +      'map.panTo(centerpoint);'
+  +      '}'
+
+  +  ' function  clearOverlays() {'   //清理地标
+  +       ' map.clearOverlays(); }'
+
+
+  +  ' function SearchSupport(newlng,newlat,RedLen) {'      // 指定半径画圆
+  +        ' var centerpoint=new BMap.Point(newlng,newlat);'
+  +        ' map.enableScrollWheelZoom(); '
+	+        ' map.centerAndZoom(centerpoint,15);  '
+  +        ' var circle = new BMap.Circle(centerpoint,RedLen,{fillColor:"blue", '
+  +           '              strokeWeight: 1 ,fillOpacity: 0.3, strokeOpacity: 0.3});  '
+  +        '   map.addOverlay(circle); '
+  +        '  var local =  new BMap.LocalSearch(map, {renderOptions: {map: map, autoViewport: false}}); '
+  +        '   local.searchNearby("",centerpoint,RedLen);  '
+  +        '}'
+
+
+  +   'function PrintLine(newlng,newlat,oldlng,oldlat,biaoji){'
+  +           'var point = new BMap.Point(newlng,newlat);' // 创建点坐标
+  +           'map.panTo(point);'
+  +           'var polyline = new BMap.Polyline(['
+  +           'new BMap.Point(oldlng,oldlat),'
+  +           'new BMap.Point(point.lng, point.lat)'
+  +           '], {strokeColor:"blue", strokeWeight:4, strokeOpacity:0.5});'
+  +           'map.addOverlay(polyline);'
+  +        '}'
+
+  +   'function GetCenter(){'
+  +       ' var center = map.getCenter();'
+  +       ' document.getElementById("centerweidu").innerHTML = center.lng;'
+  +       ' document.getElementById("centerjingdu").innerHTML = center.lat;'
+  +       '}'
+
+  +    'function Distance(newlng,newlat){'
+  +       'var pointA=centerpoint;'
+  +       'var pointB=new BMap.Point(newlng,newlat);'
+  +       'document.getElementById("Distance").innerHTML = map.getDistance(pointA,pointB);'
+  +       'alert(''距离是：''+map.getDistance(pointA,pointB)+'' 米。'');'
+
+  +      '}'
+  + '</script>'
+
+  + '</html>';
+  //==================
+implementation
+
+{$R *.dfm}
+
+uses Lu_Public_BasicModual, UMainDataModule;
+
+{ TForm2 }
+
+function CreateMapFrom(AHandle:THandle;ACaption:string;Wid,Hi,single:integer):integer;stdcall;
+ begin
+       if Assigned(Form_MapMain) then  FreeANdNil(Form_MapMain);
+
+        Form_MapMain:=TForm_MapMain.Create(nil);
+        try
+           with Form_MapMain do begin
+               Caption:=ACaption;
+               WindowState:= wsMaximized;
+               ParentWindow:=Ahandle;
+              
+               if Hi >Height then
+                   Top :=Round((Hi-Height)/3)  else   Top :=0;
+               if Wid> Width then
+                   Left:=Round((Wid-Width)/2)  else   Left:=0;
+
+                Show;
+                MakeWindowsSingle(Single);
+                SetFocus;
+                Result:=1;//函数值
+          end ;
+        except
+           FreeAndNil(Form_MapMain);
+        end;
+ end;
+
+procedure TForm_MapMain.AddAllMarker;
+var
+  i:integer;
+  bh,Jituan,KuangM,Jd,wd,Addr:string;
+begin
+
+    for I := 1 to SG_YBZ.RowCount-1 do  begin
+      bh :=Trim(SG_YBZ.Cells[0,i]);
+      KuangM:=Trim(SG_YBZ.Cells[1,i]);
+      Jituan:=Trim(SG_YBZ.Cells[2,i]);
+      jd:=Trim(SG_YBZ.Cells[3,i]);
+      wd:=Trim(SG_YBZ.Cells[4,i]);
+      Addr:=Trim(SG_YBZ.Cells[5,i]);
+      if public_Basic.StrToInt_lu(bh) >0 then   begin
+         MarkerSupportMap(bh,jd,wd,Jituan,KuangM,Addr);
+      end;
+    end;
+
+    SetMapDisplayScale(5);
+end;
+
+procedure TForm_MapMain.ApplicationEvents1Message(var Msg: tagMSG;
+  var Handled: Boolean);
+var
+  mPoint:TPoint;
+begin
+    if IsChild(WebBrowser.Handle ,Msg.hwnd ) and
+        ((Msg.message = WM_RBUTTONDOWN ) or (MSg.message =WM_RBUTTONUP)) then  begin
+           GetCurSorPos(mPoint);
+           DispMapPop(mPoint.X ,mPoint.Y);
+           Handled:=True;
+        end;
+
+end;
+
+procedure TForm_MapMain.AppMsg(var Msg: TagMsg; var Handled: Boolean);
+var
+  mPoint: TPoint;
+begin
+  if IsChild(WebBrowser.Handle, Msg.Hwnd) and (Msg.Message = WM_MOUSEMOVE) then
+  begin
+    GetCursorPos(mPoint);
+    GetWebContent;
+    Handled := True;
+  end;
+end;
+
+procedure TForm_MapMain.BitBtn1Click(Sender: TObject);
+var
+  sql:string;
+begin
+  if (Click_Jd <> '') and (Click_wd <> '') then   begin
+     if MarkerSupportMap(SelectbZj_bh,Click_Jd,Click_wd,Select_J,Select_M,Select_A) then begin
+         Panel_Text.Caption  :='';
+         Select_M:='';
+         sql:='update KuangJingXinXiBiao set mapxbz=1 ,Jingdu='''+Click_Jd+''',weidu='''+Click_wd;
+         sql:=sql +''' where id='''+SelectbZj_bh+'''';
+         MainDataModule.MyCommand.CommandText:=sql;
+         MainDataModule.MyCommand.Execute(MainDataModule.ExUser);
+         BitBtn1.Enabled :=false;
+         InitSG_StringGrid;
+     end;
+  end;
+end;
+
+procedure TForm_MapMain.BitBtn2Click(Sender: TObject);
+var
+ s_sql:widestring;
+begin
+   if  Application.MessageBox('你确定要删除地图标注么？','操作提示',MB_ICONQUESTION+MB_OkCancel+MB_DEFBUTTON2)=idCancel then
+        exit;
+   s_sql:='update KuangJingXinXiBiao set mapxbz=0 where id='''+SelectbZj_bh+'''';
+   MainDataModule.MyCommand.CommandText:=s_sql;
+   MainDataModule.MyCommand.Execute(MainDataModule.ExUser);
+   InitSG_StringGrid;
+   ClearMapMarker ;
+   SetLocalMarker;
+   AddAllMarker;
+   BitBtn2.Enabled :=false;
+end;
+
+procedure TForm_MapMain.ClearMapMarker;
+begin
+   WebBrowser.OleObject.Document.parentWindow.execScript ('clearOverlays()', 'JavaScript');
+end;
+
+function TForm_MapMain.CreateClass: Boolean;
+begin
+
+end;
+
+procedure TForm_MapMain.DispMapPop(Px, Py: Integer);
+begin
+   if wholeScreen then  begin
+      if Click_Coalid <>'' then  begin
+         Pop_Open.Enabled :=true;
+      end else begin
+         Pop_Open.Enabled :=False;
+      end;
+      Popup_Map.Popup(px,py);
+   end;
+end;
+
+procedure TForm_MapMain.ExAddmarker;
+begin
+    ClearMapMarker ;
+    SetLocalMarker;
+    AddAllMarker;
+end;
+
+procedure TForm_MapMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+   Timer1.Enabled :=False;
+   if Assigned(Form_MapMain) then  FreeANdNil(Form_MapMain);
+end;
+
+procedure TForm_MapMain.FormCreate(Sender: TObject);
+begin
+
+  SelectRad:='1000';
+
+end;
+
+procedure TForm_MapMain.FormShow(Sender: TObject);
+begin
+   PubLic_Basic.InitStatusBar(self.StatusBar1);
+   Mapx_Out_in:= MainDataModule.ExAdminBool;
+   MarkOrSelect:=false;
+   initPanelLeft;
+   InitSG_StringGrid;
+   InitPanleMap;
+   MapVisual(true);
+
+end;
+
+procedure TForm_MapMain.GenerateJPEGfromBrowser(browser: iWebBrowser2;
+  jpegFQFilename: string; srcHeight, srcWidth, tarHeight, tarWidth: integer);
+var
+  sourceDrawRect: TRect;
+  targetDrawRect: TRect;
+  sourceBitmap  : TBitmap;
+  targetBitmap  : TBitmap;
+  aViewObject   : IViewObject;
+begin { GenerateJPEGfromBrowser }
+  sourceBitmap := TBitmap.Create;
+  targetBitmap := TBitmap.Create;
+ try
+    try
+      sourceDrawRect := Rect(0, 0, srcWidth, srcHeight);
+      sourceBitmap.Width := srcWidth;
+      sourceBitmap.Height := srcHeight;
+
+      aViewObject := browser as IViewObject;
+
+      if aViewObject=nil then    Exit;
+
+      OleCheck(aViewObject.Draw(DVASPECT_CONTENT, 1, nil, nil,
+                               Form_MapMain.Handle,
+                               sourceBitmap.Canvas.Handle,
+                               @sourceDrawRect, nil, nil, 0));
+
+      targetDrawRect := Rect(0, 0, tarWidth, tarHeight);
+      targetBitmap.Height := tarHeight;
+      targetBitmap.Width := tarWidth;
+      targetBitmap.Canvas.StretchDraw(targetDrawRect, sourceBitmap);
+
+      targetBitmap.SaveToFile(jpegFQFilename)
+    finally
+
+      sourceBitmap.Free;
+      targetBitmap.Free
+    end; { try }
+
+  except
+    // error handler code  end; { try }
+end; { GenerateJPEGfromBrowser }
+
+end;
+
+procedure TForm_MapMain.GetWebContent;
+var
+  html: IHTMLDocument2; // 定义网页元素
+  submitbutton: OleVariant; // 定义按钮
+  centerweidu, centerjingdu, weidu, jingdu, weidutemp,
+  jingdutemp,Coalid: IHTMLElement; // 定义网页输入元素
+begin
+  try
+    html := self.WebBrowser.Document as IHTMLDocument2;
+    centerweidu := html.all.item('centerweidu', 0) as IHTMLElement;
+    centerjingdu := html.all.item('centerjingdu', 0) as IHTMLElement;
+    weidu := html.all.item('weidu', 0) as IHTMLElement;
+    jingdu := html.all.item('jingdu', 0) as IHTMLElement;
+    weidutemp := html.all.item('weidutemp', 0) as IHTMLElement;
+    jingdutemp := html.all.item('jingdutemp', 0) as IHTMLElement;
+    Coalid:= html.all.item('Coalid', 0) as IHTMLElement;
+
+    if weidutemp <>nil  then
+       Myjingdu:= weidutemp.innerText;
+    if jingdutemp<>nil then
+       Myweidu:= jingdutemp.innerText;
+    if weidu<> nil then
+       Click_Jd:=weidu.innerText;
+    if jingdu <> nil then
+       Click_Wd:= jingdu.innerText;
+    if Coalid <> nil then
+       Click_Coalid:= Coalid.innerText else Click_Coalid:='';
+
+    if (Click_Jd<>'') and (Select_M <>'') and (MarkOrSelect) then
+        Panel_Text.Caption  :='当前定位煤矿为：' +Select_J+ '  ' + Select_M+ ';   ' +
+             ' 当前安放位置为经度'+Click_Jd +',  维度'+Click_Wd;
+    if (Click_Jd<>'') and (Select_M <>'') and (not MarkOrSelect) then
+        Panel_Text.Caption  :='当前标志中心点经度：'+Click_Jd +',  维度'+Click_Wd +
+                    '标注半径为：'+self.SelectRad +' 米';
+
+    StatusBar1.Panels[1].Text:='经度:'+MyJingdu +'   维度:' +MyWeidu;
+  except
+  end;
+end;
+
+
+
+procedure TForm_MapMain.initPanelLeft;
+begin
+      self.PanelLeft.Visible:=true;
+      SG_WBZ.ColCount :=4;
+      SG_WBZ.FixedCols:=1;
+      SG_WBZ.FixedRows:=1;
+      SG_WBZ.DefaultRowHeight:=18;
+      SG_WBZ.ColWidths[0]:=30;    SG_WBZ.Cells[0,0]:='序号';
+      SG_WBZ.ColWidths[1]:=80;    SG_WBZ.Cells[1,0]:='煤矿名称';
+      SG_WBZ.ColWidths[2]:=80;    SG_WBZ.Cells[2,0]:='集团公司';
+      SG_WBZ.ColWidths[3]:=80;    SG_WBZ.Cells[3,0]:='煤矿地址';
+
+      SG_YBZ.ColCount :=6;
+      SG_YBZ.FixedCols:=1;
+      SG_YBZ.FixedRows:=1;
+      SG_YBZ.DefaultRowHeight:=18;
+      SG_YBZ.ColWidths[0]:=30;    SG_YBZ.Cells[0,0]:='序号';
+      SG_YBZ.ColWidths[1]:=80;    SG_YBZ.Cells[1,0]:='集团公司';
+      SG_YBZ.ColWidths[2]:=80;    SG_YBZ.Cells[2,0]:='煤矿名称';
+      SG_YBZ.ColWidths[3]:=80;    SG_YBZ.Cells[3,0]:='经度';
+      SG_YBZ.ColWidths[4]:=80;    SG_YBZ.Cells[4,0]:='纬度';
+end;
+
+
+
+procedure TForm_MapMain.InitPanleMap;
+begin
+  PanelMap.Align:=alClient;
+  loadweb;
+  Click_Jd := '';
+  Click_wd := '';
+  timer1.Enabled := True;
+end;
+
+procedure TForm_MapMain.InitSG_StringGrid;
+var
+    I,J:integer;
+    bh,Str:widestring;
+
+begin
+     for I := 1 to SG_WBZ.RowCount - 1 do
+         for j := 0 to SG_WBZ.ColCount - 1 do
+                SG_WBZ.Cells[j,i]:='';
+       for I := 1 to SG_YBZ.RowCount - 1 do
+         for j := 0 to SG_YBZ.ColCount - 1 do
+                SG_YBZ.Cells[j,i]:='';
+
+      MainDataModule.MyDataSet.Close();
+      MainDataModule.MyDataSet.CommandText:='select id,Meikuangming,JituanName,Memo1 from KuangJingXinXiBiao where mapXbz=0  ';
+      MainDataModule.MyDataSet.Open();
+      i:=1;
+      while not MainDataModule.MyDataSet.Eof  do begin
+            self.SG_WBZ.Cells[0,i]:=MainDataModule.MyDataSet.FieldByName('id').AsString;
+            self.SG_WBZ.Cells[1,i]:=MainDataModule.MyDataSet.FieldByName('Meikuangming').AsString;
+            self.SG_WBZ.Cells[2,i]:=MainDataModule.MyDataSet.FieldByName('JituanName').AsString;
+            self.SG_WBZ.Cells[3,i]:=MainDataModule.MyDataSet.FieldByName('Memo1').AsString;
+            MainDataModule.MyDataSet.Next;
+            if Sg_WBZ.RowCount-2 <i then  Sg_WBZ.RowCount:=i+2;
+            i:=i+1;
+          end;
+      MainDataModule.MyDataSet.Close();
+      MainDataModule.MyDataSet.CommandText:='select id,Meikuangming,JituanName,Memo1,Jingdu,Weidu from KuangJingXinXiBiao where mapXbz=1 ';
+      MainDataModule.MyDataSet.Open();
+      i:=1;
+      while not MainDataModule.MyDataSet.Eof  do    begin
+            self.SG_YBZ.Cells[0,i]:=MainDataModule.MyDataSet.FieldByName('id').AsString;
+            bh:= MainDataModule.MyDataSet.FieldByName('id').AsString;;
+            self.SG_YBZ.Cells[1,i]:=MainDataModule.MyDataSet.FieldByName('Meikuangming').AsString;
+            self.SG_YBZ.Cells[2,i]:=MainDataModule.MyDataSet.FieldByName('JituanName').AsString;
+            str:= bh+'|'+MainDataModule.MyDataSet.FieldByName('JituanName').AsString+'|'+MainDataModule.MyDataSet.FieldByName('Meikuangming').AsString;
+            SG_YBZ.Cells[3,i]:=MainDataModule.MyDataSet.FieldByName('Jingdu').AsString;
+            SG_YBZ.Cells[4,i]:=MainDataModule.MyDataSet.FieldByName('weidu').AsString;
+            SG_YBZ.Cells[5,i]:=MainDataModule.MyDataSet.FieldByName('Memo1').AsString;;
+            if Sg_YBZ.RowCount-2 <i then  Sg_YBZ.RowCount:=i+2;
+             i:=i+1;
+            MainDataModule.MyDataSet.Next;
+
+          end;
+          StatusBar1.Panels.Items[1].Text :='' ;
+       MainDataModule.MyDataSet.Close();
+
+
+end;
+
+procedure TForm_MapMain.loadexcel(rowCount, colCount: integer; fileName: String;
+  var grid: TStringGrid);
+
+begin
+
+
+end;
+
+procedure TForm_MapMain.loadweb;
+var
+  sl: TStringList;
+  ms: TMemoryStream;
+begin
+  self.WebBrowser.Silent := True;
+  WebBrowser.Navigate('about:blank'); (WebBrowser.Document as IHTMLDocument2)
+  .URL := 'http://127.0.0.1/';
+  while WebBrowser.ReadyState < READYSTATE_INTERACTIVE do
+    Application.ProcessMessages;
+  if Assigned(WebBrowser.Document) then
+  begin
+    sl := TStringList.Create;
+    try
+      ms := TMemoryStream.Create;
+      try
+        sl.Text := Doc1;
+        sl.SaveToStream(ms);
+        ms.Seek(0, 0); (WebBrowser.Document as IPersistStreamInit)
+        .Load(TStreamAdapter.Create(ms));
+      finally
+        ms.Free;
+      end;
+    finally
+      sl.Free;
+    end;
+  end;
+
+
+end;
+
+procedure TForm_MapMain.MakeWindowsSingle(Single: integer);
+begin
+    if Single=0 then  begin
+         BorderStyle:=BsSizeable;
+         CoolBar1.Visible :=true;
+         StatusBar1.Visible :=true;
+         PageControl1.Visible:=true;
+         PanelLeft.Visible:=true;
+         Panel_Text.Visible:=true;
+         wholeScreen:=False;
+    end else begin
+         BorderStyle:=BsNone;
+         CoolBar1.Visible :=False;
+         StatusBar1.Visible :=False;
+         PanelLeft.Visible:=False;
+         PageControl1.Visible:=False;
+         WindowState:= wsMaximized;
+         Panel_Text.Visible:=False;
+         wholeScreen:=true;
+    end;
+
+end;
+
+procedure TForm_MapMain.MapVisual(Value: Boolean);
+begin
+
+       self.PanelMap.Visible :=Value;
+       self.PanelLeft.Visible :=Value;
+
+
+
+end;
+
+function TForm_MapMain.MarkerSupportMap(coalbh,jd,wd,Jituan,MeiKuang,Address:string):Boolean;
+var
+  DispLab:string;
+begin
+  Result:=true;
+   try
+      DispLab:=Jituan+'|'+MeiKuang;
+      WebBrowser.OleObject.Document.parentWindow.execScript
+      ('SetMeiKuangAddr('  + coalbh + ','+ jd + ',' + wd + ','''+DispLab+''','''+MeiKuang+''','''+Address+''')', 'JavaScript');
+
+   except
+      Result:=False;
+   end;
+end;
+
+procedure TForm_MapMain.OptionTip(Str: String);
+begin
+  self.StatusBar1.Panels[0].Text :=str;
+end;
+
+
+procedure TForm_MapMain.Pop_LoadAllClick(Sender: TObject);
+begin
+    ClearMapMarker ;
+    SetLocalMarker;
+    AddAllMarker;
+
+end;
+
+procedure TForm_MapMain.SaveWebBrowserToBmp;
+var
+  IDoc1: IHTMLDocument2;
+  Web  : iWebBrowser2;
+  tmpX, tmpY : integer;
+  Pic_Path:string;
+begin { TForm1.Button2Click }
+  Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\MainBmp.BMP';
+
+  with WebBrowser do   begin
+    Document.QueryInterface(IHTMLDocument2, IDoc1);
+    Web := ControlInterface;
+    tmpX := Height;
+    tmpY := Width;
+    Height := OleObject.Document.Body.getAttribute('scrollHeight', 0) + GetSystemMetrics(SM_CXVSCROLL)+3;// .ParentWindow.Screen.Height+1000;
+    Width := OleObject.Document.Body.getAttribute('scrollwidth', 0) + GetSystemMetrics(SM_CXVSCROLL)+3;//.ParentWindow.Screen.Width;
+    GenerateJPEGfromBrowser(Web, Pic_Path,
+                            Height, Width,
+                            Height, Width);
+    Height := tmpX;
+    Width := tmpY;
+
+  end; { with WebBrowser1 }
+
+end;
+
+function TForm_MapMain.searchByStationName(AName: string): Boolean;
+begin
+   Result:=true;
+   try
+      WebBrowser.OleObject.Document.parentWindow.execScript
+      ('searchByStationName(''' + AName +''')', 'JavaScript');
+
+   except
+      Result:=False;
+   end;
+end;
+
+procedure TForm_MapMain.SetLocalMarker;
+begin
+   //加注厂址坐标
+    WebBrowser.OleObject.Document.parentWindow.execScript ('SetLocalPoint()', 'JavaScript');
+end;
+
+procedure TForm_MapMain.SetMapDisplayScale(Value: integer);
+begin
+    WebBrowser.OleObject.Document.parentWindow.execScript
+           ('SetDisplayScale(' + intTostr(Value) + ')', 'JavaScript');
+end;
+
+procedure TForm_MapMain.SG_WBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+    MarkOrSelect:=true;
+    SelectbZj_bh :=Trim(SG_WBZ.Cells[0,ARow]);
+    Select_M:=Trim(SG_WBZ.Cells[1,ARow]);
+    Select_J:=Trim(SG_WBZ.Cells[2,ARow]);
+    Select_A:=Trim(SG_WBZ.Cells[3,ARow]);
+     if  length(trim(SelectbZj_bh))>0 then begin
+         BitBtn1.Enabled :=Mapx_Out_in;
+         Click_jd:='';Click_wd:='';
+//         if not searchByStationName(Select_M) then
+//           if not  searchByStationName(Select_J) then
+//              searchByStationName(Select_A) ;
+     end;
+end;
+
+procedure TForm_MapMain.SG_YBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+var
+  jd,wd:string;
+begin
+     jd:='';wd:='';
+     SelectbZj_bh :=Trim(SG_YBZ.Cells[0,ARow]);
+     if  length(trim(SelectbZj_bh))>0 then begin
+         BitBtn2.Enabled :=Mapx_Out_in;
+         jd :=Trim(SG_YBZ.Cells[3,ARow]);
+         wd :=Trim(SG_YBZ.Cells[4,ARow]);
+         if (jd<> '') and (wd<>'') then
+         WebBrowser.OleObject.Document.parentWindow.execScript
+           ('SetCenterView(' + jd + ',' + wd + ')', 'JavaScript');
+
+     end;
+end;
+
+procedure TForm_MapMain.Timer1Timer(Sender: TObject);
+begin
+     GetWebContent;
+end;
+
+procedure TForm_MapMain.ToolButton11Click(Sender: TObject);
+begin
+  if not self.PanelMap.Visible  then
+     MapVisual(true);
+  MarkOrSelect:=false;
+  if (Click_Jd <> '') and (Click_wd <> '') then     begin
+      self.WebBrowser.OleObject.Document.parentWindow.execScript
+      ('SearchSupport(' + Click_Jd + ',' + Click_wd + ', '+ SelectRad+')', 'JavaScript');
+  end;
+
+
+end;
+
+procedure TForm_MapMain.ToolButton12Click(Sender: TObject);
+begin
+   ClearMapMarker ;
+end;
+
+procedure TForm_MapMain.ToolButton14Click(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TForm_MapMain.ToolButton1Click(Sender: TObject);
+begin
+//   self.MapVisual(false);
+ 
+end;
+
+procedure TForm_MapMain.ToolButton2Click(Sender: TObject);
+begin
+  // self.SaveIntoDataBase;
+
+end;
+
+procedure TForm_MapMain.ToolButton4Click(Sender: TObject);
+begin
+   InitPanleMap;
+   MapVisual(true);
+
+end;
+
+procedure TForm_MapMain.ToolButton5Click(Sender: TObject);
+begin
+    SelectRad:=InputBox('查询半径录入', '请录入查询半径（米）', '1000') ;
+    if Public_basic.StrToDouble_Lu(SelectRad)  <100 then
+      SelectRad:='1000';
+
+end;
+
+procedure TForm_MapMain.ToolButton6Click(Sender: TObject);
+begin
+   AddAllMarker;
+end;
+
+procedure TForm_MapMain.ToolButton7Click(Sender: TObject);
+begin
+    SetLocalMarker;
+end;
+
+end.
+
+
+

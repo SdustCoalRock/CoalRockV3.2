@@ -1,0 +1,48 @@
+unit UReaddataThread;
+
+interface
+
+
+ uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.ComCtrls,uDrawGraphClass;
+
+
+ type
+
+     TReadDataThread=class(TThread)
+
+      private
+        DrawGzm:TDrawGrap;
+      protected
+        procedure Execute ;override;
+
+      public
+         destructor  Destroy; override;
+         constructor  Create(Value:Boolean;iDW:TDrawGrap);
+     end;
+
+implementation
+
+{ TReadDataThread }
+
+constructor TReadDataThread.Create(Value: Boolean; iDW: TDrawGrap);
+begin
+   Inherited  Create(Value) ; //继承 创建后 不启动 只有发出Resum才启动
+   FreeOnTerminate := True;
+   DrawGzm:=iDw;
+end;
+
+destructor TReadDataThread.Destroy;
+begin
+
+  inherited;
+end;
+
+procedure TReadDataThread.Execute;
+begin
+  inherited;
+   DrawGzm.LoadRockPressDataForConTour(1);
+end;
+
+end.

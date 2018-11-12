@@ -1,0 +1,6 @@
+object DataModule1: TDataModule1
+  OldCreateOrder = False
+  OnDestroy = DataModuleDestroy
+  Height = 528
+  Width = 622
+end

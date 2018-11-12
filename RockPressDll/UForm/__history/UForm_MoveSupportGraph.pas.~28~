@@ -1,0 +1,546 @@
+unit UForm_MoveSupportGraph;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ToolWin, Vcl.ExtDlgs,
+  System.ImageList, Vcl.ImgList, VclTee.TeeGDIPlus, VCLTee.TeEngine,
+  VCLTee.Series, VCLTee.TeeTools, Vcl.ExtCtrls, VCLTee.TeeProcs, VCLTee.Chart,
+  uDrawGraphClass, Vcl.Menus
+  ;
+
+type
+  TsupportMoveRec=record
+    gentime:TdateTime;
+    Support:integer;
+  end;
+  TUForm_MoveSupport = class(TForm)
+    ImageList1: TImageList;
+    SavePictureDialog1: TSavePictureDialog;
+    ToolBar2: TToolBar;
+    SaveButton: TToolButton;
+    Open_ToolForm: TToolButton;
+    ToolButton1: TToolButton;
+    ExitButton: TToolButton;
+    GraphChart: TChart;
+    SeriesPoint: TPointSeries;
+    StatusBar1: TStatusBar;
+    Panel_ProcessBar: TPanel;
+    FirstPGBar: TProgressBar;
+    SecondPGBar: TProgressBar;
+    PopupMenu_LineGraph: TPopupMenu;
+    LineGraphPop_Refresh: TMenuItem;
+    N7: TMenuItem;
+    LineGraphPop_SaveBMP: TMenuItem;
+    N5: TMenuItem;
+    Pop_Exit: TMenuItem;
+    procedure FormDestroy(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormCreate(Sender: TObject);
+    procedure GraphChartMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure GraphChartGetAxisLabel(Sender: TChartAxis; Series: TChartSeries;
+      ValueIndex: Integer; var LabelText: string);
+    procedure ExitButtonClick(Sender: TObject);
+    procedure ToolButton1Click(Sender: TObject);
+    procedure SaveButtonClick(Sender: TObject);
+    procedure Pop_ExitClick(Sender: TObject);
+    procedure LineGraphPop_RefreshClick(Sender: TObject);
+    procedure LineGraphPop_SaveBMPClick(Sender: TObject);
+  private
+     MySupportMove_count:integer;
+     MySupportMove:Array of TsupportMoveRec;
+     loadData:Boolean;
+     EXCaption:string;
+     JinDaotimeCount:integer;
+     JinDaotimeArray :Array of TContourFootageData;
+    { Private declarations }
+    procedure ClearMySupportMove;
+    procedure AddSupportMove(Rc:TsupportMoveRec);
+    procedure MakeLineGraphChartTitle(Chart: Tchart);
+    procedure SetChartAxisMaxAndMinValue(BottomAxis: TChartAxis;MaxV,MinV:double);
+     procedure MakeWindowsSingle(Single:integer);
+    procedure FillSeiesData(Series:TPointSeries);
+    //-----
+    function  GetJinDaoFromJinDaotimeArray(TD,DT:String):String;
+     // 加载数据
+     procedure ClearJinDaotimeArray;
+     procedure AddJinDaotimeArray(Rec:TContourFootageData);
+     procedure LoadJinDaoAndTime(MinDao,MaxDao:integer);
+     //
+     function  CreateSaveBmpPath:String; //创建保存图片的文件路径
+    function  LineGraphChartSaveIntoBMP(Path:string):Boolean;
+    function  GetLineGraphChartBmpFileName:String;  //获取LineGraph保存文件的文件名
+      // 控制 快捷工具栏
+     procedure DispLineGraphPop(Px,Py:Integer);//显示GraphChart 控制的工具栏
+  public
+     SupMove_DrawClass:TDrawGrap;  // 定义的类
+
+    procedure LoadsupportMoveData;
+    procedure InitForm(DW:TDrawGrap);
+    procedure RefreshChartGraph;
+    { Public declarations }
+  end;
+
+function CreateSupportMove(AHandle:THandle;ACaption:string;Wid,Hi,Single:integer):THandle;stdcall;
+
+var
+  UForm_MoveSupport: TUForm_MoveSupport;
+
+implementation
+
+{$R *.dfm}
+
+uses UMainDataModule, Lu_Public_BasicModual, UMakeRuleClass;
+//-------------------
+function CreateSupportMove(AHandle:THandle;ACaption:string;Wid,Hi,Single:integer):THandle;stdcall;
+{
+
+  Single 0 正常页面  1 全屏页面
+}
+begin
+        if Assigned(UForm_MoveSupport) then  FreeAndNil(UForm_MoveSupport);
+        Application.Handle :=AHandle;
+        UForm_MoveSupport:=TUForm_MoveSupport.Create(Application);
+
+         try
+           with UForm_MoveSupport do begin
+               EXCaption:=ACaption;
+             //  WindowState:= wsMaximized;
+               ParentWindow:=Ahandle;
+               MakeWindowsSingle(Single);
+
+               if Hi >Height then
+                   Top :=Round((Hi-Height)/3)  else   Top :=0;
+               if Wid> Width then
+                   Left:=Round((Wid-Width)/2)  else   Left:=0;
+
+               Show;
+               Result:=UForm_MoveSupport.Handle ;//函数值
+          end ;
+        except
+           FreeAndNil(UForm_MoveSupport);
+        end;
+
+
+end;
+{ TUForm_MoveSupport }
+
+procedure TUForm_MoveSupport.AddJinDaotimeArray(Rec: TContourFootageData);
+begin
+  inc(JinDaotimeCount);
+   setlength(JinDaotimeArray,JinDaotimeCount);
+   JinDaotimeArray[JinDaotimeCount-1]:=Rec;
+end;
+
+procedure TUForm_MoveSupport.AddSupportMove(Rc: TsupportMoveRec);
+begin
+   inc(MySupportMove_count);
+   setlength(MySupportMove,MySupportMove_count);
+   MySupportMove[MySupportMove_count-1]:=Rc;
+end;
+
+procedure TUForm_MoveSupport.ClearJinDaotimeArray;
+begin
+    JinDaotimeCount:=0;
+ setlength(JinDaotimeArray,JinDaotimeCount);
+end;
+
+procedure TUForm_MoveSupport.ClearMySupportMove;
+begin
+   MySupportMove_count:=0;
+   setlength(MySupportMove,0);
+end;
+
+function TUForm_MoveSupport.CreateSaveBmpPath: String;
+var
+ BmpPath:WideString;
+begin
+    BmpPath:=Public_Basic.Get_MyModulePath+'SaveBmp\KYFX\'+Trim(IntTostr(SupMove_DrawClass.FGzm.Gzmbh)) + '\'  ;
+    if  not DirectoryExists(BmpPath) then
+         ForceDirectories(BmpPath);
+
+    Result:=BmpPath;
+end;
+
+procedure TUForm_MoveSupport.DispLineGraphPop(Px, Py: Integer);
+begin
+    LineGraphPop_SaveBmp.Enabled :=true;
+    PopupMenu_LineGraph.Popup(px,py);
+end;
+
+procedure TUForm_MoveSupport.ExitButtonClick(Sender: TObject);
+begin
+    Close;
+end;
+
+procedure TUForm_MoveSupport.FillSeiesData(Series: TPointSeries);
+var
+  i:integer;
+begin
+    Series.Clear ;
+    for I := 0 to MySupportMove_count-1 do  begin
+        Series.AddXY(MySupportMove[i].gentime,MySupportMove[i].Support) ;
+    end;
+
+
+end;
+
+procedure TUForm_MoveSupport.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+    if Assigned(UForm_MoveSupport) then  FreeandNil(UForm_MoveSupport);
+
+end;
+
+procedure TUForm_MoveSupport.FormCreate(Sender: TObject);
+begin
+   Public_basic.InitStatusBar(StatusBar1);
+end;
+
+procedure TUForm_MoveSupport.FormDestroy(Sender: TObject);
+begin
+     ClearMySupportMove;
+end;
+
+function TUForm_MoveSupport.GetJinDaoFromJinDaotimeArray(TD,
+  DT: String): String;
+{ DT  JinDao, Down_Footage,Upper_Footage;}
+var
+  tmp_TD:TdateTime;
+  i,selectid:integer;
+begin
+    { JinDaotimeCount:integer;
+     JinDaotimeArray :Array of TContourFootageData;
+}
+    Result:='';
+    selectid:=-1;
+    if trim(TD) ='' then   exit;
+    tmp_TD:=StrToDateTime(TD,Public_Basic.FSetting);
+    for I := 0 to JinDaotimeCount-1 do begin
+       if i< JinDaotimeCount-1 then   begin
+          if (JinDaotimeArray[i].DT <= tmp_TD ) and (JinDaotimeArray[i+1].DT > tmp_TD) then  begin
+              selectid:=i;
+              break;
+          end;
+       end else  if i= JinDaotimeCount-1 then   begin
+          if (JinDaotimeArray[i].DT <= tmp_TD ) then begin
+              selectid:=i;
+              break;
+          end;
+       end;
+
+    end;
+
+    if selectid>0 then  begin
+       if DT='JinDao' then begin
+          Result:=IntTostr(JinDaotimeArray[i].Daoshu);
+       end else if  DT='Down_Footage' then begin
+          Result:=FormatFloat('0.0',JinDaotimeArray[i].Down_footage);
+       end else if  DT='Upper_Footage' then begin
+          Result:=FormatFloat('0.0',JinDaotimeArray[i].Upper_Footage);
+       end;
+
+    end;
+end;
+
+function TUForm_MoveSupport.GetLineGraphChartBmpFileName: String;
+var
+  MinLab,MaxLab:integer;
+begin
+   Result:='';
+   if SupMove_DrawClass.FGzm.Gzmbh <1 then  exit;
+   MinLab:=SupMove_DrawClass.DataTimeAndFootAge.Graph_MinDao;
+   MaxLab:=SupMove_DrawClass.DataTimeAndFootAge.Graph_MaxDao;
+   Result:='SMV_'+'_'+Trim(IntTostr(MinLab))+ '_'+Trim(IntTostr(MaxLab)) ;
+end;
+
+procedure TUForm_MoveSupport.GraphChartGetAxisLabel(Sender: TChartAxis;
+  Series: TChartSeries; ValueIndex: Integer; var LabelText: string);
+var
+  Raplab:string;
+  Text:String;
+begin
+        if Sender=GraphChart.BottomAxis.SubAxes.Items[0] then   begin
+            if SupMove_DrawClass.ConTourSeriesPar.Display_DownFootage =1 then  begin
+               Raplab:=GetJinDaoFromJinDaotimeArray(LabelText,'Down_Footage');
+               LabelText:=Raplab;
+
+            end;
+        end;
+
+
+       if Sender=GraphChart.BottomAxis then   begin
+            Raplab:=GetJinDaoFromJinDaotimeArray(LabelText,'JinDao');
+            LabelText:=Raplab;
+       end;
+
+       if Sender=GraphChart.TopAxis then   begin
+          Raplab:=GetJinDaoFromJinDaotimeArray(LabelText,'Upper_Footage');
+          LabelText:=Raplab;
+
+       end;
+ 
+end;
+
+procedure TUForm_MoveSupport.GraphChartMouseWheel(Sender: TObject;
+  Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+     if WheelDelta>0 then  begin  //滚轮  前推 放大
+         GraphChart.ZoomPercent( 110 );
+     end else begin   //滚轮  后滚 缩小
+         GraphChart.ZoomPercent( 90);
+     end;
+
+end;
+
+procedure TUForm_MoveSupport.InitForm(DW: TDrawGrap);
+begin
+   loadData:=False;
+   SupMove_DrawClass:=DW;
+   GraphChart.Align :=AlClient;
+end;
+
+function TUForm_MoveSupport.LineGraphChartSaveIntoBMP(Path: string): Boolean;
+var
+  FileName,tmp:string;
+begin
+   if trim(Path) <> '' then  begin
+          if SavePictureDialog1.FilterIndex =2 then  begin
+             if ExtractFileExt(SavePictureDialog1.FileName) <> '.jpg' then
+                 SavePictureDialog1.FileName := ChangeFileExt(SavePictureDialog1.FileName,'.jpg');
+          end else if SavePictureDialog1.FilterIndex =3 then  begin
+             if ExtractFileExt(SavePictureDialog1.FileName) <> '.png' then
+                 SavePictureDialog1.FileName := ChangeFileExt(SavePictureDialog1.FileName,'.png');
+          end else  begin
+             if ExtractFileExt(SavePictureDialog1.FileName) <> '.bmp' then
+                 SavePictureDialog1.FileName := ChangeFileExt(SavePictureDialog1.FileName,'.bmp');
+          end;
+          GraphChart.SaveToBitmapFile(SavePictureDialog1.FileName);
+          if Public_Basic.Licensing  then  Public_Basic.AddSingleTextWaterFromFile(SavePictureDialog1.FileName)
+            else Public_Basic.AddMultTextWaterFormFile(SavePictureDialog1.FileName);
+   end else begin
+      tmp:=GetLineGraphChartBmpFileName;
+      if tmp ='' then  exit;
+      FileName:=CreateSaveBmpPath+ tmp +'_'+'0.bmp';
+      GraphChart.SaveToBitmapFile(FileName);
+      if Public_Basic.Licensing  then  Public_Basic.AddSingleTextWaterFromFile(FileName)
+            else Public_Basic.AddMultTextWaterFormFile(FileName);
+
+   end;
+
+end;
+
+procedure TUForm_MoveSupport.LineGraphPop_RefreshClick(Sender: TObject);
+begin
+     RefreshChartGraph;
+end;
+
+procedure TUForm_MoveSupport.LineGraphPop_SaveBMPClick(Sender: TObject);
+begin
+   SavePictureDialog1.Execute ;
+   LineGraphChartSaveIntoBMP(SavePictureDialog1.FileName);
+end;
+
+procedure TUForm_MoveSupport.LoadJinDaoAndTime(MinDao, MaxDao: integer);
+var
+  sql,Strdt:string;
+  MaxTime:TDateTime;
+  Rd:TJinDaoRecord;
+  MySqlDataSet1 :TMyDataSet;
+  rec:TContourFootageData;
+begin
+    MySqlDataSet1:=TMyDataSet.Create(nil);
+    MySqlDataSet1.MySqlConnection :=MainDataModule.ExConn;
+
+    MySqlDataSet1.Close ;
+
+   Strdt:=Public_Basic.ReturnDateTimeString(MainDataModule.DataType ,MaxTime);
+
+   Sql:=' select * from  D_'+IntToStr(SupMove_DrawClass.FGzm.Gzmbh)+'_footage ' +
+        ' where  DaoShu >= ' + IntTostr(MinDao) +  ' and  DaoShu <= ' + IntToStr(MaxDao) +
+        ' order by Daoshu  ' ;
+   self.ClearJinDaotimeArray;
+   MySqlDataSet1.CommandText :=sql;
+   try
+      if MySqlDataSet1.Open then
+       while not MySqlDataSet1.Eof  do  begin
+          SupMove_DrawClass.StepProcegressBar(FirstPGBar,SecondPGBar,0,10);
+          rec.DT :=MySqlDataSet1.FieldByName('FootDay').AsDateTime;
+          rec.Down_footage:=MySqlDataSet1.FieldByName('sumdownfootage').AsFloat;
+          rec.Upper_Footage:=MySqlDataSet1.FieldByName('sumUpperfootage').AsFloat;
+          rec.Daoshu:=MySqlDataSet1.FieldByName('DaoShu').AsInteger;
+          AddJinDaotimeArray(Rec);
+          MySqlDataSet1.Next;
+       end;
+   finally
+      MySqlDataSet1.Close ;
+      FreeAndNil(MySqlDataSet1);
+   end;
+end;
+
+procedure TUForm_MoveSupport.LoadsupportMoveData;
+var
+  sql1:string;
+  St_dt,ed_dt:string;
+  SupportBh:integer;
+  tmp:TsupportMoveRec;
+begin
+    ClearMySupportMove;
+    SupMove_DrawClass.SetProcegressBarVisual(Panel_ProcessBar,FirstPGBar,SecondPGBar,true,100,100);
+    St_dt:=Public_Basic.ReturnDateTimeString(MainDataModule.DataType ,SupMove_DrawClass.DataTimeAndFootAge.StartTime);
+    ed_dt:=Public_Basic.ReturnDateTimeString(MainDataModule.DataType ,SupMove_DrawClass.DataTimeAndFootAge.EndTime);
+     Sql1:=' select * from  D_'+IntToStr(SupMove_DrawClass.FGzm.Gzmbh)+'_SupportMoveInfo ' +
+               ' where endtime >= ' + St_dt + ' and endtime <= ' +ed_dt+ ' order by SupportBh';
+     MainDataModule.MyDataSet.Close ;
+     MainDataModule.MyDataSet.CommandText :=sql1;
+     SupportBh:=0;
+     try
+         if MainDataModule.MyDataSet.Open then begin
+            while not MainDataModule.MyDataSet.Eof  do begin
+                 if SupportBh <> MainDataModule.MyDataSet.FieldByName('Supportbh').AsInteger then  begin
+                    SupportBh:=MainDataModule.MyDataSet.FieldByName('Supportbh').AsInteger;
+                    SupMove_DrawClass.StepProcegressBar(FirstPGBar,SecondPGBar,1,0);
+                 end;
+                 SupMove_DrawClass.StepProcegressBar(FirstPGBar,SecondPGBar,0,10);
+                 tmp.gentime :=MainDataModule.MyDataSet.FieldByName('endtime').AsDateTime;
+                 tmp.Support :=SupportBh;
+                 AddSupportMove(tmp);
+                 MainDataModule.MyDataSet.Next
+            end;
+         end;
+     finally
+        MainDataModule.MyDataSet.Close ;
+        loadData:=true;
+     end;
+     //提取进刀信息
+      LoadJinDaoAndTime(SupMove_DrawClass.DataTimeAndFootAge.Graph_MinDao,
+                     SupMove_DrawClass.DataTimeAndFootAge.Graph_MaxDao);
+     SupMove_DrawClass.SetProcegressBarVisual(Panel_ProcessBar,FirstPGBar,SecondPGBar,False,0,0);
+end;
+
+procedure TUForm_MoveSupport.MakeLineGraphChartTitle(Chart: Tchart);
+var
+ Caption:String;
+ lowTime,highTime,InterValTime:integer;
+ i:integer;
+begin
+
+    Chart.Title.Font.Color :=ClBlack;
+    Caption:= MainDataModule.Coal_Name+'煤矿【'+MainDataModule.WorkFace_Name +'工作面】液压支架移架散点图';
+
+    Chart.MarginLeft :=80;
+    Chart.Title.TextAlignment:=taCenter;
+    Chart.Title.Font.Name :='黑体';
+    Chart.Title.Font.Size :=14;
+    Chart.Title.Caption := Caption;
+
+    Chart.SubTitle.Font.Color :=ClBlack;
+    Chart.SubTitle.TextAlignment:=taCenter;
+    Chart.SubTitle.Font.Name :='宋体';
+    Chart.SubTitle.Font.Size :=9;
+
+    Caption:='起止日期:'+FormatDateTime('yyyy-mm-dd hh:nn ',SupMove_DrawClass.DataTimeAndFootAge.StartTime)
+                            +'('+FormatFloat('0.00',SupMove_DrawClass.DataTimeAndFootAge.Minfootage)+  '米)--' +
+                             FormatDateTime('yyyy-mm-dd hh:nn ',SupMove_DrawClass.DataTimeAndFootAge.EndTime) +
+                             '('+FormatFloat('0.00',SupMove_DrawClass.DataTimeAndFootAge.MAXfootage)+  '米)';
+
+    Chart.SubTitle.Caption := Caption;
+    Chart.SubTitle.Font.Color :=ClBlack;
+
+    Chart.BottomAxis.Visible :=true;
+    Chart.BottomAxis.DateTimeFormat:='YYYY-MM-DD HH:NN:SS' ;
+    Chart.TopAxis.Visible :=true;
+    Chart.TopAxis.DateTimeFormat:='YYYY-MM-DD HH:NN:SS' ;
+    Chart.BottomAxis.SubAxes.Items[0].Visible :=true;
+    Chart.BottomAxis.SubAxes.Items[0].DateTimeFormat:='YYYY-MM-DD HH:NN:SS' ;
+    //控制坐标横轴的显示方式
+     Chart.ScrollMouseButton:=mbleft;
+     Chart.AllowPanning:=pmHorizontal;
+
+    Chart.BottomAxis.Title.Caption :='累计进刀';
+    Chart.BottomAxis.Title.Position  :=tpStart ;
+
+    if  SupMove_DrawClass.ConTourSeriesPar.Display_DownFootage=1 then  begin
+      Chart.BottomAxis.SubAxes.Items[0].Title.Caption:='累计进尺(米)';
+    end else begin
+      Chart.BottomAxis.SubAxes.Items[0].Title.Caption:='开采时间';
+    end;
+
+    Chart.BottomAxis.SubAxes.Items[0].Title.Position:=tpEnd;
+
+
+    Chart.TopAxis.Visible :=true;
+    Chart.TopAxis.Title.Caption:='累计进尺';
+    Chart.TopAxis.Title.Position :=tpend;
+
+    Chart.LeftAxis.Title.Caption :='液压支架编号';
+    Chart.LeftAxis.Title.Position  :=tpCenter ;
+    //
+    Chart.BottomAxis.Automatic :=false;
+    Chart.BottomAxis.Minimum:=0;
+    Chart.BottomAxis.Maximum:=SupMove_DrawClass.DataTimeAndFootAge.StartTime+4;
+    Chart.BottomAxis.Minimum:=SupMove_DrawClass.DataTimeAndFootAge.StartTime;
+    Chart.TopAxis.Automatic :=false;
+    Chart.TopAxis.Minimum:=0;
+    Chart.TopAxis.Maximum:=SupMove_DrawClass.DataTimeAndFootAge.StartTime+4;
+    Chart.TopAxis.Minimum:=SupMove_DrawClass.DataTimeAndFootAge.StartTime;
+    // 把 工具条隐藏
+    Chart.Legend.Visible:=False;
+end;
+
+procedure TUForm_MoveSupport.MakeWindowsSingle(Single: integer);
+begin
+     if Single=0 then  begin
+         BorderStyle:=BsSizeable;
+         ToolBar2.Visible :=true;
+         StatusBar1.Visible :=true;
+     end else begin
+         BorderStyle:=BsNone;
+         ToolBar2.Visible :=False;
+         StatusBar1.Visible :=False;
+     end;
+end;
+
+procedure TUForm_MoveSupport.Pop_ExitClick(Sender: TObject);
+begin
+   Close;
+end;
+
+procedure TUForm_MoveSupport.RefreshChartGraph;
+begin
+   SeriesPoint.HorizAxis:=aBothHorizAxis ;
+   MakeLineGraphChartTitle(GraphChart);
+
+   if loadData then
+      FillSeiesData(SeriesPoint);
+   LineGraphChartSaveIntoBMP('');
+
+end;
+
+procedure TUForm_MoveSupport.SaveButtonClick(Sender: TObject);
+begin
+   RefreshChartGraph;
+end;
+
+procedure TUForm_MoveSupport.SetChartAxisMaxAndMinValue(BottomAxis: TChartAxis;
+  MaxV, MinV: double);
+begin
+  BottomAxis.Automatic :=False;
+  BottomAxis.Minimum :=0;
+  if MaxV <10 then    BottomAxis.Maximum:=10
+         else   BottomAxis.Maximum := MaxV;
+  if MinV< MaxV then  begin
+     BottomAxis.Minimum :=MinV;
+  end;
+end;
+
+procedure TUForm_MoveSupport.ToolButton1Click(Sender: TObject);
+begin
+   SavePictureDialog1.Execute ;
+   LineGraphChartSaveIntoBMP(SavePictureDialog1.FileName);
+end;
+
+end.

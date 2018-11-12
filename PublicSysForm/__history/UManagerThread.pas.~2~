@@ -1,0 +1,62 @@
+unit UManagerThread;
+
+interface
+uses
+    Classes,uDisPoseData, GzmClass,ADODB,SysUtils ;
+type
+  TFinishedEvent = procedure (TotalNumber,Supbh:integer;eTime:String;SuC:Boolean) of object;
+
+  TManageThread=class(TThread)
+   private
+      TotalNumber:Integer;
+      FGzmbh:String;
+      FSupbh:integer;
+      succeed:Boolean;
+      EspTime:String;
+      OnFinished:TFinishedEvent;
+      FDisPose:TDisposeData;
+      FGzm:TGzm;
+      Fsconn:String;
+      procedure ReturnFinished;
+   protected
+      procedure Execute ;override;
+
+   public
+      destructor Destroy;
+      constructor  Create(uObjusers:TDisposeData;tGzm:TGzm;sconn,Gzmbh:string;supbh:integer);
+
+      property  FinishedEvent: TFinishedEvent read OnFinished write OnFinished;
+  end;
+
+
+implementation
+
+{ TManageThread }
+
+constructor TManageThread.Create(uObjusers: TDisposeData; tGzm: TGzm; sconn,
+  Gzmbh: string; supbh: integer);
+begin
+     FDisPose:=uObjusers;
+     FGzm:=tGzm;
+     FGzmbh:=Gzmbh;
+     FSupbh:=Supbh;
+     Fsconn:=sConn;
+end;
+
+destructor TManageThread.Destroy;
+begin
+
+end;
+
+procedure TManageThread.Execute;
+begin
+  inherited;
+
+end;
+
+procedure TManageThread.ReturnFinished;
+begin
+
+end;
+
+end.

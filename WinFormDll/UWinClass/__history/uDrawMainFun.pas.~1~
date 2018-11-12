@@ -1,0 +1,220 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：uMainform.pas
+//<<      卢国志使用的个人Delphi文件                            <<
+//<<      该文件主要记录了个人函数                   <<
+//<<      创建日期：2016.5.12                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+unit uDrawMainFun;
+
+interface
+uses
+  Winapi.Windows, SysUtils, Classes, Messages, Controls, Forms, StdCtrls, ExtCtrls,
+  ComCtrls ,math,Grids,WordXP,COMobj,SQLiteTable3,StrUtils,Vcl.Dialogs,
+  uDataModule,MySQLDataSet,SyncObjs;
+
+type
+  TMyMainForm =class (TObject)
+  private
+        judgelegal: Boolean ;
+        StepOrTime :string;
+
+        function TestDataBaseParameter(const Dtype, IP, User, Password,  Path: WideString): WordBool;  safecall;
+
+
+        function isActiveThread:Boolean;
+
+
+
+  public
+           function  OpenCoalNameForm(AHandle:THandle;ACaption:string):Boolean;safecall;
+
+           constructor Create;
+           destructor Destroy;override;
+          //日志文件
+           function Get_DllPath: WideString; safecall;
+           procedure WriteLog(const data:Ansistring; FFM : Ansistring='FFQ');
+           procedure CreateXmLSavepath;
+  end;
+
+// ======================
+//全局变量
+   var
+   MyMainForm:TMyMainForm; // 外部可以调用
+   FsyncSQL:Trtlcriticalsection;
+
+
+  //声明函数
+    function  GetProcessThreadExist( const ProcessName: WideString): WordBool;
+
+   
+implementation
+// 局部变量，仅限本函数使用
+
+
+uses UncoalName;
+//==========================================
+var   //公共变量
+        dllPath :string;
+        uMyDataModule:TMyDataModule;
+
+       // Lu_Stope
+
+
+
+//============================================
+
+ //获取线程的是否存在
+function GetProcessThreadExist( const ProcessName: WideString): WordBool;
+var
+    ExitCode: DWord;
+    Name:String;
+begin
+    Name:=UpperCase(ProcessName);
+//    if Name='FIRSTPROCESS' then      //FirstProcess
+//          GetExitCodeThread(hFirstThread, ExitCode);
+//
+//    if Name='SECONDPROCESS' then   //second thread
+//        if Assigned(hSecondThread) then
+//          GetExitCodeThread(hSecondThread.Handle, ExitCode);
+//
+//    if Name='THIRDPROCESS' then   begin  //Third thread
+//        if Assigned(hThirdThread) then
+//            GetExitCodeThread(hThirdThread.Handle, ExitCode);
+//         if Assigned(Time_ThirdThread) then
+//            GetExitCodeThread(Time_ThirdThread.Handle, ExitCode);
+//    end;
+//
+//    if Name='FOUTHPROCESS' then   begin //fourth thread
+//         if Assigned(hFourthThread) then
+//            GetExitCodeThread(hFourthThread.Handle, ExitCode);
+//         if Assigned(Time_FourthThread) then
+//            GetExitCodeThread(Time_FourthThread.Handle, ExitCode);
+//    end;
+//
+//
+//    if  Name='APPOINTFOOTAGE' then     //the FootAge
+//         if Assigned(hFootAgeThread) then
+//          GetExitCodeThread(hFootAgeThread.Handle, ExitCode);
+//
+//    if  Name='STARTSERVICE' then     //the 服务线程
+//          GetExitCodeThread(hservice, ExitCode);
+//
+//    if  Name='FORCASE' then    //forcase
+//        if Assigned(hForCaseThread) then
+//          GetExitCodeThread(hForCaseThread.Handle, ExitCode);
+//    if  Name='HISTORYRESULT' then    //hGetHisForcaseResule
+//        if Assigned(hGetHisForcaseResule) then
+//          GetExitCodeThread(hGetHisForcaseResule.Handle, ExitCode);
+//   if  Name='SUPPORTMOVEINFO' then    //SupportMoveIfo
+//        if Assigned(hSupportMoveThread) then
+//          GetExitCodeThread(hSupportMoveThread.Handle, ExitCode);
+
+
+
+    //  统一处理
+    if ExitCode = STILL_ACTIVE then
+       Result:=true
+     else
+       Result:=False;
+
+
+end;
+
+constructor TMyMainForm.Create;
+begin
+      //获取dllpath
+      Get_dllPath;
+
+       //初始化   //创建数据录入类
+      //连接sqlit数据库
+      uMyDataModule:=TMyDataModule.Create ;
+      uMyDataModule.initsqliteData;
+   initializecriticalsection(FsyncSQL);
+end;
+
+procedure TMyMainForm.CreateXmLSavepath;
+begin
+
+end;
+
+destructor TMyMainForm.Destroy;
+begin
+
+  inherited;
+end;
+
+function TMyMainForm.Get_DllPath: WideString;
+var
+   ModuleName:WideString;
+   i:integer;
+begin
+          SetLength(ModuleName, 255);
+          GetModuleFileName(HInstance, PwideChar(ModuleName), Length(ModuleName));
+          dllPath:=Trim(PwideChar(ModuleName)) ;
+          i:=Pos('\',ReverseString(dllPath));
+
+          dllPath:=Copy(dllPath,1,Length(dllPath)-i+1);
+          Result:=dllPath;
+end;
+
+function TMyMainForm.isActiveThread: Boolean;
+begin
+
+end;
+
+function TMyMainForm.OpenCoalNameForm(AHandle: THandle;
+  ACaption: string): Boolean;
+begin
+   CreatecoalName_inn(AHandle,ACaption);
+end;
+
+function TMyMainForm.TestDataBaseParameter(const Dtype, IP, User, Password,
+  Path: WideString): WordBool;
+var
+   uPass:Boolean;
+   Inn_Dtype:String;
+begin
+      Inn_Dtype:=UpperCase(Dtype);
+      uMyDataModule.SetExDataType(Inn_Dtype);
+      uMyDataModule.SetExDBaseInfo(Ip,User,Password);
+     if (Inn_Dtype= 'SQLSERVER') or(Inn_Dtype= 'SQL SERVER') then  begin
+         uPass:= uMyDataModule.TestServer(Inn_Dtype) ;
+     end else if (Inn_Dtype= 'MYSQL') or (Inn_Dtype= 'MY SQL') then  begin
+         uPass:= uMyDataModule.TestMySql(Inn_Dtype) ;
+     end;
+
+     if uPass then begin
+        Result:=true;
+     end else begin
+        Result:=false;
+     end;
+end;
+
+procedure TMyMainForm.WriteLog(const data:Ansistring; FFM : Ansistring='FFQ' );
+var
+  fileName,textString:Ansistring;
+  DirName:Ansistring;
+  hFile,logFile:integer;
+begin
+   DirName:=Get_DllPath+'\Err\'+FormatDateTime('yyyy-mm-dd',Now())+'\';
+    if not DirectoryExists(DirName) then begin
+       ForceDirectories(DirName);
+    end;
+   fileName:=Ansistring(FormatDateTime('yyyy-mm-dd',Now())) + FFM +'.txt';
+   fileName:=DirName+fileName;
+   if not(FileExists(fileName)) then begin
+       hFile:=FileCreate(fileName,fmOutput);
+       FileClose(hFile);
+   end;
+   logFile:=FileOpen(filename,fmOpenwrite or fmShareDenyWrite);
+   FileSeek(logfile,0,2);
+   textString:=formatdateTime('hh:mm:ss:zzz',Now())+'  ' +data + #13 +#10 ;
+   fileWrite(logFile,Pchar(textString)^,length(textString));
+   fileclose(logfile);
+
+end;
+
+end.

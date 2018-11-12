@@ -1,0 +1,244 @@
+unit DataService;
+
+interface
+uses
+ Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls
+  ,UMainDataModule
+  ;
+ type
+  TDataService =Class
+  private
+     function splitFootStepParameters(istr:string):integer;
+  public
+     function GetUserNameList(DataType:String):WideString;
+     function UserPasswordVifty(User_Id, Password: string): Boolean;
+     function GetMainFormVersion(const Version:integer;var BmpFile:Pansichar):Pansichar;
+     function GetImageFromDataBase(tableName,Imagefield,FileField,idName:string;idValue:integer;BMap: TBitMap):Boolean;
+     function GetMeiKuangInformation: Pansichar;
+     function GetWorkFaceDataType(workid:integer):integer;
+     function GetWorkFaceBhList(Mkid:integer):String;
+  End;
+
+//  Var
+//    Basic_DataService:TDataService;
+
+implementation
+
+{ TDataService }
+uses
+  pngimage,JPeg, Lu_Public_BasicModual;
+
+function TDataService.GetImageFromDataBase(tableName, Imagefield,FileField,
+  idName: string; idValue: integer; BMap: TBitMap): Boolean;
+Var
+    SQL,ExtName,FileName:String;
+    FS:TMemoryStream;
+    Png:TPngObject;
+    jpg: TJPEGImage;
+    retR:Boolean;
+    MyDataSet:TMyDataSet;
+begin
+   Result:=False;
+   try
+      FS := TMemoryStream.Create ;
+      MyDataSet:=TMyDataSet.Create(nil);
+      MyDataSet.MySqlConnection := MainDataModule.ExConn;
+      MyDataSet.SetFieldImageName(tableName,Imagefield);
+      retR:= MyDataSet.ReadImageFromTAble(idName,FileField, idValue,FS,FileName) ;
+
+      if retR then  begin
+         ExtName:=UpperCase(Extractfileext(FileName));
+         FS.Position := 0;
+         if ExtName='.PNG' then begin
+           Png:=TPngObject.Create;
+           png.LoadFromStream(FS);
+           Bmap.Assign(PNG);
+           Png.Free ;
+         end else if ExtName='.BMP' then begin
+           Bmap.LoadFromStream(FS);
+         end else if ExtName='.JPG' then begin
+            jpg := TJPEGImage.Create;
+            jpg.LoadFromStream(FS);
+            Bmap.Assign(jpg); // 因为 img 控件是基于bmp的
+            jpg.Free;
+         end;
+      end;
+      Result:=True;
+    finally
+       FS.Free;
+       MyDataSet.Close ;
+       FreeAndNil(MyDataSet);
+    end;
+
+end;
+
+function TDataService.GetMainFormVersion(const Version: integer;
+  var BmpFile: Pansichar): Pansichar;
+var
+  BmpF,Caption:string;
+  sql:string;
+begin
+  BmpFile:='';
+  Result:='';
+  if  MainDataModule.MySqliteDataBase.GetMainVersion(Version,BmpF,Caption)  then begin
+      BmpFile:=Pansichar(Ansistring(BMpF));
+      Result:= Pansichar(Ansistring(Caption));
+  end;
+end;
+
+function TDataService.GetMeiKuangInformation: Pansichar;
+Var
+  Sql,Pic_Path,ImisF:String;
+  Result_Str:String;
+  Bitmap:TBitMap;
+  Mkid:integer;
+  MyDataSet:TMyDataSet;
+  UpdateCoal:Boolean;
+begin
+   MyDataSet:=TMyDataSet.Create(nil);
+   MyDataSet.MySqlConnection:= MainDataModule.ExConn;
+
+   MyDataSet.Close ;
+   Result_Str:='';
+   UpdateCoal:=public_Basic.ReadUpdataCoalBmp;
+   Bitmap:=TBitmap.Create ;
+   Sql:='select id,JituanName,Meikuangming,Memo1,Jingdu,weidu from KuangJingXinXiBiao where  mapXbz=1  order by id '  ;
+   MyDataSet.CommandText:=sql;
+   try
+   if MyDataSet.Open  then
+       while not MyDataSet.eof do    begin
+         ImisF:='0';
+         Mkid:=MyDataSet.FieldByName('id').AsInteger;
+         Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\DataBase_'+IntToStr(Mkid)+'.BMP';
+         if (not FileExists(Pic_Path))  or (UpdateCoal) then   begin
+            if GetImageFromDataBase('KuangJingXinXiBiao','MemoBMP','ImageFileName','id',Mkid,Bitmap) then begin
+               Bitmap.SaveToFile(Pic_Path);
+               ImisF:='1';
+            end;
+         end else begin
+             ImisF:='1';
+         end;
+         Result_Str:=Result_Str+intTostr(Mkid)+',';
+         {Meikuangming,JituanName,Memo1}
+         Result_Str:=Result_Str+ MyDataSet.FieldByName('JituanName').AsString+',';
+         Result_Str:=Result_Str+ MyDataSet.FieldByName('Meikuangming').AsString+',';
+         Result_Str:=Result_Str+ MyDataSet.FieldByName('Memo1').AsString+',';
+         Result_Str:=Result_Str+ MyDataSet.FieldByName('Jingdu').AsString+',';
+         Result_Str:=Result_Str+ MyDataSet.FieldByName('weidu').AsString+',';
+         Result_Str:=Result_Str+ ImisF+';';
+         MyDataSet.Next ;
+       end;
+       MyDataSet.Close ;
+   finally
+     Bitmap.Free;
+     FreeAndNil(MyDataSet);
+     public_Basic.WriteUpdateCoalBmp(False);
+   end;
+   Result:= Pansichar(Ansistring(Result_Str));
+end;
+
+function TDataService.GetUserNameList(DataType: String): WideString;
+Var
+  Sql,t_s1:String;
+  Result_Str:String;
+begin
+   MainDataModule.MyDataSet.Close ;
+   Result_Str:='';
+   Sql:=' Select id,UserName from UserInfo where Used=1 and  '+
+        ' User_Type=' +DataType+
+        ' order by id';
+   MainDataModule.MyDataSet.CommandText:=sql;
+     if MainDataModule.MyDataSet.Open  then
+       while not MainDataModule.MyDataSet.eof do    begin
+           t_s1:='';
+           t_s1:=Trim(MainDataModule.MyDataSet.FieldByName('id').AsString) ;
+           t_s1:=t_s1+'_'+Trim(MainDataModule.MyDataSet.FieldByName('UserName').AsString) ;
+
+           Result_Str:=Result_Str+ t_s1+',';
+           MainDataModule.MyDataSet.Next ;
+       end;
+    MainDataModule.MyDataSet.Close ;
+    Result:=Result_str;
+end;
+
+function TDataService.GetWorkFaceBhList(Mkid: integer): String;
+var
+ sql,pramtart:string;
+begin
+    pramtart:='';
+//    sql:=' select cqid as AA from cqcsb as c,WorkFaceBuillDrill as w where c.kid='+inttostr(Mkid) + ' and c.qyzt=1' +
+//         ' w.gzmid= c.cqid ';
+    sql:=' select cqid as AA from cqcsb as c  where c.kid='+inttostr(Mkid) + ' and c.qyzt=1' ;
+
+     MainDataModule.MyDataSet.Close ;
+     try
+         MainDataModule.MyDataSet.CommandText:= sql;
+         if MainDataModule.MyDataSet.Open  then
+           while not MainDataModule.MyDataSet.Eof do begin
+               pramtart:=pramtart+MainDataModule.MyDataSet.FieldByName('AA').AsString+ ',';
+               MainDataModule.MyDataSet.Next ;
+           end;
+
+     finally
+       MainDataModule.MyDataSet.Close ;
+     end;
+     Result:=pramtart;
+
+end;
+
+function TDataService.GetWorkFaceDataType(workid: integer): integer;
+var
+ sql,pramtart:string;
+begin
+    pramtart:='';
+    sql:='select Memo1 from cqcsb where cqID='+inttostr(workid);
+     MainDataModule.MyDataSet.Close ;
+     try
+         MainDataModule.MyDataSet.CommandText:= sql;
+         if MainDataModule.MyDataSet.Open  then
+            if MainDataModule.MyDataSet.RecordCount >0 then
+                 pramtart:=MainDataModule.MyDataSet.FieldByName('Memo1').AsString
+
+     finally
+       MainDataModule.MyDataSet.Close ;
+     end;
+     Result:=splitFootStepParameters(pramtart);
+end;
+
+function TDataService.splitFootStepParameters(istr: string): integer;
+var
+   s_temp,S2:Str_DT_array;
+   C1,C2:integer;
+   DataType:integer;
+begin
+     s_temp:=Public_Basic.split(istr,'&',C1);
+     S2:=Public_Basic.split(s_temp[0],',',C2);
+     if C2>7  then  begin
+        DataType:=Public_Basic.StrToInt_lu(S2[7]) ;
+     end else begin
+        DataType:=1;
+     end;
+     Result:=DataType;
+end;
+
+function TDataService.UserPasswordVifty(User_Id, Password: string): Boolean;
+begin
+     Result:=False;
+     MainDataModule.MyDataSet.Close ;
+     try
+         MainDataModule.MyDataSet.CommandText:= 'SELECT * from UserINFo' +
+                               ' where id ='+User_Id +' ';
+         if MainDataModule.MyDataSet.Open  then
+            if MainDataModule.MyDataSet.RecordCount >0 then  begin
+               if UpperCase(Trim(MainDataModule.MyDataSet.FieldByName('User_Password').AsString))
+                  =UpperCase(Password) then   Result:=True;
+
+            end;
+     finally
+       MainDataModule.MyDataSet.Close ;
+     end;
+
+end;
+
+end.

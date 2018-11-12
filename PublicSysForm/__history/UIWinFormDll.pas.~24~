@@ -1,0 +1,71 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：uUWinFormDll.pas                          <<
+//<<      lulei使用的个人Delphi文件 主要是数据维护界面       <<
+//<<      该文件是UWinFormDll.dll delphi  引用文件           <<
+//<<      该文件与 dll文件一同发布，dll不需要注册使用          <<
+//<<      创建日期：2016.6.12                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+unit UIWinFormDll;
+
+interface
+
+uses  Classes,ShareMem,Forms;
+
+type
+
+   TReturnEvent = procedure (ReturnString:String) of object;
+
+   TIGroundClass = class (TObject)
+     protected
+       Onreturned:TReturnEvent;
+     public
+        ReturnString:String;
+
+        constructor  Create(App:TApplication);virtual;abstract;
+
+        function GetDllPath:String;virtual;abstract;
+        function GetConnected:Boolean;virtual;abstract;// 获得数据库连接是否成功
+        function CreateDataBase(Dtype,IP,User,Pass,path:string):Boolean; virtual;abstract;  //创建数据库
+
+        function ConnectDataBase(Dtype,IP,User,Pass,path:string):Boolean; virtual;abstract; //  连接数据库
+        function CreateTable(xl,gzmName:string) :Boolean; virtual;abstract; //1 代表插入基本表，2 代表插入工作面的再生表
+        function CreateSupportTable(gzmName:string) :Boolean; virtual;abstract; //插入与支架相关的数据表   xl 标号为3
+        function BackUpDataBase(Part,GzmBh,path:string):Boolean;virtual;abstract; // 备份数据库
+
+          ///  工作面类
+         function GetGzmBh(GzmName:string):String;virtual;abstract;///根据工作面名称获得系统数据国内工作面编号
+         procedure setGzmbm (Bh:string);virtual;abstract;   //设置工作面编码
+         procedure SetSupportDataType(First,Second,Third,Fouth:integer);virtual;abstract;  //  录入数据代表意思
+         procedure SetTimeInterval(Value:integer);virtual;abstract;//设置数据计算最小间隔 单位分钟
+          procedure SetGzmDill(FGzm:integer;Value:integer); virtual;abstract;//设定钻孔编号
+         //处理数据
+         function Begintrans :Boolean; virtual;abstract;   // 批量录入数据 开始
+         function CommitTrans(var elapsedtime:string) :Boolean;virtual;abstract;   // 批量录入数据提交
+         function InputFootage(uGBh:string;tDay:Tdatetime;DownDayFootage,SumDownFootage,
+                UpperDayFootage,SumUpperFootage:double):Boolean;virtual;abstract;//录入工作面进尺
+         function InPutdata(supportbh:integer;Dt:string;V1,v2,V3,V4:double;var elapsedtime:string):integer; virtual;abstract; //  批量录入数据
+        //返回结果
+         function GetRockMovement(Gzmid:string;flag:string;supid:integer;starttime,endtime:TdateTime;
+                                  var RStr:String):Boolean;virtual;abstract; //返回顶板运动规律
+          procedure StartMonitRockMovementEvent;virtual;abstract;  // 开始监测事件
+         Procedure StopMonitRockMovementEvent;virtual;abstract;  //结束监测事件
+        //界面
+         procedure CreateGzmInfo(AHandle: HResult );virtual;abstract;
+         procedure CreateCoalInFo(AHandle: HResult);virtual;abstract;
+         procedure CreateSupportInfo(AHandle: HResult );virtual;abstract;
+         procedure CreateDrillingInfo(AHandle: HResult);virtual;abstract;
+         procedure CreateDrillDetailInfo(AHandle: HResult);virtual;abstract;
+         procedure CreateGzmBulidDrill(AHandle: HResult);virtual;abstract;
+
+         // 事件
+         property   FinishedEvent: TReturnEvent read Onreturned write Onreturned;
+   end;
+
+   TIGroundClasUI = class of TIGroundClass;
+
+implementation
+  // no   ex
+end.

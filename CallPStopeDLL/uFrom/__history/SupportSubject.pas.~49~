@@ -1,0 +1,475 @@
+unit SupportSubject;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.ImageList, Vcl.ImgList,System.StrUtils,
+  Vcl.ComCtrls, Vcl.ToolWin, Vcl.StdCtrls, Vcl.ExtCtrls,UMainDataModule;
+
+type
+  TForm_Subject = class(TForm)
+    ToolBar1: TToolBar;
+    SaveDataButton: TToolButton;
+    DeleteButton: TToolButton;
+    ExitButton: TToolButton;
+    StatusBar1: TStatusBar;
+    ImageList1: TImageList;
+    GB_WorkFace: TGroupBox;
+    Panel1: TPanel;
+    GroupBox1: TGroupBox;
+    Memo_Subject: TMemo;
+    Panel_RG_Work: TPanel;
+    TreeView_Workface: TTreeView;
+    ImageList2: TImageList;
+    ClearDataButton: TToolButton;
+    procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormDestroy(Sender: TObject);
+    procedure TreeView_WorkfaceExpanded(Sender: TObject; Node: TTreeNode);
+    procedure TreeView_WorkfaceCollapsed(Sender: TObject; Node: TTreeNode);
+    procedure TreeView_WorkfaceClick(Sender: TObject);
+    procedure ExitButtonClick(Sender: TObject);
+    procedure ClearDataButtonClick(Sender: TObject);
+    procedure SaveDataButtonClick(Sender: TObject);
+    procedure Memo_SubjectClick(Sender: TObject);
+  private
+    { Private declarations }
+     Subjectid:integer;
+     MySqlDataSet1:TMyDataSet;
+     MySqlDataSet2:TMyDataSet;
+     MyCommand1:TMyCommand;
+    FirstCount,SecondCount:Integer;
+    CheckBox: Array of array of TCheckBox;
+    RG_Work: Array of TGRoupBox;
+    procedure InitPanel_RG_Work;
+    procedure OptionTip(Str:String);
+    procedure FreeCalss;
+    procedure ADjustPanel_RG_Work;
+    procedure MainTreeView(TreeView: TTreeView);
+    procedure ChildTreeView(TreeView: TTreeView;NNode: TTreeNode;SubScript:Integer);
+    procedure AddSSubjectTreeView(TreeView: TTreeView;NNode: TTreeNode;First,secondid:Integer);
+    function SaveSubjectIntoData:Boolean;
+    function CheckSaveInput:Boolean;
+    procedure DispTreeViewClick(Subid:integer);
+
+
+  public
+    { Public declarations }
+  end;
+
+var
+  Form_Subject: TForm_Subject;
+  function Inn_OpenSupportSubject(AHandle:THandle;ACaption:string;Wid,Hi:integer):integer;stdcall;
+implementation
+
+{$R *.dfm}
+
+uses SupportWeightClass, Lu_Public_BasicModual;
+
+{ TForm_Subject }
+function inn_OpenSupportSubject(AHandle:THandle;ACaption:string;Wid,Hi:integer):integer;stdcall;
+
+begin
+    if Assigned(Form_Subject) then   FreeAndNil(Form_Subject);
+    Form_Subject:=TForm_Subject.Create(nil);
+    try
+       with Form_Subject do begin
+            Caption:=ACaption;
+            WindowState:= wsNormal;
+            ParentWindow:=Ahandle;
+            if Hi >Height then
+              Top :=Round((Hi-Height)/3)
+            else   Top :=0;
+            if Wid> Width then
+                Left:=Round((Wid-Width)/2)
+            else  Left:=0;
+
+            Show;
+       end;
+        Result:=1;//函数值
+    except
+          FreeAndNil(Form_Subject);
+     end;
+end;
+
+procedure TForm_Subject.AddSSubjectTreeView(TreeView: TTreeView;
+  NNode: TTreeNode; First, secondid: Integer);
+ var
+  strcon: String;
+  RecData: PMyRec;
+  xNode,xNodeJing:TTreeNode;
+  sql:string;
+begin
+        //树图初始化
+    MySqlDataSet1.Close;
+    sql:=  'SELECT SD.id as id,SD.SubjectText as SubText  from supSubjectData as SD where id in (select subjectid ' +
+                   ' from  SupportSubIndex As SI where    SI.Firstid='+IntTostr(First)+' and SI.Secondid ='+IntToStr(secondid) +
+                   ' )' ;
+
+    MySqlDataSet1.CommandText:=sql;
+    MySqlDataSet1.Open;
+    MySqlDataSet1.First;
+
+   while not MySqlDataSet1.Eof do begin
+    New(RecData);
+    RecData^.BName:='-2';
+    RecData^.DName:=MySqlDataSet1.FieldByName('SubText').AsString;
+    RecData^.XHeight:=Trim(MySqlDataSet1.FieldByName('id').AsString);
+    xNode:=TreeView.Items.AddChildObject(NNode,leftStr(RecData^.DName,6),RecData);
+    Xnode.ImageIndex:=0;
+
+    MySqlDataSet1.Next;
+  end;
+  MySqlDataSet1.Close;
+end;
+
+procedure TForm_Subject.ADjustPanel_RG_Work;
+var
+  TopBlank,LeftBlank:integer;
+  ChildTop,ChildBlank:integer;
+
+  width1,height1:integer;
+  i,j:integer;
+  ChildCount:integer;
+begin
+  TopBlank:=trunc(Panel_RG_work.Height/40);
+  LeftBlank:=trunc(Panel_RG_work.Width/30);
+  Width1:=trunc(Panel_RG_work.Width/30*28);
+  height1:=trunc(Panel_RG_work.Height/16);
+
+   for I := 0 to FirstCount-1 do   begin
+      RG_Work[i].Width:= Width1;
+      ChildCount:=t_SupSubject.Child_Second[i].Child_count;
+      ChildTop:=trunc(height1/3);
+      ChildBlank:=trunc(Width1/10);
+      if ChildCount <5 then  begin
+         RG_Work[i].Height :=trunc(height1);
+         for j := 0 to ChildCount-1 do begin
+            CheckBox[i][j].Top:=ChildTop;
+            CheckBox[i][j].Left:=ChildBlank+ trunc(Width1/5)*j;
+            CheckBox[i][j].Width := trunc(Width1/5);
+         end;
+      end else if ChildCount <9  then begin
+         RG_Work[i].Height :=trunc(height1*1.6);
+         for j := 0 to ChildCount-1 do begin
+            CheckBox[i][j].Top:=ChildTop + trunc(height1/2) * (j div 4);
+            CheckBox[i][j].Left:=ChildBlank+ trunc(Width1/5)*(j mod 4);
+            CheckBox[i][j].Width := trunc(Width1/5);
+         end;
+      end else begin
+         RG_Work[i].Height :=trunc(height1*2.4);
+
+         for j := 0 to ChildCount-1 do begin
+            CheckBox[i][j].Top:=ChildTop + trunc(height1/2) * (j div 4);
+            CheckBox[i][j].Left:=ChildBlank+ trunc(Width1/5)*(j mod 4);
+            CheckBox[i][j].Width := trunc(Width1/5);
+         end;
+      end;
+
+      if i=0 then
+         RG_Work[i].top :=TopBlank
+      else
+         RG_Work[i].top :=TopBlank+RG_Work[i-1].Top+RG_Work[i-1].Height;
+
+      RG_Work[i].Left:=LeftBlank;
+
+   end;
+
+end;
+
+function TForm_Subject.CheckSaveInput: Boolean;
+var
+  i,j,k:integer;
+begin
+    Result:=false;
+     if Trim(Memo_Subject.Text)=''   then   begin   //1:判断采区编号
+         messagebox(self.Handle,'请录入补充意见！','系统提示',mb_iconerror+mb_ok);
+         exit;
+     end else begin
+       if length(Memo_Subject.Text)>1000 then begin
+           messagebox(self.Handle,'写的太繁琐，请精简一下！','系统提示',mb_iconerror+mb_ok);
+           exit;
+       end;
+
+     end;
+     K:=0;
+     for I := 0 to t_SupSubject.Child_count-1 do
+      for j := 0 to t_SupSubject.Child_Second[i].Child_count-1 do
+         if CheckBox[i][j].Checked  then K:=k+1;
+     if K<1   then   begin   //1:判断采区编号
+         messagebox(self.Handle,'请选择一个条件！','系统提示',mb_iconerror+mb_ok);
+         exit;
+     end;
+     Result:=true;
+end;
+
+procedure TForm_Subject.ChildTreeView(TreeView: TTreeView; NNode: TTreeNode;
+  SubScript: Integer);
+var
+   RecData: PMyRec;
+   XNodeChild:TTreeNode;
+   i:integer;
+begin
+   for I := 0 to t_SupSubject.Child_Second[SubScript].Child_count-1 do  begin
+         New(RecData);
+         RecData^.BName:='-1';
+         RecData^.DName:='ROOT';
+         RecData^.XHeight:=IntToStr(i);
+         XNodeChild:=TreeView.Items.AddChildObject(NNode,
+                    t_SupSubject.Child_Second[SubScript].Child_Third[i].Name,RecData);
+         AddSSubjectTreeView(TreeView,XNodeChild,SubScript,i);
+         XNodeChild.ImageIndex:=0;
+     end ;
+
+end;
+
+procedure TForm_Subject.DispTreeViewClick(Subid: integer);
+var
+  sql:string;
+begin
+    MySqlDataSet1.Close;
+    sql:='SELECT SD.id as id,SD.SubjectText as SubT  from supSubjectData As SD  where  SD.id='+IntToSTr(Subid);
+
+  try
+    MySqlDataSet1.CommandText:= sql;
+    if  not MySqlDataSet1.Open then  exit;
+        self.Memo_Subject.Text := MySqlDataSet1.FieldByName('SubT').AsString;
+    MySqlDataSet1.Close ;
+    sql:='SELECT SS.firstid as First_id,SS.secondid as Second_ID  SupportSubIndex as SS ' +
+         ' where SS.subjectid =' +IntToStr(Subid);
+    MySqlDataSet1.CommandText:= sql;
+    if   MySqlDataSet1.Open then
+     while not MySqlDataSet1.Eof do  begin
+        checkBox[MySqlDataSet1.FieldByName('First_id').AsInteger]
+                 [MySqlDataSet1.FieldByName('Second_ID').AsInteger].Checked :=true;
+        MySqlDataSet1.Next ;
+     end;
+
+  finally
+     MySqlDataSet1.Close ;
+  end;
+
+end;
+
+procedure TForm_Subject.SaveDataButtonClick(Sender: TObject);
+begin
+     SaveSubjectIntoData;
+     SaveDataButton.Enabled :=False;
+     self.MainTreeView(self.TreeView_Workface);
+end;
+
+procedure TForm_Subject.ExitButtonClick(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TForm_Subject.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  if Assigned(Form_Subject) then   FreeAndNil(Form_Subject);
+
+end;
+
+procedure TForm_Subject.FormCreate(Sender: TObject);
+begin
+    MySqlDataSet1:=TMyDataSet.Create(nil);
+    MySqlDataSet1.MySqlConnection :=MainDataModule.ExConn;
+
+    MySqlDataSet2:=TMyDataSet.Create(nil);
+    MySqlDataSet2.MySqlConnection :=MainDataModule.ExConn;
+
+    MyCommand1:=TMyCommand.Create (nil);
+    MyCommand1.MySqlConnection :=MainDataModule.ExConn;
+    InitPanel_RG_Work;
+end;
+
+procedure TForm_Subject.FormDestroy(Sender: TObject);
+begin
+    FreeAndNil(MySqlDataSet1);
+    FreeAndNil(MySqlDataSet2);
+    FreeAndNil(MyCommand1);
+end;
+
+procedure TForm_Subject.FormResize(Sender: TObject);
+begin
+   ADjustPanel_RG_Work;
+end;
+
+procedure TForm_Subject.FormShow(Sender: TObject);
+begin
+    ADjustPanel_RG_Work;
+    MainTreeView(TreeView_Workface);
+    self.ClearDataButton.Click ;
+end;
+
+procedure TForm_Subject.FreeCalss;
+var
+  i,j:integer;
+begin
+   for I := 0 to firstCount-1 do  begin
+      if Assigned(RG_Work[i]) then  FreeAndNil(RG_Work[i]);
+      for j := 0 to SecondCount-1 do
+        if Assigned(CheckBox[i][j]) then  FreeAndNil(CheckBox[i][j]);
+
+   end;
+
+end;
+
+procedure TForm_Subject.InitPanel_RG_Work;
+var
+  i,j:integer;
+  selectedid:integer;
+begin
+     //===
+   FirstCount:=8;
+   SecondCount:=t_SupSubject.GetMaxSecondCount;
+   Setlength(CheckBox,FirstCount,SecondCount );
+   setlength(RG_work,FirstCount);
+   for I := 0 to FirstCount-1 do  begin
+        RG_work[i]:=TGroupBox.Create(nil);
+        RG_work[i].Parent:=Panel_RG_work;
+
+        for j := 0 to SecondCount-1 do begin
+          CheckBox[i][j]:=TCheckBox.Create(nil) ;
+          CheckBox[i][j].Visible :=false;
+        end;
+   end;
+
+
+   for I := 0 to FirstCount-1 do begin
+      RG_work[i].Caption :=t_SupSubject.Child_Second[i].Name;
+      for j := 0 to t_SupSubject.Child_Second[i].Child_count-1 do begin
+          CheckBox[i][j].Visible :=true;
+          CheckBox[i][j].Parent:=RG_work[i];
+          CheckBox[i][j].Caption:= t_SupSubject.Child_Second[i].Child_Third[j].Name ;
+      end;
+   end;
+
+end;
+
+procedure TForm_Subject.MainTreeView(TreeView: TTreeView);
+var
+  strcon: String;
+  RecData: PMyRec;
+  xNode,xNodeSub:TTreeNode;
+  i,j:integer;
+begin
+        //树图初始化
+  TreeView.Items.Clear;
+    New(RecData);
+    RecData^.BName:='-1';
+    RecData^.DName:='ROOT';
+    RecData^.XHeight:='-1';
+    xNode:=TreeView.Items.AddObject(nil,'开采技术条件',RecData);
+    Xnode.ImageIndex:=0;
+
+
+  for I := 0 to t_SupSubject.Child_count -1 do  begin
+    New(RecData);
+    RecData^.BName:='-1';
+    RecData^.DName:='ROOT';
+    RecData^.XHeight:=intTostr(i);
+    xNodeSub:=TreeView.Items.AddChildObject(xNode,t_SupSubject.Child_Second[i].Name,RecData);
+    xNodeSub.ImageIndex:=0;
+    //
+    ChildTreeView(TreeView,xNodeSub,i);
+  end;
+
+end;
+
+procedure TForm_Subject.Memo_SubjectClick(Sender: TObject);
+begin
+  self.Memo_Subject.SetFocus;
+end;
+
+procedure TForm_Subject.OptionTip(Str: String);
+begin
+  self.StatusBar1.Panels[0].Text :=str;
+end;
+
+function TForm_Subject.SaveSubjectIntoData:Boolean;
+var
+  Subid,i,j:integer;
+  sql,Sql1:string;
+begin
+
+  Result:=false;
+  if not CheckSaveInput then  exit;
+  Subid:=-1;
+ try
+      Sql:='insert into SupSubjectData (subjectText) Values('''+self.Memo_Subject.Text +''')';
+      MyCommand1.CommandText :=sql;
+      MyCommand1.Execute;
+      Sql:='select Max(id) as Mid  from SupSubjectData  ';
+      MySqlDataSet1.Close ;
+      self.MySqlDataSet1.CommandText :=sql;
+      if MySqlDataSet1.Open  then
+         Subid:=MySqlDataSet1.FieldByName('Mid').AsInteger;
+      MySqlDataSet1.Close ;
+      if Subid <0 then  exit;
+      sql:=' insert into SupportSubIndex (subjectid,firstid,secondid) values ( ' +
+            intTostr(Subid) +',';
+      for I := 0 to t_SupSubject.Child_count-1 do
+         for j := 0 to t_SupSubject.Child_Second[i].Child_count-1 do
+           if CheckBox[i][j].Checked  then begin
+              Sql1:=sql+ inttostr(i) +',' +inttostr(j) +')';
+               MyCommand1.CommandText :=sql1;
+               MyCommand1.Execute;
+           end;
+
+ finally
+   Result:=true;
+ end;
+
+
+end;
+
+procedure TForm_Subject.ClearDataButtonClick(Sender: TObject);
+var
+  i,j:integer;
+begin
+    for I := 0 to t_SupSubject.Child_count-1 do
+      for j := 0 to t_SupSubject.Child_Second[i].Child_count-1 do
+         CheckBox[i][j].Checked :=false;
+    self.Memo_Subject.Text :='';
+    SaveDataButton.Enabled :=true;
+end;
+
+procedure TForm_Subject.TreeView_WorkfaceClick(Sender: TObject);
+var
+  RecData: PMyRec;
+  xNode:TTreeNode;
+  Firstid,SEcondid:integer;
+begin
+  if (TreeView_Workface.Selected = nil) or (PMyRec(TreeView_Workface.Selected.Data)^.DName = 'ROOT')   then  begin
+     Exit;
+   end;
+
+
+    xNode:=TreeView_Workface.Selected;
+
+    if (XNode=nil) then        exit;
+    if PMyRec(XNode.Data)^.BName='-2' then begin
+      Subjectid:=public_Basic.StrToInt_lu (PMyRec(xNode.Data)^.XHeight);
+      Firstid:=public_Basic.StrToInt_lu (PMyRec(xNode.Parent.Data)^.XHeight);
+      self.DispTreeViewClick(Subjectid);
+    end;
+end;
+
+procedure TForm_Subject.TreeView_WorkfaceCollapsed(Sender: TObject;
+  Node: TTreeNode);
+begin
+   Node.ImageIndex:=0;
+   Node.SelectedIndex:=0;
+end;
+
+procedure TForm_Subject.TreeView_WorkfaceExpanded(Sender: TObject;
+  Node: TTreeNode);
+begin
+   Node.ImageIndex:=1;
+   Node.SelectedIndex:=1;
+end;
+
+end.

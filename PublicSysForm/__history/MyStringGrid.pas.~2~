@@ -1,0 +1,17 @@
+unit MyStringGrid;
+
+interface
+uses
+   Winapi.Windows,System.SysUtils,Winapi.Messages,  System.Classes,Vcl.Graphics,
+   Vcl.Controls,Vcl.Forms , Vcl.Dialogs,   Vcl.Menus,  Vcl.StdCtrls,  Vcl.ExtCtrls,
+   Vcl.StdCtrls,  System.Contnrs,Vcl.Grids;
+
+
+type
+ TMYStringGrid = class(TStringGrid)
+
+ end;
+
+implementation
+
+end.

@@ -1,0 +1,51 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：uSupportClass.pas                          <<
+//<<      lulei使用的个人Delphi文件                            <<
+//<<      该文件主要是作为矿压数据分析使用                     <<
+//<<      创建日期：2016.5.12                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+unit uSupportClass;
+interface
+
+uses
+  Windows, SysUtils, Classes, Messages, Controls, Forms, StdCtrls, ExtCtrls,
+  ComCtrls,math,IniFiles,Jpeg,Graphics,Dialogs;
+
+type
+  TZJ_Class=class
+      public
+         Zj_Name: WideString;    //支架的名称
+         Zj_BianHao:WideString;  //支架的编号
+         Zj_XingHao:WideString;   //支架的型号
+         Zj_Lizhu_count: Integer;  //支架立柱数量
+         Zj_toall_F:double;       //支架整架阻抗力
+         zj_toall_P:double;       //支架支护强度
+         Zj_suoliang:double;      //支架最大缩量
+         Zj_Max_h:double;         //支架最大高度
+         Zj_min_h:double;         //支架最小高度
+         Zj_KongdingJU:double;    //支架控顶距
+         Zj_zhongxinju:double;    //支架中心矩
+         Zj_hlzyd:double;        //合力作用点
+         Zj_hubang_h:double;      //支架护帮高度
+         Zj_hubang_jishu:integer;  //支架护帮级数
+         zj_hubang_F:double;     //支架护帮阻力
+         zj_hubang_P:double;     //支架护帮强度
+
+   end;
+   TSupportStep =Class(TZj_Class)
+        Lz_Diameter  :double;//立柱的直径（计算使用的）
+        SupportBh:integer;//   支架的编号 与 Zj_BianHao 一致
+        initLoad:double; //    支架初始支撑强度 或者也叫初撑力
+        EndOpenLoad: double; // 支架液压阀开启时强度
+   End;
+
+
+implementation
+
+{ TSupportStep }
+
+
+
+end.

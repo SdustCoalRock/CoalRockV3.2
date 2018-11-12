@@ -1,0 +1,282 @@
+unit DataModule;
+
+interface
+
+uses
+  System.SysUtils, System.Classes,MySQLDataSet,uLuDataModule,uDisposeFile;
+
+type
+
+  pDataBase =^TUsedDataBase;
+  TUsedDataBase=packed record
+    Ip  :String;
+    UserName: string;
+    Port: String;
+    Password:string;
+    DataBaseName:String;
+    DataType:string;
+    DataBaseString:String;
+  end;
+
+  TDataModule1 = class(TDataModule)
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
+
+  private
+    { Private declarations }
+     PublicDataBase:pDataBase;
+     inMainPath:String;
+     SQLSERVER_CurrentLocation:String;
+     procedure SetDataType(Value:string);
+     function GetMainPath:String;
+     procedure SetMainPath(Value:string);
+     function GetDataType:String;
+  public
+    MySqlConnect:TMySqlConnection;
+    MyDataSet:TMyDataSet;
+    MyCommand:TMyCommand;
+    uPublicDM:TPublicDataModule;
+    uControlFile:TDisPoseFile;
+    { Public declarations }
+    property DataType:String read GetDataType write SetDataType;
+    property MainPath:String read GetMainPath write SetMainPath;
+
+    function ReadServerinfo(PathName:string;dp:pDataBase):Boolean;
+    procedure SaveDataInotRecord(Ip,UserName,Password,Port,DataBase:String );
+    function ReturnDataBaseConn(ExePath,FName:String):widestring;
+    function ReadDataTypeFromFile:String;
+    procedure WriteDataTypeIntoFile(Value:string);
+    function TestDataBaseParameter( Dtype:string): WordBool;  safecall;
+    function SelectIsExsitDataBase(Dtype:string) :Boolean;
+    function CreateDataBase(Dtype:string):Boolean;
+    function CreateTable(Dtype:string):Boolean;
+  end;
+
+var
+  MainDataModule: TDataModule1;
+
+implementation
+
+{%CLASSGROUP 'Vcl.Controls.TControl'}
+
+uses Lu_base_function;
+
+
+
+{$R *.dfm}
+
+{ TDataModule1 }
+
+function TDataModule1.CreateDataBase(Dtype: string): Boolean;
+var
+ Inn_Dtype:String;
+begin
+    Result:=False;
+    Inn_Dtype:=UpperCase(Dtype);
+    uPublicDM.DataBaseName:=PublicDataBase.DataBaseName;
+    if (Inn_Dtype= 'SQLSERVER') or(Inn_Dtype= 'SQL SERVER') then  begin
+         if uPublicDM.CreateDatabase(Inn_Dtype,PublicDataBase.Ip,PublicDataBase.UserName,
+                                         PublicDataBase.Password ,SQLSERVER_CurrentLocation) then begin
+            self.uControlFile.WriteMYSQLDataBase(Inn_Dtype,PublicDataBase.Ip,PublicDataBase.UserName,
+                                         PublicDataBase.Password,'1433',PublicDataBase.DataBaseName) ;
+            Result:=true;
+         end;
+     end else if (Inn_Dtype= 'MYSQL') or (Inn_Dtype= 'MY SQL') then  begin
+         if uPublicDM.CreateDatabase(Inn_Dtype,PublicDataBase.Ip,PublicDataBase.UserName,
+                                         PublicDataBase.Password ,'') then begin
+            self.uControlFile.WriteMYSQLDataBase(Inn_Dtype,PublicDataBase.Ip,PublicDataBase.UserName,
+                                         PublicDataBase.Password,PublicDataBase.Port,PublicDataBase.DataBaseName) ;
+            Result:=true;
+         end;
+     end else if (Inn_Dtype= 'ACCESS') then  begin
+        if uPublicDM.CreateDatabase(Inn_Dtype,PublicDataBase.Ip,PublicDataBase.UserName,
+                                         PublicDataBase.Password ,MainPath) then begin
+            self.uControlFile.WriteMYSQLDataBase(Inn_Dtype,PublicDataBase.Ip,PublicDataBase.UserName,
+                                         PublicDataBase.Password,'',PublicDataBase.DataBaseName) ;
+            Result:=true;
+         end;
+     end;
+
+end;
+
+function TDataModule1.CreateTable(Dtype: string): Boolean;
+var
+ Inn_Dtype:String;
+begin
+    Result:=False;
+    Inn_Dtype:=UpperCase(Dtype);
+    uPublicDM.DataBaseName:=PublicDataBase.DataBaseName;
+     if (Inn_Dtype= 'SQLSERVER') or(Inn_Dtype= 'SQL SERVER') then  begin
+         //把数据连接连接到 新建的数据库中
+         uPublicDM.ConnectedData('SqlServer',PublicDataBase.DataBaseName);
+         if  uPublicDM.CreateServerTable('1','','')  then  Result:=true;
+
+     end else if (Inn_Dtype= 'MYSQL') or (Inn_Dtype= 'MY SQL') then  begin
+          //把数据连接连接到 新建的数据库中
+            uPublicDM.ConnectedData('MySql',PublicDataBase.DataBaseName);
+            if uPublicDM.CreateMySqlTable('1','','')  then  Result:=true;
+     end;
+end;
+
+procedure TDataModule1.DataModuleCreate(Sender: TObject);
+begin
+   new(PublicDataBase);
+   MySqlConnect:=TMySqlConnection.Create(nil);
+   MyDataSet:=TMyDataSet.Create(nil);
+   MyCommand:=TMyCommand.Create(nil);
+   //
+   if uPublicDM =nil then begin
+       uPublicDM:=TPublicDataModule.Create ;
+       uPublicDM.SetSqliteName('CoalBasicDataBase.db');
+       uPublicDM.initsqliteData;
+   end;
+   if uControlFile = nil then
+       uControlFile:=TDisPoseFile.Create('','serverinfo.dll');
+   if MySQLTableNameList = nil then
+       MySQLTableNameList:=TStringlist.Create;
+end;
+
+procedure TDataModule1.DataModuleDestroy(Sender: TObject);
+begin
+   Dispose(PublicDataBase) ;
+   FreeAndNil(MySqlConnect);
+   FreeAndNil(MyDataSet);
+   FreeAndNil(MyCommand);
+   if uControlFile <>nil then
+        FreeAndNil(uControlFile) ;
+   if uPublicDM <>nil then
+        FreeAndNil(uPublicDM) ;
+   if MySQLTableNameList <> nil then
+        FreeAndnil(MySQLTableNameList) ;
+end;
+
+function TDataModule1.GetDataType: String;
+begin
+   Result:=PublicDataBase.DataType;
+end;
+
+function TDataModule1.GetMainPath: String;
+begin
+   Result:=inMainPath;
+end;
+
+function TDataModule1.ReadDataTypeFromFile: String;
+var
+  sOut:String;
+begin
+  Result:='Access';
+  if  uControlFile.ReadDataBaseType(sOut) then
+      Result:=Trim(sOut);
+end;
+
+function TDataModule1.ReadServerinfo(PathName: string; dp: pDataBase): Boolean;
+begin
+
+end;
+
+function TDataModule1.ReturnDataBaseConn(ExePath,FName: String): widestring;
+var
+  ConnStr:WideString;
+  fileStr:tstringlist;
+
+begin
+   fileStr:=tstringlist.Create;
+   if not FileExists(ExePath+FName) then  begin
+     Result:='O';
+     Exit;
+   end;
+
+   fileStr.LoadFromFile(ExePath+FName);
+   if fileStr[1]='LOCAL' then  begin
+      ConnStr:= Format('Provider=Microsoft.Jet.OLEDB.4.0;Password="";Data Source=%s;Mode=Share Deny None; '+
+                       ' Extended Properties = ""', [ExePath+'data\'+fileStr[3]]);
+   end else if fileStr[1]='SERVER' then begin
+      ConnStr:=fileStr[5]+fileStr[6]+fileStr[7]+fileStr[8]+fileStr[9]+fileStr[10];
+   end else if fileStr[1]='MYSQL' then begin
+      ConnStr:=fileStr[12]+fileStr[13]+fileStr[14]+fileStr[15]+fileStr[16]+fileStr[17];
+   end;
+   fileStr.Free ;
+   Result:=ConnStr;
+
+end;
+
+procedure TDataModule1.SaveDataInotRecord(Ip, UserName, Password, Port,
+  DataBase: String);
+begin
+   if Port='' then
+     if UpperCase(DataType)='MYSQL' then  begin
+        Port:='3306' ;
+     end else if UpperCase(DataType)='SQLSERVER' then  begin
+        Port:='1433' ;
+     end else begin
+        Port:='' ;
+     end;
+
+   PublicDataBase.Ip:=IP;
+   PublicDataBase.UserName :=UserName;
+   PublicDataBase.Port :=port;
+   PublicDataBase.Password :=Password;
+   PublicDataBase.DataBaseName :=DataBase;
+
+end;
+
+function TDataModule1.SelectIsExsitDataBase(Dtype: string): Boolean;
+var
+ Inn_Dtype:String;
+begin
+    Result:=False;
+    Inn_Dtype:=UpperCase(Dtype);
+     if (Inn_Dtype= 'SQLSERVER') or(Inn_Dtype= 'SQL SERVER') then  begin
+        Result:=uPublicDM.isExsitSQlServer(PublicDataBase.DataBaseName);
+     end else if (Inn_Dtype= 'MYSQL') or (Inn_Dtype= 'MY SQL') then  begin
+        Result:=uPublicDM.isExsitMySql(PublicDataBase.DataBaseName);
+     end else if (Inn_Dtype= 'ACCESS') then  begin
+        Result:=uPublicDM.isExsitMySql(MainPath,PublicDataBase.DataBaseName);
+     end;
+
+
+end;
+
+procedure TDataModule1.SetDataType(Value: string);
+begin
+    PublicDataBase.DataType:=value;
+end;
+
+procedure TDataModule1.SetMainPath(Value: string);
+begin
+    inMainPath:=Value;
+end;
+
+function TDataModule1.TestDataBaseParameter( Dtype:String): WordBool;
+var
+   uPass:Boolean;
+   Inn_Dtype:String;
+begin
+      Inn_Dtype:=UpperCase(Dtype);
+      uPublicDM.SetExDataType(Inn_Dtype);
+      uPublicDM.SetExDBaseInfo(PublicDataBase.Ip,PublicDataBase.UserName,PublicDataBase.Password);
+     if (Inn_Dtype= 'SQLSERVER') or(Inn_Dtype= 'SQL SERVER') then  begin
+         uPublicDM.SetMySqlPort('1433');
+         uPass:= uPublicDM.TestServer(Inn_Dtype) ;
+         if uPass then  begin
+            SQLSERVER_CurrentLocation:= uPublicDM.GetSqlServerLocalPath;
+         end;
+
+     end else if (Inn_Dtype= 'MYSQL') or (Inn_Dtype= 'MY SQL') then  begin
+         uPublicDM.SetMySqlPort('3306');
+         uPass:= uPublicDM.TestMySql(Inn_Dtype) ;
+     end;
+
+     if uPass then begin
+        Result:=true;
+     end else begin
+        Result:=false;
+     end;
+end;
+
+procedure TDataModule1.WriteDataTypeIntoFile(Value: string);
+begin
+   uControlFile.WriteDataBaseType(Value);
+end;
+
+end.

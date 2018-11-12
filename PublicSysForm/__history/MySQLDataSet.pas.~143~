@@ -1,0 +1,1019 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：MySQLDataSet.pas                          <<
+//<<      卢国志使用的个人Delphi文件                            <<
+//<<      该文件主要是作为访问MySql使用使用的                     <<
+//<<      该文件需要libmysql.dll 与 Mysql_win32.inc一起使用
+//<<      创建日期：2016.9.21                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+unit MySQLDataSet;
+
+interface
+ uses  winapi.windows,System.Types, System.SysUtils, System.Classes,mysql,
+       System.StrUtils,Data.Win.ADODB, Data.DB;
+
+type
+ Largeint = Int64;
+ EDatabaseError = class(Exception);
+ TValueBuffer = TArray<Byte>;
+
+ TMySqlConnection = class(TComponent)
+  private
+      Host          : PAnsiChar;
+      Port          : Integer;
+      User          : PAnsiChar;
+      Pwd           : PAnsiChar;
+      TimeOut       : Integer;
+      AutoConn      : Boolean;
+      MYSqL_Connected    : Boolean;
+      SQLServer_Connect  :Boolean;
+      Bool_Begintrans    :Boolean;
+      TableNameList       :TStringlist;
+      DataBaseIndex : integer;
+      ConnectString : WideString;
+      ADOConnection: TADOConnection;
+  protected
+    function GetConnected: Boolean;
+    procedure SetConnected(Value: Boolean);
+    procedure SetConnectString(Value:WideString);
+  public
+    FMySQL              : PMYSQL;
+    ConnectedDataBase   : string;
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    { 写数据库的超时时间,读数据库的超时时间,连接数据库的超时时间,是否自动连接}
+    procedure SetConnectProperty(InsertOutTime,SelectOutTime,ConnectedOutTime:integer;AutoConn:Boolean);
+    function Open(Host,Port,User,Pwd,DataBaseName:string):Boolean;
+    function OpenAgin :Boolean;
+    procedure Close;
+    [Default(False)]
+    property ServerConnected: Boolean read GetConnected write SetConnected default False;
+    property ConnectStr :Widestring Write SetConnectString ;
+    function BeginTrans: Boolean;
+    procedure CommitTrans;
+    procedure RollbackTrans;
+    procedure SetDataBaseType(Value:String);
+    // 查找等级的数据表
+    function InsertTableName(Name:String):Boolean;
+    function DeleteTableName(Name:string):Boolean;
+    function isExistTableName(Name:string):Boolean;
+    procedure ClearTableName;
+  end;
+
+ TMyField =class(TComponent)
+    private
+        iRowIndex            :integer;
+        iFieldIndex          :integer;
+        RowsCount            :integer;
+        FSetting             :TFormatSettings;
+        DataBaseIndex        :Boolean; //FALSE 为MYSQL  true 为其他数据库
+
+        function GetAsBoolean: Boolean;
+        function GetAsDateTime: TDateTime;
+        function GetAsFloat: Double;
+        function GetAsInteger: Longint;
+        function GetAsString: string;
+        function GetRowIndex:integer;
+        procedure SetRowIndex(value:integer);
+        function GetFieldIndex:integer;
+        procedure SetFieldIndex(value:integer);
+        function GetRecordCount:Integer;
+        procedure SetRecordCount(Value:integer);
+        procedure SetDataBaseIndex(Value:Boolean);
+    public
+        MySQL_Row               : PMYSQL_ROW;
+        ADOField                : TField;
+        constructor Create(AOwner: TComponent); override;
+        destructor Destroy; override;
+
+        property AsBoolean: Boolean read GetAsBoolean ;
+        property AsDateTime: TDateTime read GetAsDateTime ;
+        property AsFloat: Double read GetAsFloat ;
+        property AsInteger: Longint read GetAsInteger ;
+        property AsString: string read GetAsString;
+        property RowIndex:integer read GetRowIndex write SetRowIndex;
+        property FieldIndex:integer read GetFieldIndex write SetFieldIndex;
+        property RecordCount:integer read GetRecordCount write SetRecordCount;
+
+ end;
+
+ TMyDataSet =Class(TComponent)
+   private
+      MySQL_Res           : PMYSQL_RES;
+      MySQL_Field         : PMYSQL_FIELD;
+
+      Sql                 :string;
+      RowIndex            :integer;
+      FieldIndex          :integer;
+      NumFields           :integer;
+      NumRows             :integer;
+      RecordNumbers       :integer;
+      innField               :TMyField;
+      ADODataSet1         :TADODataSet;
+      function GetSql:string;
+      function GetEof:Boolean;
+      function GetBof:Boolean;
+      function GetRecordCount:integer;
+      function GetRecordNo:integer;
+      procedure SetSql(innsql:string);
+
+   public
+      MySqlConnection     : TMySqlConnection;
+      property CommandText:String read GetSql write SetSql;
+      property Eof:Boolean  read GetEof;
+      property BOF:Boolean  read GetBoF;
+      property RecordCount:Integer  read GetRecordCount;
+      property RecNo:integer read GetRecordNo;
+      function Open:Boolean;
+      function MYSqlOpen:Boolean;
+      function Close:Boolean;
+      procedure First;
+      procedure Last;
+      procedure PrevRco;
+      Procedure Next;
+      function FieldByName(const FieldName: string): TMyField;
+      function MySqlFieldByName(const FieldName: string):TMyField;
+      constructor Create(AOwner: TComponent); override;
+      destructor Destroy; override;
+ End;
+TMyCommand = Class(TComponent)
+   private
+      MySQL_Res           : PMYSQL_RES;
+      sqlText             :String;
+      ADOCommand1         : TADOCommand;
+      function GetSql:string;
+      procedure SetSql(innsql:string);
+      function SelectTableName:String;
+
+   public
+      MySqlConnection     : TMySqlConnection;
+      function Execute:Boolean; overload;
+      function Execute(UserName:string):Boolean;Overload;
+      function MySQLExecute:Boolean;
+      property CommandText:String read GetSql write SetSql;
+      procedure MyCriticalSection(Sql:String);
+      constructor Create(AOwner: TComponent); override;
+      destructor Destroy; override;
+End;
+
+
+implementation
+
+{ TMySqlConnection }
+
+uses  Lu_base_function;
+
+function TMySqlConnection.BeginTrans: Boolean;
+var
+  t:integer;
+  SQl:PAnsiChar;
+begin
+ if DataBaseIndex >0  then   begin   //不是MySQL数据库
+    try
+      AdoConnection.BeginTrans;
+    finally
+      Result:=True;
+    end;
+ end else  begin  // 如果是MYSQL 数据库
+     CommitTrans; //如果有没有提交的事务,代替提交
+     Bool_Begintrans:=false;
+     Sql:= PAnsiChar(AnsiString('SET AUTOCOMMIT =1'));
+     t:=mysql_real_query(&FMySQL,Sql,Length(sql));
+     if t<>0 then   begin
+         Result:=false;  exit;
+     end;
+     Sql:=  PAnsiChar(AnsiString('Begin;'));
+     t:=mysql_real_query(&FMySQL,Sql,Length(sql));
+     if t<>0 then   begin
+         Result:=false;  exit;
+     end;
+     Result:=True;
+     Bool_Begintrans:=true;
+ end;
+end;
+
+
+
+procedure TMySqlConnection.ClearTableName;
+begin
+   EnterCriticalSection(FSYNCsql);
+   try
+     MySQLTableNameList.Clear ;
+     //TableNameList.Clear ;
+   finally
+     leavecriticalsection(FSYNCsql);
+   end;
+end;
+
+procedure TMySqlConnection.Close;
+begin
+ if DataBaseIndex >0  then   begin   //不是MySQL数据库
+    try
+       AdoConnection.Close;
+    finally
+       ServerConnected:= False ;
+    end;
+ end else  begin
+//    mysql_close(FMySQL);
+//    Connected:=false;
+ end;
+end;
+
+procedure TMySqlConnection.CommitTrans;
+var
+  t:integer;
+  SQl:PAnsiChar;
+begin
+   if DataBaseIndex >0  then   begin   //不是MySQL数据库
+    AdoConnection.CommitTrans ;
+ end else  begin  // 如果是MYSQL 数据库
+     if Bool_Begintrans then  begin //提交事务
+         Sql:=  PAnsiChar(AnsiString('COMMIT;'));
+         t:=mysql_real_query(&FMySQL,Sql,Length(sql));
+         Bool_Begintrans:=false;
+        //恢复立即提交
+//          Sql:= PAnsiChar(AnsiString('SET AUTOCOMMIT =1'));
+//          t:=mysql_real_query(&FMySQL,Sql,Length(sql));
+     end;
+ end;
+end;
+
+constructor TMySqlConnection.Create(AOwner: TComponent);
+begin
+  inherited;
+     MYSqL_Connected:=False;
+     FMySQL := mysql_init(nil);
+     if FMySQL = nil then
+        raise Exception.CreateFmt('mysql_init failed.[%s]', [mysql_error(FMySQL)]);
+     TableNameList:=TStringlist.Create ;
+     ADOConnection:=TADOConnection.Create(nil);
+     ADOConnection.LoginPrompt:=false;
+     DataBaseIndex:=0;
+end;
+
+function TMySqlConnection.DeleteTableName(Name: string): Boolean;
+var
+  i:integer;
+begin
+   Result:=false;
+   i:=-1;
+   EnterCriticalSection(FSYNCsql);
+   try
+     i:=MySQLTableNameList.IndexOf(Name);
+    // i:=TableNameList.IndexOf(Name);
+     if i>=0 then  begin
+        MySQLTableNameList.Delete(i);
+       // TableNameList.Delete(i);
+        Result:=true;
+     end;
+   finally
+     leavecriticalsection(FSYNCsql);
+   end;
+
+end;
+
+destructor TMySqlConnection.Destroy;
+begin
+  if (FMySQL <> nil) then
+  begin
+    mysql_close(FMySQL);
+    FMySQL := nil
+  end;
+  TableNameList.Free ;
+  FreeAndNil(ADOConnection);
+  inherited;
+end;
+
+function TMySqlConnection.GetConnected: Boolean;
+begin
+     Result:=SQLServer_Connect;
+end;
+
+function TMySqlConnection.InsertTableName(Name: String): Boolean;
+begin
+     MySQLTableNameList.Add(Name);
+     //TableNameList.Add(Name);
+     Result:=true;
+end;
+
+function TMySqlConnection.isExistTableName(Name: string): Boolean;
+var
+  i:integer;
+begin
+   Result:=False;
+   i:=-1;
+   EnterCriticalSection(FSYNCsql);
+   try
+      i:= MySQLTableNameList.IndexOf(Name) ;
+     // i:= TableNameList.IndexOf(Name) ;
+      if i>=0 then   Result:=true;
+   finally
+     leavecriticalsection(FSYNCsql);
+   end;
+end;
+
+function TMySqlConnection.Open(Host, Port, User, Pwd,DataBaseName: string): Boolean;
+var
+  uHost,uUser,uPwd,DB: PAnsiChar;
+  uPort:integer;
+begin
+   Result:=False;
+   uHost:=PAnsiChar(AnsiString(Host));
+   uUser:=PAnsiChar(AnsiString(User));
+   uPwd:=PAnsiChar(AnsiString(pwd));
+   uPort:=StrToint(AnsiString(Port));
+   DB:= PAnsiChar(AnsiString(DataBaseName));
+   //
+ if DataBaseName ='' then  DB:='';
+   {如果不是MYSQL数据库}
+ if DataBaseIndex >0  then   begin   //不是MySQL数据库
+    AdoConnection.ConnectionString:=ConnectString;
+    try
+       AdoConnection.Open;
+       Result:=True;
+    finally
+       ServerConnected:= AdoConnection.Connected ;
+    end;
+ end else  begin  // 如果是MYSQL 数据库
+   //设置参数
+   SetConnectProperty(1000,1000,1000,true);
+   if ( MYSqL_Connected ) and (DataBaseName = ConnectedDataBase ) then   begin
+        Result:=true;
+   end else if ( MYSqL_Connected ) and (DataBaseName <> ConnectedDataBase ) then   begin
+       if mysql_select_db(FMySQL,DB) = 0 then begin
+         MYSqL_Connected:=true;
+         ConnectedDataBase:= DB;
+         Result:=True;
+       end else begin
+         MYSqL_Connected:=false ;
+       end;
+   end else if( not MYSqL_Connected )  then  begin
+       if mysql_real_connect(FMySQL, uHost, uUser, upwd, DB, uPort, nil, 0) <> nil then begin
+         MYSqL_Connected:=true;
+         ConnectedDataBase:= DataBaseName;
+         Result:=True;
+       end else begin
+         MYSqL_Connected:=false;
+       end;
+   end;
+ end;
+
+
+
+end;
+
+function TMySqlConnection.OpenAgin :Boolean;
+Var
+  SPort:string;
+begin
+   Result:=true;
+
+   if port>0 then  sPort:='' else sPort:=IntTostr(port);
+
+   if (not ServerConnected ) and (DataBaseIndex>0 )then  begin
+
+        ADOConnection.Close ;
+        ADOConnection.ConnectionString :=ConnectString;
+        ADOConnection.Open;
+        Result:=ADOConnection.Connected;
+
+   end ;
+  if not MySql_Connected then
+    if (trim(Host)<> '') and (sPort <>'') and (trim(User)<>'') and
+          (trim(Pwd)<> '') and (trim(ConnectedDataBase) <> '') then   begin
+            if not Open(Host,sPort,User,Pwd,ConnectedDataBase) then
+                  Result:=false;
+    end else begin
+         Result:=false;
+    end;
+
+
+
+end;
+
+procedure TMySqlConnection.RollbackTrans;
+var
+  t:integer;
+  SQl:PAnsiChar;
+begin
+ if DataBaseIndex >0  then   begin   //不是MySQL数据库
+      AdoConnection.RollbackTrans ;
+
+ end else  begin  // 如果是MYSQL 数据库
+     if Bool_Begintrans then  begin //回滚事务
+        Sql:=  PAnsiChar(AnsiString('ROLLBACK;'));
+        t:=mysql_real_query(&FMySQL,Sql,Length(sql));
+        Bool_Begintrans:=false;
+        //恢复立即提交
+//        Sql:= PAnsiChar(AnsiString('SET AUTOCOMMIT =1'));
+//        t:=mysql_real_query(&FMySQL,Sql,Length(sql));
+     end;
+ end;
+
+end;
+
+procedure TMySqlConnection.SetConnected(Value: Boolean);
+begin
+    SQLServer_Connect:=Value;
+end;
+
+procedure TMySqlConnection.SetConnectProperty(InsertOutTime, SelectOutTime,
+  ConnectedOutTime: integer;AutoConn:Boolean);
+var
+ write_TimeOut,Read_TimeOut,Connect_TimeOut:PAnsiChar;
+begin
+    write_TimeOut:=PAnsiChar(intToStr(InsertOutTime));
+    Read_TimeOut:= PAnsiChar(intToStr(SelectOutTime));
+    Connect_TimeOut:=PAnsiChar(intToStr(ConnectedOutTime));
+    // Timeout
+  // 写数据库(Update Delete Insert Replace)超时等待时间
+  if mysql_options(FMySQL, MYSQL_OPT_WRITE_TIMEOUT, @write_TimeOut) <> 0 then
+    raise Exception.CreateFmt('mysql set write timeout error.[%s]', [mysql_error(FMySQL)]);
+  // 查询数据库(Select)超时时间
+  if mysql_options(FMySQL, MYSQL_OPT_READ_TIMEOUT, @Read_TimeOut) <> 0 then
+    raise Exception.CreateFmt('mysql set read timeout error.[%s]', [mysql_error(FMySQL)]);
+  // 连接超时时间
+  if mysql_options(FMySQL, MYSQL_OPT_CONNECT_TIMEOUT, @Connect_TimeOut) <> 0 then
+    raise Exception.CreateFmt('mysql set connect timeout error.[%s]', [mysql_error(FMySQL)]);
+  //AutoConnect
+ // AutoConn := True;
+  if mysql_options(FMySQL, MYSQL_OPT_RECONNECT, @AutoConn) <> 0 then
+     raise Exception.CreateFmt('mysql set auto connect error.[%s]', [mysql_error(FMySQL)]);
+
+end;
+
+procedure TMySqlConnection.SetConnectString(Value: WideString);
+begin
+    ConnectString:=Value;
+end;
+
+procedure TMySqlConnection.SetDataBaseType(Value: String);
+begin
+    if UpperCase(Value)<>'MYSQL' then  begin
+       DataBaseIndex:=1;
+    end else begin
+       DataBaseIndex:=0;
+    end;
+end;
+
+{ TField }
+
+
+
+constructor TMyField.Create(AOwner: TComponent);
+begin
+  inherited;
+    //日期格式转换
+       FSetting.ShortDateFormat:='yyyy-mm-ss' ;
+       FSetting.DateSeparator :='-';
+       FSetting.ShortTimeFormat :='hh:nn:ss';
+       FSetting.TimeSeparator :=':';
+       FSetting.DecimalSeparator :='.';
+    DataBaseIndex:=False;
+end;
+
+destructor TMyField.Destroy;
+begin
+
+  inherited;
+end;
+
+
+
+
+
+function TMyField.GetAsBoolean: Boolean;
+var
+  intS:Integer;
+begin
+ if DataBaseIndex then   begin //不是MYSQL数据库
+    Result:=ADOField.AsBoolean;
+ end else begin
+    if RowsCount=0  then begin
+      Result:=false;
+      exit;
+    end;
+    intS:=StrToInt(StrPas(MySQL_Row^[iFieldIndex]));
+    if intS=1 then
+       Result:=true
+    else
+       Result:=false;
+ end;
+end;
+
+function TMyField.GetAsDateTime: TDateTime;
+var
+  iStr:string;
+begin
+ if  DataBaseIndex then   begin //不是MYSQL数据库
+    Result:=ADOField.AsDateTime;
+ end else begin
+    if RowsCount=0  then begin
+      Result:=1;
+      exit;
+    end;
+
+   iStr:=string(StrPas(MySQL_Row^[iFieldIndex]));
+   if trim(iStr)=''  then  Result:=1
+    else    Result:=StrToDateTime(iStr,FSetting);
+ end;
+end;
+
+function TMyField.GetAsFloat: Double;
+var
+   iStr:String;
+begin
+if  DataBaseIndex then   begin //不是MYSQL数据库
+    Result:=ADOField.AsFloat;
+ end else begin
+
+    if RowsCount=0  then begin
+      Result:=0;
+      exit;
+    end;
+
+   iStr:=StrPas(MySQL_Row^[iFieldIndex]);
+   if Trim(iStr)='' then   Result:=0
+    else   Result:=StrTofloat(iStr);
+ end;
+end;
+
+function TMyField.GetAsInteger: Longint;
+var
+   iStr:String;
+begin
+  if DataBaseIndex then   begin //不是MYSQL数据库
+    Result:=ADOField.AsInteger;
+ end else begin
+    if RowsCount=0  then begin
+      Result:=0;
+      exit;
+    end;
+
+   iStr:=StrPas(MySQL_Row^[iFieldIndex]);
+   if Trim(iStr)='' then   Result:=0
+    else    Result:=StrToInt(iStr);
+ end;
+end;
+
+
+
+function TMyField.GetAsString: string;
+begin
+ if DataBaseIndex then   begin //不是MYSQL数据库
+    Result:=ADOField.AsString;
+ end else begin
+     if RowsCount=0  then begin
+      Result:='';
+      exit;
+    end;
+    Result:=string(StrPas(MySQL_Row^[iFieldIndex]));
+ end;
+end;
+
+
+
+function TMyField.GetFieldIndex: integer;
+begin
+ if DataBaseIndex then   begin //是MYSQL数据库
+     Result:=iFieldIndex;
+ end;
+
+
+end;
+
+function TMyField.GetRecordCount: Integer;
+begin
+ if DataBaseIndex then   begin //是MYSQL数据库
+     Result:=RowsCount;
+ end;
+
+end;
+
+function TMyField.GetRowIndex: integer;
+begin
+ if DataBaseIndex then   begin //不是MYSQL数据库
+    Result:=ADOField.Index;
+ end else begin
+    Result:=iRowIndex;
+ end;
+end;
+
+procedure TMyField.SetDataBaseIndex(Value: Boolean);
+begin
+   DataBaseIndex:=Value;
+end;
+
+procedure TMyField.SetFieldIndex(value: integer);
+begin
+ if not DataBaseIndex then   begin //是MYSQL数据库
+    iFieldIndex:=Value;
+ end;
+
+end;
+
+procedure TMyField.SetRecordCount(Value: integer);
+begin
+ if not DataBaseIndex then   begin //是MYSQL数据库
+     RowsCount:=Value;
+ end;
+
+end;
+
+procedure TMyField.SetRowIndex(value: integer);
+begin
+ if not DataBaseIndex then   begin //是MYSQL数据库
+     iRowIndex:=Value;
+ end;
+
+end;
+
+{ TMyDataSet }
+
+function TMyDataSet.Close: Boolean;
+begin
+     {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    AdoDataSet1.Close; ;
+ end else begin
+   if MySQL_Res <> nil then    begin
+      mysql_free_result(MySQL_Res);
+      MySQL_Res := nil;
+   end;
+ end;
+end;
+
+constructor TMyDataSet.Create(AOwner: TComponent);
+begin
+  inherited;
+   innField:=TMyField.Create(nil);
+   ADODataSet1:=TADODataSet.Create(nil);
+end;
+
+destructor TMyDataSet.Destroy;
+begin
+  Close;
+  FreeAndNil(innField);
+  FreeAndNil(ADODataSet1);
+  inherited;
+end;
+
+function TMyDataSet.FieldByName(const FieldName: string): TMyField;
+begin
+       {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    innField.DataBaseIndex :=true;
+    innField.ADOField:=AdoDataSet1.FieldByName(FieldName);
+    Result:= innField;
+ end else begin
+    innField.DataBaseIndex:=false;
+    Result:=self.MySqlFieldByName(FieldName) ;
+ end;
+end;
+
+procedure TMyDataSet.First;
+begin
+      {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    AdoDataSet1.First; ;
+ end else begin
+    RowIndex :=0;
+ end;
+end;
+
+function TMyDataSet.GetBof: Boolean;
+begin
+    {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    Result:=AdoDataSet1.Bof ;
+ end else begin
+    if RowIndex = 0 then
+      Result:=true
+    else
+      Result:=false;
+ end;
+end;
+
+function TMyDataSet.GetEof: Boolean;
+begin
+     {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    Result:=AdoDataSet1.Eof ;
+ end else begin
+    if RowIndex = NumRows then
+      Result:=true
+    else
+      Result:=false;
+ end;
+
+end;
+
+function TMyDataSet.GetRecordCount: integer;
+begin
+   {如果不是MYSQL数据库}
+     if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+        Result:=AdoDataSet1.RecordCount ;
+     end else begin
+       try
+         Result:= NumRows;
+       except
+         on e:exception do begin
+            MY_WriteLog(Get_MyModulePath,'GetRecordCount:'+e.Message,'[TMyDataSet]');
+         end;
+
+       end;
+     end;
+end;
+
+function TMyDataSet.GetRecordNo: integer;
+begin
+     {如果不是MYSQL数据库}
+   if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+      Result:=AdoDataSet1.RecNo ;
+   end else begin
+     try
+       Result:= RowIndex+1;
+     except
+       on e:exception do begin
+          MY_WriteLog(Get_MyModulePath,'GetRecordCount:'+e.Message,'[TMyDataSet]');
+       end;
+     end;
+   end;
+
+end;
+
+function TMyDataSet.GetSql: string;
+begin
+    Result:=sql;
+end;
+
+procedure TMyDataSet.Last;
+begin
+   {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    AdoDataSet1.Last; ;
+ end else begin
+    RowIndex :=NumRows;
+ end;
+end;
+
+function TMyDataSet.MySqlFieldByName(const FieldName: string): TMyField;
+var
+  i:integer;
+begin
+  if MySQL_Res <> nil  then    begin
+    NumFields := mysql_num_fields(MySQL_Res);
+    for i := 0 to NumFields - 1 do     begin
+      MySQL_Field := mysql_fetch_field_direct(MySQL_Res, i);
+      if MySQL_Field <> nil  then       begin
+        if UpperCase(string(mysql_field_name(MySQL_Field))) = UpperCase(FieldName) then
+        begin
+          FieldIndex := i;
+          Break;
+        end;
+      end;
+    end;
+    if i= NumFields then begin
+      MY_WriteLog(Get_MyModulePath,'Eorr:No Find '+FieldName+' Fields_' +Sql ,'[TMyDataSet]');
+    end;
+
+    if RowIndex <= NumRows - 1 then
+      mysql_data_seek(MySQL_Res, RowIndex);
+  end;
+
+  innField.MySQL_Row:= mysql_fetch_row(MySQL_Res);
+  innField.SetRowIndex(RowIndex);
+  innField.SetFieldIndex(FieldIndex);
+  innField.SetRecordCount(NumRows);
+  Result:= innField;
+
+  //edtResult.Text := string(StrPas(MySQL_Row^[FieldIndex]));
+end;
+
+function TMyDataSet.MYSqlOpen: Boolean;
+var
+  Query : string;
+begin
+  Result:=false;
+  Query := sql;
+  if not MySqlConnection.OpenAgin  then exit;
+ try
+  if mysql_real_query(MySqlConnection.FMySQL, PAnsiChar(AnsiString(Query)), Length(AnsiString(Query))) = 0 then  begin
+     MySQL_Res := mysql_store_result(MySqlConnection.FMySQL);
+     NumRows := mysql_num_rows(MySQL_Res);
+     RowIndex:=0;
+     Result:=true;
+  end else begin
+     NumRows:=0;RowIndex:=0;
+  end;
+  except
+     on e:exception do begin
+        MY_WriteLog(Get_MyModulePath,'OpenEorr:'+e.Message,'[TMyDataSet]');
+     end;
+   end;
+end;
+
+procedure TMyDataSet.Next;
+begin
+      {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    AdoDataSet1.Next; ;
+ end else begin
+    if RowIndex <NumRows then
+       RowIndex:=RowIndex+1;
+ end;
+
+end;
+
+function TMyDataSet.Open: Boolean;
+begin
+     {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    AdoDataSet1.Connection:=MySqlConnection.ADOConnection;
+    AdoDataSet1.CommandText:=sql;
+    try
+      AdoDataSet1.Open;
+      Result:=True;
+    except
+      Result:=False
+    end;
+ end else begin
+    Result:=MYSqlOpen;
+ end;
+end;
+
+procedure TMyDataSet.PrevRco;
+begin
+     {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+    if AdoDataSet1.RecNo>0 then
+       AdoDataSet1.Prior ;
+ end else begin
+     if RowIndex >0 then
+       RowIndex:=RowIndex-1;
+ end;
+end;
+
+procedure TMyDataSet.SetSql(innsql:string);
+begin
+  Sql:=innSql;
+end;
+
+{ TMyCommand }
+
+constructor TMyCommand.Create(AOwner: TComponent);
+begin
+  ADOCommand1:=TADOCommand.Create(nil) ;
+  inherited;
+end;
+
+destructor TMyCommand.Destroy;
+begin
+  FreeAndNil(ADOCommand1);
+  inherited;
+end;
+
+function TMyCommand.Execute(UserName: string): Boolean;
+var
+  tempStr,Sql1:String;
+begin
+   tempStr:=Getsql;
+   if Execute then begin
+      Result:=True;
+      Sql1:='insert into UserLoginlog (UserName,TextValue,Generatetime)  values ( ' +
+            '''' + UserName+''','''+LeftStr(tempStr,200) +''','''  +
+            FormatDateTime('YYYY-MM-DD HH:NN:SS',Now()) +''')';
+      SetSql(Sql1);
+      Execute;
+   end else begin
+      Result:=False;
+   end;
+
+end;
+
+procedure TMyCommand.MYCriticalSection(Sql: String);
+begin
+    EnterCriticalSection(FSYNCsql);
+     try
+       CommandText:=Sql;
+       Execute;
+     finally
+       leavecriticalsection(FSYNCsql);
+     end;
+end;
+
+function TMyCommand.MySQLExecute: Boolean;
+var
+  TableName:string;
+  icount:integer;
+begin
+   Result:=false;
+   try
+      if not MySqlConnection.OpenAgin then exit;
+
+       TableName:= SelectTableName;
+      if TableName = 'other' then  begin
+         if mysql_real_query(MySqlConnection.FMySQL, PAnsiChar(AnsiString(SQLText)), Length(AnsiString(SQLText)))  =0 then begin
+                  //当执行的SQL语句返回结果集时，一定要释放结果集
+                    MySQL_Res := mysql_store_result(MySqlConnection.FMySQL);
+                    if MySQL_Res <> nil then   begin
+                      mysql_free_result(MySQL_Res);
+                      MySQL_Res := nil;
+                      Result:=true;
+                    end;
+        end;
+
+      end else if TableName <> 'nill' then  begin
+         icount:=0;
+         while (MySqlConnection.isExistTableName(TableName)) do  begin
+            sleep(100);
+            icount:=icount+1;
+            if(icount> 10*60*10) then  MySqlConnection.ClearTableName;
+         end;
+         try
+            MySqlConnection.InsertTableName(TableName);
+             if mysql_real_query(MySqlConnection.FMySQL, PAnsiChar(AnsiString(SQLText)), Length(AnsiString(SQLText)))  =0 then begin
+                //当执行的SQL语句返回结果集时，一定要释放结果集
+                  MySQL_Res := mysql_store_result(MySqlConnection.FMySQL);
+                  if MySQL_Res <> nil then   begin
+                    mysql_free_result(MySQL_Res);
+                    MySQL_Res := nil;
+                  end;
+                 Result:=true;
+             end;
+         finally
+            MySqlConnection.DeleteTableName(TableName);
+         end;
+      end;
+
+   except
+     on e:exception do begin
+        MY_WriteLog(Get_MyModulePath,'Sum_Eorr:'+SQLText+e.Message,'[TMyCommand]');
+     end;
+
+   end;
+
+end;
+
+function TMyCommand.Execute: Boolean;
+begin
+    {如果不是MYSQL数据库}
+ if MySqlConnection.DataBaseIndex >0  then   begin   //不是MySQL数据库
+     ADOCommand1.Connection:=MySqlConnection.ADOConnection;
+     ADOCommand1.CommandText:=sqlText;
+   try
+     ADOCommand1.Execute;
+   finally
+     Result:=true;
+   end;
+ end else begin
+    Result:=MySqlExecute;
+ end;
+end;
+
+function TMyCommand.GetSql: string;
+begin
+    Result:=sqlText;
+end;
+
+function TMyCommand.SelectTableName: String;
+Var
+  St,Command_S:AnsiString;
+  Name:String;
+  i,j:integer;
+begin
+   St:=AnsiLowerCase(Trim(leftstr(sqlText,100)));
+   if length(st) <1 then begin
+       Result:='nill';  exit;
+   end;
+   Command_S:=AnsiLowerCase(leftStr(st,6));
+   St:=trim(Rightstr(st,length(st)-6));
+   if Command_S='insert' then  begin
+      i:=pos(' ',st);
+      j:=pos('(',st);
+      Name:=midstr(st,i,j-i);
+   end else if Command_S='update' then  begin
+      j:=pos('set',st);
+      Name:=midstr(st,1,j-1);
+   end else if Command_S='delete' then  begin
+      i:=pos(' ',st);
+      j:=pos('where',st);
+      if j= 0 then   j:=length(st);
+      Name:=midstr(st,i,j-i);
+   end else begin
+      Name:='other';
+   end;
+
+   Result:=Trim(Name);
+
+end;
+
+procedure TMyCommand.SetSql(innsql: string);
+begin
+    sqlText:=innsql;
+end;
+
+
+
+end.

@@ -1,0 +1,24 @@
+program CoalRockPress;
+
+uses
+  Vcl.Forms,
+  BanBen_Wf in 'FormUnit\BanBen_Wf.pas' {BanBen},
+  FormMonitor in 'FormUnit\FormMonitor.pas' {MonitorForm},
+  Login in 'FormUnit\Login.pas' {loginForm},
+  MainForm in 'FormUnit\MainForm.pas' {MainCForm},
+  ShowOtherForm in 'FormUnit\ShowOtherForm.pas' {Form2},
+  Start in 'FormUnit\Start.pas' {Kcover};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TBanBen, BanBen);
+  Application.CreateForm(TMonitorForm, MonitorForm);
+  Application.CreateForm(TloginForm, loginForm);
+  Application.CreateForm(TMainCForm, MainCForm);
+  Application.CreateForm(TForm2, Form2);
+  Application.CreateForm(TKcover, Kcover);
+  Application.Run;
+end.

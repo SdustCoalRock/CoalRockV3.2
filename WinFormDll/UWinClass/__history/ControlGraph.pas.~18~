@@ -1,0 +1,760 @@
+unit ControlGraph;
+
+interface
+uses
+ Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls
+
+  ;
+ type
+   TmyDraw=(null,myLine,myRect,myEllips,myCircle); // 画图类型
+  //下面是画图的类型
+  type pLine=^recordLine;
+     recordLine=record
+     originP,finalP:TPoint;
+     lineColor:TColor;
+     next:pLine;
+     end;
+  type pRect=^recordRect;
+     recordRect=record
+     originP,finalP:TPoint;
+     rectColor:TColor;
+     fillColor:TColor;
+     next:pRect;
+     end;
+  type pEllips=^recordEllips;
+     recordEllips=record
+     originP,finalP:TPoint;
+     ellipsColor:TColor;
+     fillColor:TColor;
+     next:pEllips;
+     end;
+   type pCircle=^recordCircle;
+     recordCircle=record
+     centreP,edgeP:TPoint;
+     circleColor:TColor;
+     fillColor:TColor;
+     next:pCircle;
+     end;
+type
+  TControlImage=class
+    private
+
+
+        MYImage:Timage;
+        MyColorBox: TColorBox;
+        OutStr:String;
+        //intNumberLine: Integer;
+
+    public
+
+        myDrawStart:TmyDraw;
+
+        procedure SetImage(Image:Timage);
+        procedure SetMyColorBox(ColorBox:TColorBox);
+        function  GetOutStr:String;
+       //-------------------------------------------------
+        procedure drawLine(topLeft: TPoint; bottomRight: TPoint);//me
+        procedure drawRect(topLeft: TPoint; bottomRight: TPoint);//me
+        procedure drawEllips(topLeft,bottomRight:TPoint);
+        procedure drawCircle(centreP,edgeP:TPoint);
+        procedure preMove(myPoint:TPoint;Var S_out:string);
+        procedure realMoveLine(myPoint:TPoint);
+        procedure realMoveRect(myPoint:TPoint);
+        procedure realMoveEllips(myPoint:TPoint);
+        procedure realMoveCircle(myPoint:TPoint);
+        procedure realClear;
+        procedure preDel(myPoint:TPoint);
+        procedure preFill(myPoint:TPoint);
+        procedure saveToMyFile(outFileName:String);
+        procedure loadFromMyFile(inFileName:string);
+
+        function prepareLine(myPoint,firstPoint,secondPoint:TPoint):boolean;
+        function prepareRect(myPoint,firstPoint,secondPoint:TPoint):boolean;
+        function prepareEllips(myPoint,firstPoint,secondPoint:TPoint):boolean;
+        function prepareCircle(myPoint,centrePoint,edgePoint:TPoint):boolean;
+       // ------
+        procedure MyImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+        procedure MyImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+        procedure MYImageMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+        //setLine  Rect
+        procedure SetDrawLine;
+        procedure SetDrawRectang;
+
+        constructor Create;
+        destructor Destroy;override;
+  end;
+
+var
+        drawing,filling,moving,deling: Boolean;
+        movingLine,movingRect,movingEllips,movingCircle:Boolean;
+        origin,movePt:TPoint;
+
+        itsLine,firstLine,lastLine,dLine:pLine;
+        itsRect,firstRect,lastRect,dRect:pRect;
+        itsEllips,firstEllips,lastEllips,dEllips:pEllips;
+        itsCircle,firstCircle,lastCircle,dCircle:pCircle;
+
+
+implementation
+
+{ TControlImage }
+
+function TControlImage.prepareLine(myPoint, firstPoint,
+  secondPoint: TPoint): boolean;
+var
+  lengthA,lengthB,lengthC:real;
+  lengthX,lengthY:real; //integer;
+begin
+  lengthX:=abs(myPoint.X-firstPoint.X );
+  lengthY:=abs(myPoint.Y-firstPoint.Y );
+  lengthX:=sqr(lengthX);
+  lengthY:=sqr(lengthY);
+  lengthA:=sqrt(lengthX+lengthY);
+
+  lengthX:=abs(myPoint.X-secondPoint.X );
+  lengthY:=abs(myPoint.Y-secondPoint.Y );
+  lengthX:=sqr(lengthX);
+  lengthY:=sqr(lengthY);
+  lengthB:=sqrt(lengthX+lengthY);
+
+  lengthX:=abs(secondPoint.X-firstPoint.X );
+  lengthY:=abs(secondPoint.Y-firstPoint.Y );
+  lengthX:=sqr(lengthX);
+  lengthY:=sqr(lengthY);
+  lengthC:=sqrt(lengthX+lengthY);
+
+  if lengthA+lengthB<lengthC+1 then
+    result:=true
+  else
+    result:=false;
+
+end;
+
+constructor TControlImage.Create;
+begin
+  // MYImage:=Timage.Create(nil);
+//      MyImage.OnMouseDown:=MyImageMouseDown;
+//      MyImage.OnMouseMove:=MyImageMouseMove;
+//      MyImage.OnMouseUp:=MyImageMouseUP;
+end;
+
+destructor TControlImage.Destroy;
+begin
+
+  inherited;
+end;
+
+procedure TControlImage.drawCircle(centreP, edgeP: TPoint);
+var
+  radius,angle:real;
+  lengthX,lengthY:integer;
+  x1,y1:integer;
+  i,j:integer;
+  arrayCircle: array[1..100] of TPoint;
+begin
+  lengthX:=abs(centreP.X-edgeP.X );
+  lengthY:=abs(centreP.Y-edgeP.Y );
+  lengthX:=sqr(lengthX);
+  lengthY:=sqr(lengthY);
+  radius:=sqrt(lengthX+lengthY);
+  i:=100;
+  angle:=2*3.1416/i;
+  //x0:=centreP.X;
+  //y0:=centreP.Y;
+
+  with MYimage.Canvas do
+  begin
+    x1:=centreP.X+round(radius); //也可以用trunc
+    y1:=centreP.Y;
+
+    //moveto(x1,y1 );
+    for j:=0 to i-1 do
+    begin
+      x1:=centreP.X+round(radius*cos(angle*j));
+      y1:=centreP.Y+round(radius*sin(angle*j));
+      //lineto(x1,y1);
+      arrayCircle[j+1]:=Point(x1,y1);
+    end;
+    Polygon(arrayCircle);
+  end;
+
+end;
+
+procedure TControlImage.drawEllips(topLeft, bottomRight: TPoint);
+begin
+  MYImage.Canvas.Ellipse(topLeft.X,topLeft.Y,bottomRight.X,bottomRight.Y );
+end;
+
+procedure TControlImage.drawLine( topLeft, bottomRight: TPoint);
+begin
+  with MYImage.canvas do
+  begin
+    MoveTo(topLeft.x,topLeft.y);
+    lineto(bottomRight.x,bottomRight.y);
+  end;
+end;
+
+procedure TControlImage.drawRect( topLeft, bottomRight: TPoint);
+begin
+  with MYImage.Canvas do
+  begin
+    Rectangle(topLeft.X,topLeft.y,bottomRight.X ,bottomRight.y);
+  end;
+end;
+
+function TControlImage.GetOutStr: String;
+begin
+    Result:=OutStr;
+end;
+
+procedure TControlImage.loadFromMyFile(inFileName: string);
+begin
+
+end;
+
+procedure TControlImage.MyImageMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+   if button=mbLeft then   begin
+        drawing:=true;
+        MYimage.Canvas.Pen.Color :=MYColorBox.Selected;
+        origin:=Point(x,y);
+        movePt:=origin;
+        if moving=true then    begin
+          drawing:=false;
+          premove(origin,OutStr);
+        end;
+        if deling=true then    begin
+          drawing:=false;
+          preDel(origin);
+        end;
+        if filling=true then    begin
+          drawing:=false;
+          preFill(origin);
+        end;
+
+        if drawing=true then    begin
+           OutStr :='拾取终点：按住左键并且移动鼠标至终点再松开';
+        end;
+
+  end;
+end;
+
+procedure TControlImage.MyImageMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+    OUtStr:='坐标  ( '+intToStr(x)+' , '+intToStr(Myimage.Height-y)+' )';
+      if drawing then       begin
+          Myimage.Canvas.Pen.Mode :=pmNotXor;  //--------?????
+          Myimage.Canvas.Brush.Style :=bsClear;//<<< !!!
+
+          case myDrawStart of
+           myLine:
+             begin
+             drawLine(origin,movePt);
+             movePt:=Point(x,y);
+             drawLine(origin,movePt);
+             end;
+           myRect:
+             begin
+             drawRect(origin,movePt);
+             movePt:=Point(x,y);
+             drawRect(origin,movePt);
+             end;
+           myEllips:
+             begin
+             drawEllips(origin,movePt);
+             movePt:=Point(x,y);
+             drawEllips(origin,movePt);
+             end;
+           myCircle:
+             begin
+             drawCircle(origin,movePt);
+             movePt:=Point(x,y);
+             drawCircle(origin,movePt);
+             end;
+
+          end;
+      end;
+
+    if movingLine then     begin
+      movePt:=Point(x,y);
+      realMoveLine(movePt);
+    end;
+
+    if movingRect then   begin
+      movePt:=Point(x,y);
+      realMoveRect(movePt);
+    end;
+
+    if movingEllips then   begin
+      movePt:=Point(x,y);
+      realMoveEllips(movePt);
+    end;
+
+    if movingCircle then   begin
+      movePt:=Point(x,y);
+      realMoveCircle(movePt);
+    end;
+end;
+
+procedure TControlImage.MYImageMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if button=mbLeft then   begin
+      if drawing then    begin
+         drawing:=false;
+         OutSTr :='继续刚才的操作类型，或者重新选择操作类型';
+
+        case myDrawStart of
+         myLine:
+             begin
+               new(itsLine^.next);
+               itsLine:=itsLine^.next;
+
+               itsLine^.originP:=origin;
+               itsLine^.finalP:=movePt;
+               itsLine^.lineColor:=Myimage.Canvas.Pen.Color;
+
+               itsLine^.next :=nil;
+               lastLine:=itsLine;
+             end;
+         myRect:
+             begin
+               new(itsRect^.next);
+               itsRect:=itsRect^.next ;
+               itsRect^.originP:=origin;
+               itsRect^.finalP:=movePt;
+               itsRect^.rectColor:=Myimage.Canvas.Pen.Color ;
+               itsRect^.fillColor:=Myimage.Canvas.Brush.Color;
+               itsRect^.next:=nil;
+               lastRect:=itsRect;
+             end;
+         myEllips:
+             begin
+               new(itsEllips^.next);
+               itsEllips:=itsEllips^.next ;
+               itsEllips^.originP :=origin;
+               itsEllips^.finalP :=movePt;
+               itsEllips^.ellipsColor :=Myimage.Canvas.Pen.Color ;
+               itsEllips^.fillColor :=Myimage.Canvas.Brush.Color ;
+               itsEllips^.next :=nil;
+               lastEllips:=itsEllips;
+             end;
+         myCircle:
+             begin
+               new(itsCircle^.next); //------------------Right
+               itsCircle:=itsCircle^.next ;
+               itsCircle^.centreP :=origin;
+               itsCircle^.edgeP :=movePt;
+               itsCircle^.circleColor :=Myimage.Canvas.Pen.Color ;
+               itsCircle^.fillColor :=Myimage.Canvas.Brush.Color ;
+               itsCircle^.next :=nil;
+               lastCircle:=itsCircle;
+             end;
+
+      end;
+      end;
+  end;
+
+  if movingLine then       begin
+       movingLine:=false;   //<<<<<<<<  Right
+       itsLine:=lastLine;
+       OutStr :='继续刚才的操作类型，或者重新选择操作类型';
+  end;
+
+  if movingRect then    begin
+      movingRect:=false;
+      itsRect:=lastRect;
+      OutStr :='继续刚才的操作类型，或者重新选择操作类型';
+  end;
+
+  if movingEllips then      begin
+      movingEllips:=false;
+      itsEllips:=lastEllips;
+      OutStr:='继续刚才的操作类型，或者重新选择操作类型';
+  end;
+
+  if movingCircle then     begin
+      movingCircle:=false;
+      itsCircle:=lastCircle;
+      OutStr:='继续刚才的操作类型，或者重新选择操作类型';
+  end;
+
+
+end;
+
+procedure TControlImage.preDel(myPoint: TPoint);
+begin
+
+end;
+
+procedure TControlImage.preFill(myPoint: TPoint);
+begin
+
+end;
+
+procedure TControlImage.preMove(myPoint: TPoint; var S_out: string);
+var
+  ctrlRect:boolean;
+  ctrlEllips:boolean;
+  ctrlCircle:boolean;
+begin
+  ctrlRect:=true;
+  ctrlEllips:=true;
+  ctrlCircle:=true;
+
+  itsLine:=firstLine^.next ;
+  while itsLine<>nil do
+  begin
+    {with image1.canvas do
+     MoveTo(myPoint.X ,myPoint.Y );  //<<<<<<<<<<<<<<<
+    }
+    if prepareLine(myPoint,itsLine^.originP,itsLine^.finalP) then
+    begin
+      S_out :='拾取移动终止点：按住左键并且移动鼠标至终止点再松开';
+      realMoveLine(myPoint);
+      movingLine:=True;
+      ctrlRect:=false;
+      ctrlEllips:=false;
+      ctrlCircle:=false;
+      exit;//<<<<<<<<<<<<<<<  Bug !!! <<<<<<<<<<
+    end;
+    itsLine:=itsLine^.next ;
+  end;
+  if itsLine=nil then
+     itsLine:=lastLine;   //<<<<<< Bug! <<
+
+  if ctrlRect then
+  begin
+    itsRect:=firstRect^.next ;
+    while itsRect<>nil do
+    begin
+      if prepareRect(myPoint,itsRect^.originP,itsRect^.finalP) then
+      begin
+        S_out :='拾取移动终止点：按住左键并且移动鼠标至终止点再松开';
+        realMoveRect(myPoint);
+        movingRect:=true;
+        ctrlEllips:=false;
+        ctrlCircle:=false;
+        exit;//<--------- !!!
+      end;
+      itsRect:=itsRect^.next ;
+    end;
+    if itsRect=nil then
+       itsRect:=lastRect;  //<<<<<< Bug! <<<<<<<<
+  end;
+
+  if ctrlEllips then
+  begin
+    itsEllips:=firstEllips^.next ;
+    while itsEllips<>nil do
+    begin
+      if prepareEllips(myPoint,itsEllips^.originP ,itsEllips^.finalP) then
+      begin
+        S_out :='拾取移动终止点：按住左键并且移动鼠标至终止点再松开';
+        realMoveEllips(myPoint);
+        movingEllips:=true;
+        ctrlCircle:=false;
+        exit;
+      end;
+      itsEllips:=itsEllips^.next ;
+    end;
+    if itsEllips=nil then
+       itsEllips:=lastEllips;
+  end;
+
+  if ctrlCircle then
+  begin
+    itsCircle:=firstCircle^.next ;
+    while itsCircle<>nil do
+    begin
+      if prepareCircle(myPoint,itsCircle^.centreP ,itsCircle^.edgeP )then
+      begin
+        S_out:='拾取移动终止点：按住左键并且移动鼠标至终止点再松开';
+        realMoveCircle(myPoint);
+        movingCircle:=true;
+        exit;
+      end;
+      itsCircle:=itsCircle^.next ;
+    end;
+    if itsCircle=nil then
+       itsCircle:=lastCircle;
+  end;
+
+end;
+
+function TControlImage.prepareCircle(myPoint, centrePoint,
+  edgePoint: TPoint): boolean;
+var
+  radius,lengthP:real;
+  lengthX,lengthY:real;
+begin
+  lengthX:=abs(centrePoint.X -edgePoint.X );
+  lengthY:=abs(centrePoint.Y -edgePoint.Y );
+  lengthX:=sqr(lengthX);
+  lengthY:=sqr(lengthY);
+  radius:=sqrt(lengthX+lengthY);
+
+  lengthX:=abs(myPoint.X-centrePoint.X );
+  lengthY:=abs(myPoint.Y-centrePoint.Y );
+  lengthX:=sqr(lengthX);
+  lengthY:=sqr(lengthY);
+  lengthP:=sqrt(lengthX+lengthY);
+
+  if (lengthP<radius+6) and (lengthP>radius-8) then
+     result:=true
+  else
+     result:=false;
+
+end;
+
+function TControlImage.prepareEllips(myPoint, firstPoint,
+  secondPoint: TPoint): boolean;
+var
+  length2A,lengthA2,lengthB2,lengthC:real;
+  lengthX,lengthY:real;  //
+  deltaX2,deltaY2:real;
+  myLength1,myLength2:real;
+begin
+  lengthX:=abs(secondPoint.X-firstPoint.X )/2;
+  lengthY:=abs(secondPoint.Y-firstPoint.Y )/2;
+
+  if lengthX>lengthY then
+  begin
+    lengthA2:=sqr(lengthX);
+    lengthB2:=sqr(lengthY);
+    lengthC:=sqrt(lengthA2-lengthB2);
+    length2A:=2*lengthX ;
+    deltaX2:=sqr((firstPoint.X+secondPoint.X)/2-lengthC-myPoint.X);
+    deltaY2:=sqr((firstPoint.Y+secondPoint.Y)/2-myPoint.Y);
+    myLength1:=sqrt(deltaX2+deltaY2);
+    deltaX2:=sqr((firstPoint.X+secondPoint.X)/2+lengthC-myPoint.X);
+    myLength2:=sqrt(deltaX2+deltaY2);
+  end
+  else
+  begin
+    lengthA2:=sqr(lengthY);
+    lengthB2:=sqr(lengthX);
+    lengthC:=sqrt(lengthA2-lengthB2);
+    length2A:=2*lengthY;
+    deltaX2:=sqr((firstPoint.x+secondPoint.x)/2-myPoint.x);
+    deltaY2:=sqr((firstPoint.Y +secondPoint.Y )/2+lengthC-myPoint.Y );
+    myLength1:=sqrt(deltaX2+deltaY2);
+    deltaY2:=sqr((firstPoint.Y +secondPoint.Y )/2-lengthC-myPoint.Y );
+    myLength2:=sqrt(deltaX2+deltaY2);
+  end;
+
+  if (myLength1+myLength2<length2A+5)and (myLength1+myLength2>length2A-8)then
+     result:=true
+  else
+     result:=false;
+
+end;
+
+function TControlImage.prepareRect(myPoint, firstPoint,
+  secondPoint: TPoint): boolean;
+var
+  bigX,smallX,bigY,smallY:integer;
+begin
+  if firstPoint.X >secondPoint.X then
+  begin
+     bigX:=firstPoint.X ;
+     smallX:=secondPoint.X ;
+  end
+  else
+  begin
+     bigX:=secondPoint.X ;
+     smallX:=firstPoint.X ;
+  end;
+
+  if firstPoint.Y >secondPoint.Y then
+  begin
+    bigY:=firstPoint.Y ;
+    smallY:=secondPoint.Y;
+  end
+  else
+  begin
+    bigY:=secondPoint.Y ;
+    smallY:=firstPoint.Y ;
+  end;
+
+  if (myPoint.X>smallX-5) and (myPoint.X<smallX+10) and (myPoint.Y>smallY-5) and (myPoint.Y<bigY+5) then
+     result:=true
+  else if (myPoint.X>smallX-5) and (myPoint.X<bigX+5) and (myPoint.Y>bigY-10) and (myPoint.Y<bigY+5) then
+          result:=true
+  else if (myPoint.X>bigX-10) and (myPoint.X<bigX+5) and (myPoint.Y>smallY-5) and (myPoint.Y<bigY+5) then
+          result:=true
+  else if (myPoint.X>smallX-5) and (myPoint.X<bigX+5) and (myPoint.Y>smallY-5) and (myPoint.Y<smallY+10) then
+          result:=true
+  else
+     result:=false;
+end;
+
+procedure TControlImage.realClear;
+begin
+   itsLine:=firstLine^.next ;
+  while itsLine<>nil do  begin
+    MYImage.Canvas.Pen.Color :=itsLine^.lineColor ;
+    drawLine(itsLine^.originP ,itsLine^.finalP );
+    firstLine^.next :=itsLine^.next ;
+    dispose(itsLine);
+    itsLine:=firstLine^.next ;
+  end;
+  lastLine:=firstLine;
+  itsLine:=firstLine;
+
+  itsRect:=firstRect^.next ;
+  while itsRect<>nil do  begin
+    MYImage.Canvas.Pen.Color :=itsRect^.rectColor ;
+    MYImage.Canvas.Brush.Color :=itsRect^.fillColor ;
+    drawRect(itsRect^.originP ,itsRect^.finalP );
+    firstRect^.next :=itsRect^.next ;
+    dispose(itsRect);
+    itsRect:=firstRect^.next ;
+  end;
+  lastRect:=firstRect;
+  itsRect:=firstRect;
+
+  itsEllips:=firstEllips^.next ;
+  while itsEllips<>nil do   begin
+    MYImage.Canvas.Pen.Color :=itsEllips^.ellipsColor ;
+    MYImage.Canvas.Brush.Color :=itsEllips^.fillColor ;
+    drawEllips(itsEllips^.originP ,itsEllips^.finalP );
+    firstEllips^.next :=itsEllips^.next ;
+    dispose(itsEllips);
+    itsEllips:=firstEllips^.next ;
+  end;
+  lastEllips:=firstEllips;
+  itsEllips:=firstEllips;
+
+  itsCircle:=firstCircle^.next ;
+  while itsCircle<>nil do
+  begin
+    MYImage.Canvas.Pen.Color :=itsCircle^.CircleColor ;
+    MYImage.Canvas.Brush.Color :=itsCircle^.fillColor ;
+    drawCircle(itsCircle^.centreP ,itsCircle^.edgeP );
+    firstCircle^.next :=itsCircle^.next ;
+    dispose(itsCircle);
+    itsCircle:=firstCircle^.next ;
+  end;
+  lastCircle:=firstCircle;
+  itsCircle:=firstCircle;
+
+  //myDrawStart:=null;
+  myDrawStart:=null;
+  filling:=false;
+  moving:=false;
+  deling:=false;
+end;
+
+procedure TControlImage.realMoveCircle(myPoint: TPoint);
+var
+  deltaX,deltaY:integer;
+  centrePoint,edgePoint:TPoint;
+begin
+  MYImage.Canvas.Pen.Color :=itsCircle^.circleColor ;
+  MYImage.Canvas.Brush.Color :=itsCircle^.fillColor ;
+  drawCircle(itsCircle^.centreP ,itsCircle^.edgeP );
+  deltaX:=-origin.X+myPoint.X;
+  deltaY:=-origin.Y+myPoint.Y;
+  centrePoint:=Point(itsCircle^.centreP.X+deltaX,itsCircle^.centreP.Y+deltaY);
+  edgePoint:=Point(itsCircle^.edgeP.X+deltaX,itsCircle^.edgeP.Y+deltaY);
+  MYImage.Canvas.Pen.Color :=itsCircle^.circleColor ;
+  drawCircle(centrePoint,edgePoint);
+  origin:=myPoint;
+  itsCircle^.centreP:=centrePoint;
+  itsCircle^.edgeP:=edgePoint;
+
+end;
+
+procedure TControlImage.realMoveEllips(myPoint: TPoint);
+var
+  deltaX,deltaY:integer;
+  firstPoint,secondPoint:TPoint;
+begin
+  MYImage.Canvas.Pen.Color :=itsEllips^.ellipsColor ;
+  MYImage.Canvas.Brush.Color :=itsEllips^.fillColor ;
+  drawEllips(itsEllips^.originP ,itsEllips^.finalP);
+  deltaX:=-origin.X+myPoint.X;
+  deltaY:=-origin.Y+myPoint.Y;
+  firstPoint:=Point(itsEllips^.originP.X+deltaX,itsEllips^.originP.Y+deltaY);
+  secondPoint:=Point(itsEllips^.finalP.X+deltaX,itsEllips^.finalP.Y+deltaY);
+  drawEllips(firstPoint,secondPoint);
+  origin:=myPoint;
+  itsEllips^.originP:=firstPoint;
+  itsEllips^.finalP:=secondPoint;
+
+end;
+
+procedure TControlImage.realMoveLine( myPoint: TPoint);
+var
+  deltaX,deltaY:integer;
+  firstPoint,secondPoint:TPoint;
+begin
+  MYImage.Canvas.Pen.Color :=itsLine^.lineColor ;
+  drawLine(itsLine^.originP,itsLine^.finalP);
+  deltaX:=-origin.X+myPoint.X;
+  deltaY:=-origin.Y+myPoint.Y;
+  firstPoint:=Point(itsLine^.originP.X+deltaX,itsLine^.originP.Y+deltaY);
+  secondPoint:=Point(itsLine^.finalP.X+deltaX,itsLine^.finalP.Y+deltaY);
+  drawLine(firstPoint,secondPoint);
+  origin:=myPoint;
+  itsLine^.originP:=firstPoint;
+  itsLine^.finalP:=secondPoint;
+end;
+
+procedure TControlImage.realMoveRect(myPoint: TPoint);
+var
+  deltaX,deltaY:integer;
+  firstPoint,secondPoint:TPoint;
+begin
+  MYImage.Canvas.Pen.Color :=itsRect^.rectColor;
+  MYImage.Canvas.Brush.Color :=itsRect^.fillColor;
+  drawRect(itsRect^.originP ,itsRect^.finalP);
+  deltaX:=-origin.X+myPoint.X;
+  deltaY:=-origin.Y+myPoint.Y;
+  firstPoint:=Point(itsRect^.originP.X+deltaX,itsRect^.originP.Y+deltaY);
+  secondPoint:=Point(itsRect^.finalP.X+deltaX,itsRect^.finalP.Y+deltaY);
+  drawRect(firstPoint,secondPoint);
+  origin:=myPoint;
+  itsRect^.originP:=firstPoint;
+  itsRect^.finalP:=secondPoint;
+end;
+
+procedure TControlImage.saveToMyFile(outFileName: String);
+begin
+
+end;
+
+procedure TControlImage.SetDrawLine;
+begin
+  myDrawStart:=myLine;
+  filling:=false;
+  moving:=false;
+  deling:=false;
+  OutStr :='绘制直线：拾取起始点（按下鼠标左键）';
+end;
+
+procedure TControlImage.SetDrawRectang;
+begin
+
+end;
+
+procedure TControlImage.SetImage(Image: Timage);
+begin
+     MyImage:=Image;
+      MyImage.OnMouseDown:=MyImageMouseDown;
+      MyImage.OnMouseMove:=MyImageMouseMove;
+      MyImage.OnMouseUp:=MyImageMouseUP;
+end;
+
+procedure TControlImage.SetMyColorBox(ColorBox: TColorBox);
+begin
+    MyColorBox:=ColorBox;
+end;
+
+
+
+end.

@@ -1,0 +1,844 @@
+unit ReportWord;
+
+interface
+uses
+  System.SysUtils,Vcl.ExtCtrls,
+  unWord_Lu,PStope_GzmGuidClass;
+
+type
+    TWordReport = class(TMyWord)
+
+    private
+
+        innWord:TMyWord;
+        function  Get_Cmff(id:integer):String;         //采煤方法
+        function  Get_Coal_F(id:integer):String;       //煤体应力
+        function  Get_JYHD(id:integer):String;           //基岩厚度
+        function  Get_HangDao_Stress(id:integer):String; //巷道压力
+        function  Get_HangDao_support(id:integer):String; //巷道支护方式
+        function  Get_support_type(id:integer):String; //支架型号
+        function  Get_DZGZ(id:integer):String;  //地质构造
+        function  Get_WSFC(id:integer):String;  //瓦斯含量
+        function  Get_TopWater(id:integer):String;  //顶板水源
+        function  Get_BottomWater(id:integer):String;  //地板水源
+        function  Get_RockPress(id:integer):String;  //矿压情况
+        function  Get_YxFx(id:integer):String;  //仰斜与俯斜
+        // main Myword
+        Procedure CreateWordClass();
+        procedure FreeMyWordClass();
+        procedure AddDocmentTitle(CoalName,WorkFaceName,ReportType:String);
+        procedure ADDWorkFaceInFo_1(inGzm:TGzm);
+        procedure ADDDrilleInFo_2(inGzm:TGzm);
+        procedure AddFYYDInfo_3(inGzm:TGzm;ReportType:String);
+        procedure AddYDFZInfo_4(inGzm:TGzm);
+        procedure AddSupportInfo_5(inGzm:TGzm);
+        procedure AddSupSubject_6(inGzm:TGzm);
+        procedure AddExsitSupport_7(inGzm:TGzm);
+        //------------------
+        procedure AddYklhInfo_5(inGzm:TGzm);
+        procedure AddYklhInfo_5_2;
+
+        procedure Add_disclaimer(Xhstr:String);
+
+       //
+        procedure DeleteBmPFile;
+        function  isExsitBmpFile(BmpFile:string):Boolean;
+        function  Report_Zcyl(inGzm:TGzm):Boolean;
+    public
+        procedure ReportZhijia(AHandle:THandle;inGzm:TGzm); //打印支架报告
+        procedure ReportYklh(AHandle:THandle;inGzm:TGzm);//  打印沿空留巷
+        function  ReportDrillInfoToWordFile(inGzm:TGzm):String;
+
+         constructor Create;
+         destructor  Destroy;
+
+    end;
+
+
+implementation
+
+{ TWordReport }
+
+uses UMainDataModule, MainCallUnit, Lu_Public_BasicModual,IOUtils,
+  SupportWeightClass;
+Procedure CreateWordClass(MyUseWord:TMyWord);
+begin
+
+end;
+
+procedure TWordReport.AddDocmentTitle(CoalName, WorkFaceName,ReportType: String );
+var
+  title:String;
+  i:integer;
+begin
+    with innWord do begin
+         if ReportType='Support' then  begin
+            title:=CoalName+'【'+WorkFaceName+'】液压支架选型报告';
+         end else if ReportType='Yklh' then begin
+            title:=CoalName+'【'+WorkFaceName+'】沿空留巷技术报告';
+         end;
+
+         SetFont('楷体_GB2312',18,false,false);
+         AlignLine(1);  //居中
+         SetHeading(title,1); //报告标题
+
+    end;
+end;
+
+procedure TWordReport.ADDDrilleInFo_2( inGzm: TGzm);
+var
+  str:string;
+  i:integer;
+begin
+     with innWord do begin
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          AlignLine(1);
+          SetHeading('二、钻孔信息',2);// 章节
+          AddReturn();
+           //正文
+          SetFont('宋体',13,false,false);
+          AlignLine(0);
+          WriteText('    该次测算使用的钻孔名称为：'+inGzm.UsedDrill.Zk_name +
+                    '，该钻孔录入岩层：'+IntToStr(inGzm.UsedDrill.Zk_Yc_Count)+'层。'+#13,0);
+
+          AlignLine(1);
+          SetFont('宋体',10,true,false);
+          AddTable(6,inGzm.UsedDrill.Zk_Yc_Count);
+          WriteText('岩层序号',0);   MoveRight(1);
+          WriteText('岩层名称',0);   MoveRight(1);
+          WriteText('均厚(米)',0);   MoveRight(1);
+          WriteText('岩石容重',0);   MoveRight(1);
+          WriteText('抗压MPa',0);    MoveRight(1);
+          WriteText('抗拉MPa',0);    MoveRight(1);
+
+          SetFont('宋体',10,false,false);
+          for I := 0 to inGzm.UsedDrill.Zk_Yc_Count-1 do   begin
+              WriteText(inttoStr(i+1),0);                       MoveRight(1);
+              WriteText(inGzm.UsedDrill.Yc_Rock[i].R_Name,0);   MoveRight(1);
+              WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_h),0);      MoveRight(1);
+              WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_r),0);      MoveRight(1);
+              WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_kyqd),0);   MoveRight(1);
+              WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_klqd),0);   MoveRight(1);
+          end;
+          MoveDown(inGzm.UsedDrill.Zk_Yc_Count);
+
+     end;
+end;
+
+procedure TWordReport.AddExsitSupport_7(inGzm:TGzm);
+var
+  Sout,t_sql:String;
+  s_temp:Str_DT_array;
+  C1:integer;
+  max_P,min_P:double;
+begin
+//*************
+    with innWord do begin
+          AlignLine(0);
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          SetHeading('七、支架选型',2);// 章节
+          AddReturn();
+           //正文
+          SetFont('黑体',13,false,false);
+          SetFont('宋体',13,false,false);
+
+          Sout:=StrPas(Main_CallPStope.UsePStope.Get_Support_P('3.0'));
+          s_temp:=Public_Basic.split(Sout,',',C1);
+          if C1>1 then begin
+             max_P:=Public_Basic.StrToDouble_Lu(s_temp[0]) ;
+             min_P:=Public_Basic.StrToDouble_Lu(s_temp[1]) ;
+          end;
+         t_sql:='select bh,Tu_bh,ZJ_Type from MapBh where Zj_P>='''+
+               floattostr(min_P)+''' and Zj_P<='''+floattostr(max_P)+''' and Zj_h_min <'''+
+               floattostr(inGzm.S_Cg_h-0.5)+''' and Zj_h_max > '''+floattostr(inGzm.S_Cg_h+0.2)+'''';
+         AlignLine(0) ;
+         MainDataModule.MyDataSet.Close ;
+         MainDataModule.MyDataSet.CommandText :=t_sql;
+         C1:=1;
+         try
+             MainDataModule.MyDataSet.Open ;
+             if MainDataModule.MyDataSet.RecordCount >0 then begin
+                WriteText('存在类似的液压支架：',0); AddReturn();
+                while not MainDataModule.MyDataSet.Eof  do begin
+                   WriteText( '第【'+intToStr(C1)+'】支架    '+
+                             MainDataModule.MyDataSet.FieldByName('Tu_bh').AsString +'  ' +
+                             MainDataModule.MyDataSet.FieldByName('ZJ_Type').AsString,0 );
+                    AddReturn();
+                   MainDataModule.MyDataSet.Next ;
+                end;
+             end else begin
+                WriteText('数据库中不存在相似的液压支架：',0); AddReturn();
+             end;
+         finally
+            MainDataModule.MyDataSet.Close ;
+         end;
+    end;
+end;
+
+procedure TWordReport.AddFYYDInfo_3(inGzm: TGzm;ReportType:String);
+var
+  Pic_Path:Ansistring;
+begin
+    Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\FYYD\';
+    with innWord do begin
+          AlignLine(0);
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          SetHeading('三、覆岩运动规律',2);// 章节
+          AddReturn();
+           //正文
+          SetFont('黑体',13,false,false);
+          SetHeading('1、三种算法',3);
+          AddReturn();
+          AlignLine(1);
+          SetFont('宋体',10,true,false);
+          AddTable(1,6);
+          if self.isExsitBmpFile(Pic_Path+'NQF.JPG') then
+             AddPicture(Pic_Path+'NQF.JPG',0);
+          MoveRight(1);
+          WriteText('图3.1 覆岩运动规律挠曲算法图示',0);
+          MoveRight(1);
+          if self.isExsitBmpFile(Pic_Path+'BJF.JPG') then
+             AddPicture(Pic_Path+'BJF.JPG',1);
+          MoveRight(1);
+          WriteText('图3.2 覆岩运动规律步距算法图示',0);
+          MoveRight(1);
+           if self.isExsitBmpFile(Pic_Path+'ZHSF.JPG') then
+             AddPicture(Pic_Path+'ZHSF.JPG',1);
+          MoveRight(1);
+          WriteText('图3.3 覆岩运动规律综合算法图示',0);
+          MoveDown(1);
+
+          AddReturn();
+
+          AlignLine(0);
+
+          SetFont('黑体',13,false,false);
+          SetHeading('2、覆岩运动规律',3);
+          AddReturn();
+          SetFont('宋体',13,false,false);
+          WriteText('   直接顶运动参数：'+StrPas(Main_CallPStope.UsePStope.Get_immediate_roof('1.0')),0);
+          AddReturn();
+          WriteText('   老顶运动参数：'+StrPas(Main_CallPStope.UsePStope.Get_Old_roof('1.0')),0);
+          AddReturn();
+          {为沿空留巷定制}
+          if ReportType='Yklh' then begin
+              SetFont('黑体',13,false,false);
+              SetHeading('3、承压力分布规律',3);
+              AddReturn();
+              SetFont('宋体',13,false,false);
+              Report_Zcyl(inGzm);
+          end;
+    end;
+end;
+
+procedure TWordReport.AddSupportInfo_5(inGzm: TGzm);
+var
+  i,selectedid:integer;
+  Image1:TImage;
+  Pic_Path,DispStr:string;
+begin
+   Image1 := TImage.Create(nil);
+   Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\FYYD\';
+   try
+    with innWord do begin
+          AlignLine(0);
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          SetHeading('五、支架选型',2);// 章节
+          AddReturn();
+           //正文
+          SetFont('黑体',13,false,false);
+          SetHeading('1、开采条件影响值',3);
+          AddReturn();
+          AlignLine(1);
+          SetFont('宋体',10,true,false);
+          AddTable(8,2);
+          WriteText('直接顶类别',0);MoveRight(1);
+          WriteText('基本顶类别',0);MoveRight(1);
+          WriteText('底板类别',0);MoveRight(1);
+          WriteText('工作阻力/KN',0);MoveRight(1);
+          WriteText('采高/m',0);MoveRight(1);
+          WriteText('矿井瓦斯',0);MoveRight(1);
+          WriteText('冒放性类别',0);MoveRight(1);
+          WriteText('煤层倾角',0);MoveRight(1);
+          for I := 0 to 7 do  begin
+             selectedid:= t_SupWeigth.WorkFaceInfo.Child_Second[i].selected ;
+             WriteText(t_SupWeigth.WorkFaceInfo.Child_Second[i].Child_Third[selectedid].Name ,0);
+             if i<7 then   MoveRight(1);
+
+          end;
+
+          MoveDown(1);
+
+          AddReturn();
+
+          AlignLine(0);
+          SetFont('黑体',13,false,false);
+          SetHeading('2、注意事项',3);
+          AddReturn();
+          SetFont('宋体',13,false,false);
+          WriteText('液压支架阻力计算建议值：',0);
+          AddReturn();
+          WriteText(StrPas(Main_CallPStope.UsePStope.Get_Support_P('1.0')),0);
+
+          AddReturn();
+
+          AlignLine(0);
+          SetFont('黑体',13,false,false);
+          SetHeading('3、支架设计专家建议结构选项',3);
+
+          AddReturn();
+          SetFont('宋体',10,true,false);
+          AddTable(1,1);
+          for I := 0 to t_SupWeigth.SupportInfo.Child_count-1 do  begin
+            selectedid:=t_SupWeigth.SupportInfo.Child_Second[i].Selected;
+            MainDataModule.MySqliteDataBase.GetBMPToSQlite(
+                t_SupWeigth.SupportInfo.Child_Second[i].Child_Third[selectedid].id,'3',Image1.Picture.Bitmap  );
+             Image1.Width :=Image1.Picture.Bitmap.Width ;
+             Image1.Height :=Image1.Picture.Bitmap.Height ;
+
+             if Public_Basic.Licensing  then  Public_Basic.AddSingleTextWaterFormImage(Image1)
+               else Public_Basic.AddMultTextWaterFormImage(Image1);
+
+            Image1.Picture.SaveToFile(Pic_Path+'Supp.bmp');
+            AlignLine(0);
+            DispStr:=IntToStr(i+1)+'、'+t_SupWeigth.SupportInfo.Child_Second[i].Name+
+                     ' 选用: '+ t_SupWeigth.SupportInfo.Child_Second[i].Child_Third[selectedid].BianMa+'【'+
+                      t_SupWeigth.SupportInfo.Child_Second[i].Child_Third[selectedid].Name   +'】' ;
+            WriteText(DispStr,0);  MoveRight(1);
+            AlignLine(1);
+            if self.isExsitBmpFile(Pic_Path+'Supp.bmp') then
+               AddPicture(Pic_Path+'Supp.bmp',1);
+            if i< t_SupWeigth.SupportInfo.Child_count-1 then
+               MoveRight(1);
+
+          end;
+          MoveDown(1);
+
+    end;
+   finally
+      Image1.Free;
+   end;
+end;
+
+procedure TWordReport.AddSupSubject_6(inGzm: TGzm);
+var
+ i:integer;
+begin
+     with innWord do begin
+          AlignLine(0);
+          MoveDown(1);
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          SetHeading('六、注意问题',2);// 章节
+          AddReturn();
+           //正文
+
+          SetFont('宋体',13,false,false);
+          for I := 0 to t_SupSubject.Data_Count-1 do  begin
+             WriteText('    '+t_SupSubject.DataClass[i],0);
+             AddReturn();
+          end;
+
+     end;
+end;
+
+procedure TWordReport.ADDWorkFaceInFo_1(inGzm: TGzm);
+var
+  str:string;
+begin
+  with innWord do begin
+      AlignLine(0);
+      AddReturn();   //加一个空行
+      SetFont('宋体',14,false,false);
+      SetHeading('一、工作面基本信息',2);// 章节
+      AddReturn();
+       //正文
+      SetFont('宋体',13,false,false);
+      str:='  模拟开采工作面名称为【'+inGzm.S_Name+'】煤层平均厚度为' +
+                  FormatFloat('#.##',inGzm.S_Agv_mch) +'米, 设定开采高度为' +
+                  FormatFloat('#.##',inGzm.S_Cg_h)+'米, 采煤方法是' +
+                  Get_Cmff(inGzm.S_CMFS_INteger)+ ',工作面上界采深是'+FormatFloat('#.##',inGzm.S_Sh_UP)+
+                  '米,下界采深是'+FormatFloat('#.##',inGzm.S_Sh_Down)+'米，平均采深是'   +
+                  FormatFloat('#.##',inGzm.S_mcsd_h)+'米';
+      WriteText(str,0);
+      AddReturn();
+      str:='  该工作面推进长度是'+FormatFloat('#.##',inGzm.S_Sx_zx )+'米，'+
+                '倾斜长度是'+FormatFloat('#.##',inGzm.S_L_qx)+'米，'   +
+                '煤层硬度是'+Get_Coal_F(round(inGzm.S_f_PS))+',基岩厚度是'+Get_JYHd(inGzm.Dz_JYHD)+
+                ',每天推进'+FormatFloat('#.##',inGzm.S_DayStep_speed)+'米左右。' ;
+
+      WriteText(Str,0);
+      AddReturn();
+
+      Str:='  该次模拟计算使用的液压支架参数为:'+
+                '中心距：'+ FormatFloat('#.##',inGzm.Usedsupport.Zj_zhongxinju) +  '米,'+
+                '控顶距：'+ FormatFloat('#.##',inGzm.Usedsupport.Zj_KongdingJU) +  '米,'+
+                '合力作用点：'+ FormatFloat('#.##',inGzm.Usedsupport.Zj_hlzyd)  +  '米,'+
+                '立柱数量：'+ IntTostr(inGzm.Usedsupport.Zj_Lizhu_count) +  '个。';
+      WriteText(Str,0);
+      AddReturn();
+  end;
+end;
+
+procedure TWordReport.AddYDFZInfo_4(inGzm: TGzm);
+var
+  Pic_Path:Ansistring;
+begin
+    Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\FYYD\';
+    with innWord do begin
+          AlignLine(1);
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          SetHeading('四、采场开采覆岩运动模拟',2);// 章节
+          AddReturn();
+           //正文
+          AlignLine(1);
+          SetFont('宋体',10,true,false);
+          AddTable(1,12);
+          if self.isExsitBmpFile(Pic_Path+'IMM0.JPG') then
+             AddPicture(Pic_Path+'IMM0.JPG',1);
+          MoveRight(1);
+          WriteText('图4.1 开采模拟初始状态图',0);
+          MoveRight(1);
+          if self.isExsitBmpFile(Pic_Path+'IMM1.JPG') then
+             AddPicture(Pic_Path+'IMM1.JPG',1);
+          MoveRight(1);
+          WriteText('图4.2 直接顶初次垮落示意图',0);
+          MoveRight(1);
+          if self.isExsitBmpFile(Pic_Path+'IMM2.JPG') then
+             AddPicture(Pic_Path+'IMM2.JPG',1);
+          MoveRight(1);
+          WriteText('图4.3 顶板冒落形成示意图',0);
+          MoveRight(1);
+          if self.isExsitBmpFile(Pic_Path+'IMM3.JPG') then
+             AddPicture(Pic_Path+'IMM3.JPG',1);
+          MoveRight(1);
+          WriteText('图4.4 老顶初次来压示意图',0);
+          MoveRight(1);
+          if self.isExsitBmpFile(Pic_Path+'IMM4.JPG') then
+             AddPicture(Pic_Path+'IMM4.JPG',1);
+          MoveRight(1);
+          WriteText('图4.5 老顶周期来压示意图',0);
+          MoveRight(1);
+          if self.isExsitBmpFile(Pic_Path+'IMM5.JPG') then
+             AddPicture(Pic_Path+'IMM5.JPG',1);
+          MoveRight(1);
+          WriteText('图4.6 采动见方顶板运动示意图',0);
+          MoveDown(1);
+
+    end;
+
+end;
+
+procedure TWordReport.AddYklhInfo_5(inGzm: TGzm);
+var
+  i,selectedid:integer;
+  Image1:TImage;
+  Pic_Path,DispStr:string;
+begin
+   Image1 := TImage.Create(nil);
+   Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\FYYD\';
+   try
+    with innWord do begin
+          AlignLine(0);
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          SetHeading('五、沿空留巷可行性分析方案',2);// 章节
+          AddReturn();
+           //正文
+          SetFont('黑体',13,false,false);
+          SetHeading('1、工作面顶板分布信息',2);
+          AddReturn();
+          AlignLine(1);
+          SetFont('宋体',10,true,false);
+          AddTable(8,2);
+          WriteText('直接顶类别',0);MoveRight(1);
+          WriteText('基本顶类别',0);MoveRight(1);
+          WriteText('底板类别',0);MoveRight(1);
+          WriteText('工作阻力/KN',0);MoveRight(1);
+          WriteText('采高/m',0);MoveRight(1);
+          WriteText('矿井瓦斯',0);MoveRight(1);
+          WriteText('冒放性类别',0);MoveRight(1);
+          WriteText('煤层倾角',0);MoveRight(1);
+          for I := 0 to 7 do  begin
+             selectedid:= t_SupWeigth.WorkFaceInfo.Child_Second[i].selected ;
+             WriteText(t_SupWeigth.WorkFaceInfo.Child_Second[i].Child_Third[selectedid].Name ,0);
+             if i<7 then   MoveRight(1);
+
+          end;
+
+          MoveDown(1);
+
+          AddReturn();
+        // 添加5.2 其他内容
+         AddYklhInfo_5_2;
+
+
+
+    end;
+   finally
+      Image1.Free;
+   end;
+
+end;
+
+procedure TWordReport.AddYklhInfo_5_2;
+begin
+    with innWord do begin
+          AlignLine(0);
+          SetFont('黑体',13,false,false);
+          SetHeading('2、沿空留巷可行性方案分析',3);
+          AddReturn();
+          AlignLine(0);
+          SetFont('宋体',13,false,false);
+          WriteText(Main_CallPStope.UsePStope.Get_kcjstj('2.0') ,0);
+            AddReturn();
+          SetFont('黑体',13,false,false);
+          SetHeading('3、沿空留巷充填墙体主要参数',3);
+            AddReturn();
+          AlignLine(0);
+          SetFont('宋体',13,false,false);
+          WriteText(Main_CallPStope.Return_Yklh_SupportParam('1.0'),0 );
+            AddReturn();
+          SetFont('黑体',13,false,false);
+          SetHeading('4、巷道辅助支护建议',3);
+            AddReturn();
+          SetFont('宋体',13,false,false);
+          WriteText(Main_CallPStope.Return_Yklh_HangDao_Zhihu_Support('1.0'),0 );
+            AddReturn();
+          SetFont('黑体',13,false,false);
+          SetHeading('5、经济效益评价',3);
+            AddReturn();
+          SetFont('宋体',13,false,false);
+          WriteText(Main_CallPStope.Return_Yklh_Jinjixiaoyi('1.0'),0 );
+            AddReturn();
+     end;
+end;
+
+procedure TWordReport.Add_disclaimer(Xhstr:String);
+begin
+     with innWord do begin
+          AlignLine(1);
+          AddReturn();   //加一个空行
+          SetFont('宋体',15,false,false);
+          SetHeading(Xhstr+ '、补充建议',2);// 章节
+          AddReturn();
+           //正文
+          AlignLine(0);
+          SetFont('宋体',13,false,false);
+          WriteText('    本计算主要是使用钻孔柱状图的信息,关于岩石力学参数采用的是经验值,给出的结论仅供参考, ' +
+                    ' 如果想确定对采煤工作面有实用性的数据,需要加强现场矿压观测校订关键参数！');
+
+     end;
+end;
+
+constructor TWordReport.Create;
+begin
+    CreateWordClass;
+end;
+
+procedure TWordReport.CreateWordClass;
+begin
+    if not Assigned(innWord) then
+       innWord:= TMyWord.Create;
+
+end;
+
+procedure TWordReport.DeleteBmPFile;
+var
+ BmpPath:WideString;
+begin
+    BmpPath:=Public_Basic.Get_MyModulePath+'SaveBmp\FYYD\';
+    if  DirectoryExists(BmpPath) then
+        TDirectory.Delete(BmpPath, true);
+    ForceDirectories(BmpPath);
+end;
+
+destructor TWordReport.Destroy;
+begin
+   FreeMyWordClass;
+end;
+
+procedure TWordReport.FreeMyWordClass();
+begin
+     if Assigned(innWord) then  FreeAndNil(innWord);
+
+end;
+
+function TWordReport.Get_BottomWater(id: integer): String;
+begin
+  case id of
+     1: Result:='底板无水';
+     2: Result:='底板有水源，较远';
+     3: Result:='底板有水源，较近';
+     4: Result:='曾发生底板突出事故';
+     else  Result:='其他';
+  end;
+end;
+
+function TWordReport.Get_Cmff(id: integer): String;
+begin
+    case id of
+       1: Result:='炮采';
+       2: Result:='普采';
+       3: Result:='综采';
+       else Result:='放顶煤';
+    end;
+end;
+
+function TWordReport.Get_Coal_F(id: integer): String;
+begin
+   case id of
+         1: Result:='普氏系数0.8以下';
+         2: Result:='普氏系数0.8-1.5之间';
+         3: Result:='普氏系数1.5-2.5之间';
+         else Result:='普氏系数2.5以上';
+   end;
+end;
+
+function TWordReport.Get_DZGZ(id: integer): String;
+begin
+   case id of
+       1: Result:='地质构造较少';
+       2: Result:='背斜轴部';
+       3: Result:='向斜轴部';
+       4: Result:='断层密集，但不影响推进';
+       5: Result:='断层密集，影响推进';
+       6: Result:='地质及其复杂';
+   end;
+end;
+
+function TWordReport.Get_HangDao_Stress(id: integer): String;
+begin
+   case id  of
+       1: Result:='基本无水平应力';
+       2: Result:='水平应力小于垂直应力';
+       3: Result:='水平应力与垂直应力相当';
+       else Result:='水平应力大于垂直应力1.5倍以上';
+   end;
+end;
+
+function TWordReport.Get_HangDao_support(id: integer): String;
+begin
+   case id of
+       1: Result:='巷道基本不需要支护';
+       2: Result:='巷道需要简单的锚网支护';
+       3: Result:='巷道架棚支护，基本不变形';
+       4: Result:='巷道变形，底鼓，变形小';
+       else Result:='巷道急速变形，底鼓，严重影响生产';
+   end;
+end;
+
+function TWordReport.Get_JYHD(id: integer): String;
+begin
+   case id of
+     1: Result:='基岩层较薄';
+     2: Result:='基岩层一般';
+     3: Result:='基岩层较厚';
+     else Result:='基岩层巨厚';
+   end;
+end;
+
+function TWordReport.Get_RockPress(id: integer): String;
+begin
+   case id of
+       1: Result:='矿压显现不明显';
+       2: Result:='有矿压显现，不影响生产';
+       3: Result:='矿压显现叫剧烈，影响生产';
+       4: Result:='发生过顶板事故';
+   end;
+end;
+
+function TWordReport.Get_support_type(id: integer): String;
+begin
+   case id of
+      1: Result:='单体支护';
+      2: Result:='综采液压支架';
+   end;
+end;
+
+function TWordReport.Get_TopWater(id: integer): String;
+begin
+   case id of
+     1: Result:='顶板无水';
+     2: Result:='含水层距离顶板较远';
+     3: Result:='含水层距离顶板较近';
+     4: Result:='曾发生透水事故';
+     else  Result:='其他';
+
+  end;
+end;
+
+function TWordReport.Get_WSFC(id: integer): String;
+begin
+  case id of
+      1: Result:='瓦斯含量较低';
+      2: Result:='低瓦斯，但局部超限';
+      3: Result:='高瓦斯';
+  end;
+end;
+
+function TWordReport.Get_YxFx(id: integer): String;
+begin
+   case id of
+      1: Result:='水平推进';
+      2: Result:='仰斜推进';
+      3: Result:='俯斜推进';
+   end;
+end;
+
+function TWordReport.isExsitBmpFile(BmpFile: string): Boolean;
+begin
+    Result:=False;
+    while not FileExists(BmpFile) do  sleep(100);
+    Result:=true;
+
+end;
+
+function TWordReport.ReportDrillInfoToWordFile(inGzm: TGzm): String;
+var
+  str:string;
+  fileName,textString:Ansistring;
+  DirName:Ansistring;
+  Dll_Path:AnsiString;
+  i:integer;
+begin
+   Result:='';
+   //
+   CreateWordClass();
+   innWord.OpenWord('');
+   //
+   Dll_Path:=Public_Basic.Get_MyModulePath;
+   DirName:=DLL_path+'\InputData\WorkDace_'+IntTostr(inGzm.Gzmbh)+'\D000.rtf';
+    with innWord do begin
+           //正文
+        if inGzm.UsedDrill.Zk_Yc_Count> 0 then begin
+            SetFont('宋体',12,false,false);
+            AlignLine(0);
+            WriteText('    该次测算使用的钻孔名称为：'+inGzm.UsedDrill.Zk_name +
+                      '，该钻孔录入岩层：'+IntToStr(inGzm.UsedDrill.Zk_Yc_Count)+'层。'+#13,0);
+
+            AlignLine(1);
+            SetFont('宋体',8,true,false);
+            WriteText('表1-2 钻孔岩层信息表',0);
+            AddReturn();
+            SetFont('宋体',10,False,false);
+            AddTable(6,inGzm.UsedDrill.Zk_Yc_Count);
+            WriteText('岩层序号',0);   MoveRight(1);
+            WriteText('岩层名称',0);   MoveRight(1);
+            WriteText('均厚(米)',0);   MoveRight(1);
+            WriteText('岩石容重',0);   MoveRight(1);
+            WriteText('抗压MPa',0);    MoveRight(1);
+            WriteText('抗拉MPa',0);    MoveRight(1);
+
+            SetFont('宋体',12,false,false);
+            for I := 0 to inGzm.UsedDrill.Zk_Yc_Count-1 do   begin
+                WriteText(inttoStr(i+1),0);                       MoveRight(1);
+                WriteText(inGzm.UsedDrill.Yc_Rock[i].R_Name,0);   MoveRight(1);
+                WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_h),0);      MoveRight(1);
+                WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_r),0);      MoveRight(1);
+                WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_kyqd),0);   MoveRight(1);
+                WriteText(FormatFloat('#.##',inGzm.UsedDrill.Yc_Rock[i].R_klqd),0);   MoveRight(1);
+            end;
+
+            MoveDown(inGzm.UsedDrill.Zk_Yc_Count);
+            Save(DirName);
+            close;
+            Result:=DirName;
+        end;
+
+     end;
+
+    FreeMyWordClass;
+end;
+
+procedure TWordReport.ReportYklh(AHandle:THandle;inGzm:TGzm);
+begin
+       CreateWordClass();
+       innWord.OpenWord('');
+       DeleteBmPFile; {删除文件夹}
+       {提前调用，为文件保存预留时间}
+       Main_CallPStope.UsePStope.GetFyydBmp(AHandle);
+       Main_CallPStope.UsePStope.GetDTFZBmp(AHandle);
+       // 添加标题
+       AddDocmentTitle(MainDataModule.Coal_Name,MainDataModule.WorkFace_Name,
+                       'Yklh');
+      //添加工作面信息
+       ADDWorkFaceInFo_1(inGzm);
+       //添加钻孔基本信息
+       ADDDrilleInFo_2(inGzm);
+       //添加覆岩运动规律
+       AddFYYDInfo_3(inGzm,'Yklh');
+       //添加采动模拟仿真
+       AddYDFZInfo_4(inGzm);
+       //添加支架选型
+       AddYklhInfo_5(inGzm);
+       //添加支架专家意见表
+//       AddSupSubject_6(inGzm);
+//       //添加已存在液压支架信息
+//       AddExsitSupport_7(inGzm);
+       //免责声明
+       Add_disclaimer('六');
+       FreeMyWordClass();
+end;
+
+procedure TWordReport.ReportZhijia(AHandle:THandle;inGzm:TGzm);
+begin
+       CreateWordClass();
+       innWord.OpenWord('');
+       DeleteBmPFile; {删除文件夹}
+       {提前调用，为文件保存预留时间}
+       Main_CallPStope.UsePStope.GetFyydBmp(AHandle);
+       Main_CallPStope.UsePStope.GetDTFZBmp(AHandle);
+       // 添加标题
+       AddDocmentTitle(MainDataModule.Coal_Name,MainDataModule.WorkFace_Name,
+                       'Support' );
+      //添加工作面信息
+       ADDWorkFaceInFo_1(inGzm);
+       //添加钻孔基本信息
+       ADDDrilleInFo_2(inGzm);
+       //添加覆岩运动规律
+       AddFYYDInfo_3(inGzm,'Support');
+       //添加采动模拟仿真
+       AddYDFZInfo_4(inGzm);
+       //添加支架选型
+       AddSupportInfo_5(inGzm);
+       //添加支架专家意见表
+       AddSupSubject_6(inGzm);
+       //添加已存在液压支架信息
+       AddExsitSupport_7(inGzm);
+       //免责声明
+       Add_disclaimer('八');
+       FreeMyWordClass();
+end;
+
+function TWordReport.Report_Zcyl(inGzm:TGzm): Boolean;
+ var
+   s_temp:Str_DT_array;
+   C1:integer;
+begin
+//*************
+     s_temp:=Public_Basic.split(Main_CallPStope.UsePStope.Get_Zcyl('2.0',inGzm.S_Jc_L),';',C1);
+     if C1> 4 then  begin
+         {内应力场峰值k1;内应力场s0; 外应力场峰值k2; 支承压力峰值距离煤壁距离s1; 外应力范围sx; }
+         with innWord do begin
+             WriteText('    内应力场峰值'+s_temp[0]);
+                AddReturn();
+             WriteText('    内应力场'+s_temp[1]+'米');
+                 AddReturn();
+             WriteText('    外应力场峰值'+s_temp[2]);
+                 AddReturn();
+             WriteText('    支承压力峰值距离煤壁距离'+s_temp[3]+'米');
+                  AddReturn();
+             WriteText('    外应力范围'+s_temp[4]+'米') ;
+                 AddReturn();
+         end;
+
+     end;
+end;
+
+end.

@@ -1,0 +1,346 @@
+unit Login;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ExtCtrls, DB, ADODB, ImgList, Vcl.Buttons;
+
+type
+  TloginForm = class(TForm)
+    Panel1: TPanel;
+    Label1: TLabel;
+    Edit_Password: TEdit;
+    Label2: TLabel;
+    Button1: TButton;
+    Button2: TButton;
+    Image1: TImage;
+    ComboUserType: TComboBox;
+    Lab_UsedDataType: TLabel;
+    Button3: TButton;
+    Label8: TLabel;
+    ComboUserName: TComboBox;
+    procedure Button2Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure ComboBox2Change(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure But_LinkNetClick(Sender: TObject);
+    procedure But_TestisExsitDataBaseClick(Sender: TObject);
+    procedure But_CreatDataBaseClick(Sender: TObject);
+    procedure But_CreateTableClick(Sender: TObject);
+    procedure But_SaveDataTypeClick(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure ComboUserTypeChange(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+//    function isExsitDataBase(DataBaseType:String);
+//    function CreateMySqlDataBase(MySQLAddress: string; MySQLPort: Integer;
+//         UserName, Password: string):Boolean;
+  private
+    { Private declarations }
+    procedure  SelectCombox2Index;
+    procedure  ReadInfoFromFile; // 读取数据库配置文件
+    procedure  SetButtonEnabled(Value:Boolean);
+    procedure  RefreshUsedDataType(Value:string);
+    procedure  UserCombox(Combo: TComboBox;DataType:integer );
+    function   UserPasswordVifty(User_Id,Password:string):Boolean;
+  public
+    { Public declarations }
+
+  end;
+
+var
+   loginForm: TloginForm;
+
+implementation
+
+uses UMainDataModule, Lu_Public_BasicModual;
+
+{$R *.dfm}
+
+procedure TloginForm.Button1Click(Sender: TObject);
+var
+  s_temp:Str_DT_array;
+  C1:integer;
+  User_ID,User_Name :string;
+begin
+//    s_temp:=split(self.ComBoUserName.Text,'_',C1);
+//    if s_temp[0]='' then exit;
+//    User_ID:=s_temp[0];
+//    User_Name:=s_temp[1];
+//    if not UserPasswordVifty(User_ID,Trim(Edit_Password.Text)) then   begin
+//      messagebox(self.Handle,'密码录入有误，请仔细录入！','系统提示',mb_iconerror+mb_ok);
+//      Edit_Password.Text:='';
+//      exit;
+//    end;
+//
+//     if ComboUserType.ItemIndex=0 then begin
+//        MainCForm.SetUserInfo(User_ID,User_Name,true);
+//     end else begin
+//        MainCForm.SetUserInfo(User_ID,User_Name,true);
+//     end;
+//
+//     MainCForm.StatusBar1.Panels.Items[0].Text:='当前登录用户：'+User_Name;
+//     MainCForm.ConnectDataBase ;
+//     MainCForm.Longin_i:=1;
+//     loginForm.Close;
+     
+end;
+
+procedure TloginForm.Button2Click(Sender: TObject);
+begin
+
+     loginForm.Close;
+end;
+
+procedure TloginForm.Button3Click(Sender: TObject);
+begin
+//    MainCForm.OpenUserInfoWin(panel1.Handle);
+end;
+
+procedure TloginForm.But_CreatDataBaseClick(Sender: TObject);
+var
+  WStr:WideString;
+begin
+//   MainDataModule.SaveDataInotRecord(self.IPEdit.Text,
+//                                       self.UserEdit.Text,
+//                                       self.PassEdit.Text,
+//                                        '',
+//                                       self.ComboBox3.Text );
+//
+//   wStr:='确定要创建新数据库么？原有数据库将会被删除！';
+//   if MessageBox(0, Pwidechar(wstr),'提示',MB_YESNO + MB_DEFBUTTON2+ MB_ICONQUESTION) = IDNO then exit;
+//
+//   if MainDataModule.CreateDataBase(MainDataModule.DataType) then  begin
+//        wStr:='数据库创建成功！' ;
+//        But_CreatDataBase.Enabled :=false;
+//        if   MainDataModule.CreateTable(MainDataModule.DataType) then
+//             self.But_CreateTable.Enabled :=FALSE;
+//   end else begin
+//        wStr:='数据库创建失败！' ;
+//   end;
+//   MessageBox(0, Pwidechar(wstr),'提示',MB_OK + MB_ICONQUESTION) ;
+
+end;
+
+procedure TloginForm.But_CreateTableClick(Sender: TObject);
+var
+  WStr:WideString;
+begin
+//   MainDataModule.SaveDataInotRecord(self.IPEdit.Text,
+//                                       self.UserEdit.Text,
+//                                       self.PassEdit.Text,
+//                                        '',
+//                                       self.ComboBox3.Text );
+//
+//   wStr:='确定要重新创建数据表么？原有数据表中数据将会被清空！';
+//   if MessageBox(0, Pwidechar(wstr),'提示',MB_YESNO + MB_DEFBUTTON2+ MB_ICONQUESTION) = IDNO then exit;
+//
+//   if MainDataModule.CreateTable(MainDataModule.DataType) then  begin
+//        wStr:='数据表创建成功！' ;
+//        But_CreateTable.Enabled :=false;
+//   end else begin
+//        wStr:='数据表创建失败！' ;
+//   end;
+//   MessageBox(0, Pwidechar(wstr),'提示',MB_OK + MB_ICONQUESTION) ;
+
+
+end;
+
+procedure TloginForm.But_LinkNetClick(Sender: TObject);
+var
+   StrTem:string;
+begin
+//  StrTem:=MainDataModule.DataType;
+//  MainDataModule.SaveDataInotRecord(self.IPEdit.Text,
+//                                       self.UserEdit.Text,
+//                                       self.PassEdit.Text,
+//                                       '',
+//                                       self.ComboBox3.Text );
+//    if MainDataModule.TestDataBaseParameter(StrTem)  then begin
+//       self.But_TestisExsitDataBase.Enabled :=true;
+//    end;
+end;
+
+procedure TloginForm.But_SaveDataTypeClick(Sender: TObject);
+begin
+//    MainDataModule.uControlFile.WriteDataBaseType(UpperCase(MainDataModule.DataType)) ;
+//    RefreshUsedDataType(MainDataModule.DataType);
+//    Self.UserCombox(ComboUserName,ComboUserType.ItemIndex+1);
+end;
+
+procedure TloginForm.But_TestisExsitDataBaseClick(Sender: TObject);
+var
+  WStr:WideString;
+  port:string;
+begin
+//   if UpperCase(MainDataModule.DataType)='MYSQL' then  begin
+//      Port:='3306' ;
+//   end else if UpperCase(MainDataModule.DataType)='SQLSERVER' then  begin
+//      Port:='1433' ;
+//   end else begin
+//      Port:='' ;
+//   end;
+//
+//   MainDataModule.SaveDataInotRecord(self.IPEdit.Text,
+//                                       self.UserEdit.Text,
+//                                       self.PassEdit.Text,
+//                                       port,
+//                                       self.ComboBox3.Text );
+//   if  MainDataModule.SelectIsExsitDataBase(MainDataModule.DataType) then  begin
+//      MainDataModule.uControlFile.WriteMYSQLDataBase(MainDataModule.DataType,IPEdit.Text,
+//                                  UserEdit.Text,self.PassEdit.Text, port,ComboBox3.Text);
+//
+//      wStr:='数据库存在，可以进入程序';
+//     // MessageBox(0, Pwidechar(wstr),'提示',MB_OK + MB_ICONQUESTION);
+//      But_CreateTable.Enabled:=true;
+//      But_SaveDataType.Enabled :=true;
+//      But_CreatDataBase.Caption :='删除数据库重建！';
+//   end;
+//      But_CreatDataBase.Enabled :=True;
+end;
+
+procedure TloginForm.ComboBox2Change(Sender: TObject);
+begin
+//   if ComboBox2.ItemIndex=0 then begin
+//      MainDataModule.DataType :='MySql';
+//   end else if ComboBox2.ItemIndex=1 then begin
+//      MainDataModule.DataType:='SQLServer';
+//
+//   end else begin
+//      MainDataModule.DataType:='Access';
+//
+//   end;
+//   ReadInfoFromFile;
+//   self.SetButtonEnabled(False);
+end;
+
+procedure TloginForm.ComboUserTypeChange(Sender: TObject);
+begin
+//   Self.UserCombox(ComboUserName,ComboUserType.ItemIndex+1);
+end;
+
+procedure TloginForm.FormActivate(Sender: TObject);
+begin
+//  if MainDataModule.DataType<>'' then  begin
+//      if MainDataModule.ConnectSystemDataBase then  begin
+//         //测试使用
+//         Self.UserCombox(ComboUserName,1);
+//         ComboUserName.ItemIndex:=0;
+//      end;
+//  end;
+end;
+
+procedure TloginForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+   Action:=cafree;
+end;
+
+procedure TloginForm.FormCreate(Sender: TObject);
+begin
+    self.SelectCombox2Index ;
+    ReadInfoFromFile;
+end;
+
+procedure TloginForm.ReadInfoFromFile;
+var
+  IP,UserName,Password,Port,DataBase:String;
+begin
+//   MainDataModule.uControlFile.ReadMySqlDataBase(MainDataModule.DataType,Ip,UserName,
+//                   Password,Port,DataBase);
+//
+//   self.IPEdit.Text :=Ip;
+//   self.UserEdit.Text :=UserName;
+//   self.PassEdit.Text:=Password;
+//   self.ComboBox3.Text:=DataBase;
+//
+//   if (Ip='0') and (Uppercase(MainDataModule.DataType) <>'ACCESS') then  begin
+//       self.IPEdit.Text :='local';
+//       self.UserEdit.Text :='admin';
+//       self.PassEdit.Text:='admin';
+//       self.ComboBox3.Text:=DataBase;
+//   end  ;
+//   //放入数据集
+//   MainDataModule.SaveDataInotRecord(self.IPEdit.Text,
+//                                     self.UserEdit.Text,
+//                                     self.PassEdit.Text,
+//                                     port,
+//                                     self.ComboBox3.Text );
+
+end;
+
+procedure TloginForm.RefreshUsedDataType(Value: string);
+begin
+   Lab_UsedDataType.Caption :='【'+Value+'】为当前使用的数据库' ;
+end;
+
+procedure TloginForm.SelectCombox2Index;
+var
+  sDAtaType:string;
+begin
+//   sDAtaType:=UpperCase(MainDataModule.ReadDataTypeFromFile);
+//   if sDAtaType='SQLSERVER' then   begin
+//      ComboBox2.ItemIndex:=1;
+//
+//   end else if sDAtaType='MYSQL' then   begin
+//      ComboBox2.ItemIndex:=0;
+//
+//   end else begin
+//      ComboBox2.ItemIndex:=2;
+//
+//   end;
+//   MainDataModule.DataType:=sDAtaType;
+//   RefreshUsedDataType(MainDataModule.DataType);
+end;
+
+procedure TloginForm.SetButtonEnabled(Value: Boolean);
+begin
+//     self.But_TestisExsitDataBase.Enabled :=Value;
+//     self.But_CreatDataBase.Enabled :=Value;
+//     self.But_CreateTable.Enabled :=Value;
+//     self.But_SaveDataType.Enabled :=value;
+end;
+
+procedure TloginForm.UserCombox(Combo: TComboBox;DataType:integer);
+Var
+  Sql,t_s1:String;
+begin
+   MainDataModule.MyDataSet.Close ;
+   combo.Clear ;
+   Sql:=' Select id,UserName from UserInfo where Used=1 and  '+
+        ' User_Type=' +IntToStr(DataType )+
+        ' order by UserName';
+
+   MainDataModule.MyDataSet.CommandText:=sql;
+     if MainDataModule.MyDataSet.Open  then
+       while not MainDataModule.MyDataSet.eof do    begin
+           t_s1:='';
+           t_s1:=Trim(MainDataModule.MyDataSet.FieldByName('id').AsString) ;
+           t_s1:=t_s1+'_'+Trim(MainDataModule.MyDataSet.FieldByName('UserName').AsString) ;
+
+           combo.Items.Add(t_s1);
+           MainDataModule.MyDataSet.Next ;
+       end;
+    MainDataModule.MyDataSet.Close ;
+end;
+
+function TloginForm.UserPasswordVifty(User_Id, Password: string): Boolean;
+begin
+     Result:=False;
+     MainDataModule.MyDataSet.Close ;
+     try
+         MainDataModule.MyDataSet.CommandText:= 'SELECT * from UserINFo' +
+                               ' where id ='+User_Id +' ';
+         if MainDataModule.MyDataSet.Open  then
+            if MainDataModule.MyDataSet.RecordCount >0 then  begin
+               if UpperCase(Trim(MainDataModule.MyDataSet.FieldByName('User_Password').AsString))
+                  =UpperCase(Password) then   Result:=True;
+
+            end;
+     finally
+       MainDataModule.MyDataSet.Close ;
+     end;
+
+end;
+
+end.

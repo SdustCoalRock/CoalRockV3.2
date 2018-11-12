@@ -1,0 +1,1478 @@
+unit MapX_LuLeiImpl;
+
+{$WARN SYMBOL_PLATFORM OFF}
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  ActiveX, AxCtrls, PrMapOcx_TLB, StdVcl, StdCtrls, Buttons, ExtCtrls, DB, ADODB,
+  ImgList, ComCtrls, ToolWin, Grids,ActnList,CheckLst, OleCtrls,
+  MapXLib_TLB;
+
+type
+  TMapX_LuLei = class(TActiveForm, IMapX_LuLei)
+    PanelLeft: TPanel;
+    OpenDialog1: TOpenDialog;
+    ADOConnection1: TADOConnection;
+    ADOCommand1: TADOCommand;
+    CoolBar1: TCoolBar;
+    ToolBar1: TToolBar;
+    ToolButton1: TToolButton;
+    ToolButton2: TToolButton;
+    PanelExcel: TPanel;
+    StringGrid1: TStringGrid;
+    ADODataSet1: TADODataSet;
+    PanelMap: TPanel;
+    ImageList1: TImageList;
+    ToolButton3: TToolButton;
+    ToolButton4: TToolButton;
+    ToolButton5: TToolButton;
+    ToolButton6: TToolButton;
+    ToolButton7: TToolButton;
+    ToolButton10: TToolButton;
+    ActionList1: TActionList;
+    ZoomInTool: TAction;
+    ZoomOutTool: TAction;
+    PanTool: TAction;
+    OpenFile: TAction;
+    PointSelectTool: TAction;
+    RectSelectTool: TAction;
+    NewFile: TAction;
+    SaveFile: TAction;
+    RadiusSelectTool: TAction;
+    PolygonSelectTool: TAction;
+    RulerTool: TAction;
+    AreaTool: TAction;
+    LabelTool: TAction;
+    InforTool: TAction;
+    ViewLayers: TAction;
+    ViewScheme: TAction;
+    ViewHawkMap: TAction;
+    TitleSetting: TAction;
+    LayerSetting: TAction;
+    SaveGraph: TAction;
+    PrintMap: TAction;
+    ThemeSetting: TAction;
+    TaskConfig: TAction;
+    SearchSetting: TAction;
+    FAnalyseSetting: TAction;
+    LAnalyseSetting: TAction;
+    PAnalyseSetting: TAction;
+    RAnalyseSetting: TAction;
+    StatusBar1: TStatusBar;
+    OpenDialog2: TOpenDialog;
+    Splitter1: TSplitter;
+    PageControl1: TPageControl;
+    TabSheetDz: TTabSheet;
+    SG_WBZ: TStringGrid;
+    TabSheetZj: TTabSheet;
+    SG_YBZ: TStringGrid;
+    ToolButton12: TToolButton;
+    Panel1: TPanel;
+    BitBtn1: TBitBtn;
+    Panel2: TPanel;
+    BitBtn2: TBitBtn;
+    ToolButton8: TToolButton;
+    ToolButton9: TToolButton;
+    ToolButton11: TToolButton;
+    ToolButton13: TToolButton;
+   // clbLayers: TCheckListBox;
+    procedure ToolButton1Click(Sender: TObject);
+    procedure ActiveFormCreate(Sender: TObject);
+    procedure ToolButton2Click(Sender: TObject);
+    procedure ToolButton4Click(Sender: TObject);
+    procedure ToolButton5Click(Sender: TObject);
+    procedure ToolButton6Click(Sender: TObject);
+    procedure ToolButton7Click(Sender: TObject);
+    procedure ToolButton10Click(Sender: TObject);
+    procedure MapOnMouseWheel(ASender: TObject; Flags: Integer; zDelta: Smallint;
+      var X, Y: Single; var EnableDefault: WordBool);
+    procedure MapOnMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure SG_WBZDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
+      State: TGridDrawState);
+    procedure SG_WBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure MapOnMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure BitBtn2Click(Sender: TObject);
+    procedure SG_YBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure MapOnToolUsed(ASender: TObject; ToolNum: Smallint; X1, Y1, X2, Y2,
+      Distance: Double; Shift, Ctrl: WordBool; var EnableDefault: WordBool);
+    procedure ToolButton12Click(Sender: TObject);
+    procedure ToolButton8Click(Sender: TObject);
+    procedure ToolButton9Click(Sender: TObject);
+    procedure ToolButton11Click(Sender: TObject);
+    procedure ActiveFormDestroy(Sender: TObject);
+    procedure ToolButton13Click(Sender: TObject);
+  private
+    { Private declarations }
+    //var
+
+    FEvents: IMapX_LuLeiEvents;
+    SelectbZj_bh,Select_str:widestring;
+    Baozhu:Integer; //0 不标注 1   标注
+    ShowInfoFrm:wordbool;
+    dllPath:Widestring; //ocx path
+    MapX_Input,Mapx_Out:integer; //传过来的关于操作Mapx的权限
+    somblName,somblsize,mouse_Bs:widestring; //sysombl name and size   mouse bbs
+    //====
+    procedure ActivateEvent(Sender: TObject);
+    procedure ClickEvent(Sender: TObject);
+    procedure CreateEvent(Sender: TObject);
+    procedure DblClickEvent(Sender: TObject);
+    procedure DeactivateEvent(Sender: TObject);
+    procedure DestroyEvent(Sender: TObject);
+    procedure KeyPressEvent(Sender: TObject; var Key: Char);
+    procedure MouseEnterEvent(Sender: TObject);
+    procedure MouseLeaveEvent(Sender: TObject);
+    procedure PaintEvent(Sender: TObject);
+    // lulei Edit
+    procedure loadexcel(rowCount,colCount:integer; fileName:String; var grid:TStringGrid);{ Private declarations }
+    procedure ReadExcel(Sender: TObject;Excel:WideString);
+    procedure InitFiledName();
+
+     //mapx
+    procedure initLayer(layaName:Widestring);
+    procedure BiaoZhuZj(bh,str,Img:Widestring;xx,yy:double);
+    procedure InitMap();
+    procedure InitSG_Map();
+    procedure Clear_SG_Map();
+    procedure SelectButtonClick(Sender: TObject) ;
+  protected
+    { Protected declarations }
+    procedure DefinePropertyPages(DefinePropertyPage: TDefinePropertyPage); override;
+    procedure EventSinkChanged(const EventSink: IUnknown); override;
+    function Get_Active: WordBool; safecall;
+    function Get_AlignDisabled: WordBool; safecall;
+    function Get_AlignWithMargins: WordBool; safecall;
+    function Get_AutoScroll: WordBool; safecall;
+    function Get_AutoSize: WordBool; safecall;
+    function Get_AxBorderStyle: TxActiveFormBorderStyle; safecall;
+    function Get_Caption: WideString; safecall;
+    function Get_Color: OLE_COLOR; safecall;
+    function Get_DockSite: WordBool; safecall;
+    function Get_DoubleBuffered: WordBool; safecall;
+    function Get_DropTarget: WordBool; safecall;
+    function Get_Enabled: WordBool; safecall;
+    function Get_ExplicitHeight: Integer; safecall;
+    function Get_ExplicitLeft: Integer; safecall;
+    function Get_ExplicitTop: Integer; safecall;
+    function Get_ExplicitWidth: Integer; safecall;
+    function Get_Font: IFontDisp; safecall;
+    function Get_HelpFile: WideString; safecall;
+    function Get_KeyPreview: WordBool; safecall;
+    function Get_MouseInClient: WordBool; safecall;
+    function Get_PixelsPerInch: Integer; safecall;
+    function Get_PopupMode: TxPopupMode; safecall;
+    function Get_PrintScale: TxPrintScale; safecall;
+    function Get_Scaled: WordBool; safecall;
+    function Get_ScreenSnap: WordBool; safecall;
+    function Get_SnapBuffer: Integer; safecall;
+    function Get_UseDockManager: WordBool; safecall;
+    function Get_Visible: WordBool; safecall;
+    function Get_VisibleDockClientCount: Integer; safecall;
+    procedure _Set_Font(var Value: IFontDisp); safecall;
+    procedure Set_AlignWithMargins(Value: WordBool); safecall;
+    procedure Set_AutoScroll(Value: WordBool); safecall;
+    procedure Set_AutoSize(Value: WordBool); safecall;
+    procedure Set_AxBorderStyle(Value: TxActiveFormBorderStyle); safecall;
+    procedure Set_Caption(const Value: WideString); safecall;
+    procedure Set_Color(Value: OLE_COLOR); safecall;
+    procedure Set_DockSite(Value: WordBool); safecall;
+    procedure Set_DoubleBuffered(Value: WordBool); safecall;
+    procedure Set_DropTarget(Value: WordBool); safecall;
+    procedure Set_Enabled(Value: WordBool); safecall;
+    procedure Set_Font(const Value: IFontDisp); safecall;
+    procedure Set_HelpFile(const Value: WideString); safecall;
+    procedure Set_KeyPreview(Value: WordBool); safecall;
+    procedure Set_PixelsPerInch(Value: Integer); safecall;
+    procedure Set_PopupMode(Value: TxPopupMode); safecall;
+    procedure Set_PrintScale(Value: TxPrintScale); safecall;
+    procedure Set_Scaled(Value: WordBool); safecall;
+    procedure Set_ScreenSnap(Value: WordBool); safecall;
+    procedure Set_SnapBuffer(Value: Integer); safecall;
+    procedure Set_UseDockManager(Value: WordBool); safecall;
+    procedure Set_Visible(Value: WordBool); safecall;
+    function DataLink(const Str: WideString): WideString; safecall;
+    function InitModel: WideString; safecall;
+    procedure mapX_quanxian(Input_shuju, Out_shuju: Integer); safecall;
+
+  public
+    { Public declarations }
+      //显示地图文件，返回显示的子窗体
+    Excel_field,Field_name : Array [0..80] of string;
+    procedure ResetLayers(Layers: TStringList; VisibleLayers: TStringList);
+    procedure Initialize; override;
+
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+
+  var
+    //iMapX_LuLei:TMapX_LuLei;
+    FMap: TMap;
+implementation
+
+uses ComObj, ComServ,StrUtils, ProgForm, InforFrm,Lu_base_function,IniFiles,
+  ChecKInputForm, MapTuCVisi, SelectCheck;
+
+{$R *.DFM}
+
+{ TMapX_LuLei }
+
+
+//================
+procedure TMapX_LuLei.InitFiledName();
+begin
+          Excel_field[1]:='bh';           Field_name[1]:='编号';
+          Excel_field[2]:='Tu_bh';        Field_name[2]:='图编号';
+          Excel_field[3]:='ZJ_Type';      Field_name[3]:='支架型号';
+          Excel_field[4]:='ZJ_name';      Field_name[4]:='支架名称';
+          Excel_field[5]:='ZJ_D_name';    Field_name[5]:='支架设计者名称';
+          Excel_field[6]:='Mt_address';   Field_name[6]:='煤田区域';
+          Excel_field[7]:='Mc_ZJ_name';   Field_name[7]:='煤层编号';
+          Excel_field[8]:='Gzm_l';        Field_name[8]:='工作面斜长';
+          Excel_field[9]:='Gzm_h';        Field_name[9]:='采高';
+          Excel_field[10]:='Mc_name';     Field_name[10]:='煤层名称';
+          Excel_field[11]:='Mc_h';        Field_name[11]:='煤层高度';
+          Excel_field[12]:='Mc_f';        Field_name[12]:='煤体硬度';
+          Excel_field[13]:='Mc_qj';       Field_name[13]:='煤层倾角';
+          Excel_field[14]:='Top_attr';    Field_name[14]:='顶板状态';
+          Excel_field[15]:='Bottom_attr'; Field_name[15]:='底板状态';
+          Excel_field[16]:='Ws_attr';     Field_name[16]:='瓦斯状态';
+          Excel_field[17]:='Ky_attr';     Field_name[17]:='来压情况';
+          Excel_field[18]:='Useed_attr';  Field_name[18]:='使用情况';
+          Excel_field[19]:='chanliang';   Field_name[19]:='产量';
+          Excel_field[20]:='Memo_bz';     Field_name[20]:='备注';
+          Excel_field[21]:='Zj_D_zhong';  Field_name[21]:='支架设计重量';
+          Excel_field[22]:='Zj_s_zhong';  Field_name[22]:='支架称重';
+          Excel_field[23]:='Zj_p';        Field_name[23]:='支架阻力';
+          Excel_field[24]:='Zj_h_min';    Field_name[24]:='最低高度';
+          Excel_field[25]:='Zj_h_max';    Field_name[25]:='最大高度';
+          Excel_field[26]:='Zj_zxj';      Field_name[26]:='中心距';
+          Excel_field[27]:='Zj_qlz';      Field_name[27]:='前立柱';
+          Excel_field[28]:='zj_hlz';      Field_name[28]:='后立柱';
+          Excel_field[29]:='Zj_kzfs';     Field_name[29]:='控制方式';
+          Excel_field[30]:='Mj_type';     Field_name[30]:='煤机型号';
+          Excel_field[31]:='mj_Gt_d';     Field_name[31]:='滚筒直径';
+          Excel_field[32]:='mj_js';       Field_name[32]:='截深';
+          Excel_field[33]:='Front_GB_type';  Field_name[33]:='前部刮板机型号';
+          Excel_field[34]:='Front_lc_w';     Field_name[34]:='前部溜槽宽度';
+          Excel_field[35]:='behind_gb_type'; Field_name[35]:='后部刮板机型号';
+          Excel_field[36]:='behind_lc_w';    Field_name[36]:='后部溜槽快读';
+          Excel_field[37]:='liang_duanju';   Field_name[37]:='梁端距';
+          Excel_field[38]:='Tuiyidian_juli';          Field_name[38]:='推移点距离煤壁距离';
+          Excel_field[39]:='Front_behind_lc_zxj';     Field_name[39]:='前后溜槽中心距';
+          Excel_field[40]:='pt_guomei_h';             Field_name[40]:='过煤高度';
+          Excel_field[41]:='zj_js_h';     Field_name[41]:='机身高';
+          Excel_field[42]:='Zj_Dl';       Field_name[42]:='顶梁前部结构';
+          Excel_field[43]:='Zj_Ql';       Field_name[43]:='前梁结构';
+          Excel_field[44]:='Zj_Dl_Yhl';   Field_name[44]:='顶梁与掩护梁关系';
+          Excel_field[45]:='Zj_chb';      Field_name[45]:='侧护板结构';
+          Excel_field[46]:='Zj_slg';      Field_name[46]:='四连杆结构';
+          Excel_field[47]:='Zj_ty';       Field_name[47]:='推移结构';
+          Excel_field[48]:='Zj_td';       Field_name[48]:='抬底结构';
+          Excel_field[49]:='Zj_ty_d';     Field_name[49]:='推移缸径';
+          Excel_field[50]:='Zj_yl_d';     Field_name[50]:='前梁缸径';
+          Excel_field[51]:='zj_wl_d';     Field_name[51]:='尾梁缸径';
+          Excel_field[52]:='zj_cb_d';     Field_name[52]:='插板缸径';
+          Excel_field[53]:='Zj_ct_d';     Field_name[53]:='侧推缸径';
+          Excel_field[54]:='Zj_td_d';     Field_name[54]:='抬底缸径';
+          Excel_field[55]:='Zj_yihg_d';   Field_name[55]:='一级护帮缸径';
+          Excel_field[56]:='Zj_ss_d';     Field_name[56]:='伸缩缸径';
+          Excel_field[57]:='zj_dt_d';     Field_name[57]:='底座缸径';
+          Excel_field[58]:='zj_lhl_d';    Field_name[58]:='拉后溜缸径';
+          //2014年 补充
+
+          Excel_field[59]:='B_SF';       Field_name[59]:='省份';
+          Excel_field[60]:='B_DJS';   Field_name[60]:='地级市';
+          Excel_field[61]:='B_XJS';      Field_name[61]:='县级市';
+          Excel_field[62]:='B_ZHQD';      Field_name[62]:='支护强度';
+          Excel_field[63]:='B_DBBY';       Field_name[63]:='底板比压';
+          Excel_field[64]:='B_H';       Field_name[64]:='埋深';
+          Excel_field[65]:='B_YSL';     Field_name[65]:='涌水量';
+          Excel_field[66]:='B_JHDM';     Field_name[66]:='机巷断面';
+          Excel_field[67]:='B_FHDM';     Field_name[67]:='风巷断面';
+          Excel_field[68]:='B_CMJCJ';     Field_name[68]:='采煤机厂家';
+          Excel_field[69]:='B_GBJCJ';     Field_name[69]:='刮板机厂家';
+          Excel_field[70]:='B_PSJXH';     Field_name[70]:='破碎机型号';
+          Excel_field[71]:='B_PSJCJ';   Field_name[71]:='破碎机厂家';
+          Excel_field[72]:='B_RHYB';     Field_name[72]:='乳化液泵';
+          Excel_field[73]:='B_RHYCJ';     Field_name[73]:='乳化液厂家';
+
+          //
+          Excel_field[74]:='MapxBz';    Field_name[74]:='是否修改';
+
+end;
+//=======
+ procedure TMapX_LuLei.InitSG_Map();
+ var
+    I,J:integer;
+    bh,Str:widestring;
+    x1,y1 :double;
+ begin
+      x1:=0.0;y1:=0.0;
+      for I := 1 to SG_WBZ.RowCount - 1 do
+         for j := 0 to SG_WBZ.ColCount - 1 do
+                SG_WBZ.Cells[j,i]:='';
+       for I := 1 to SG_YBZ.RowCount - 1 do
+         for j := 0 to SG_YBZ.ColCount - 1 do
+                SG_YBZ.Cells[j,i]:='';
+
+      self.ADODataSet1.Close();
+          ADODataSet1.CommandText:='select bh,zj_type,Mt_address,zj_name from Mapbh where mapXbz=''0''';
+          ADODataSet1.Open();
+          while not ADODataSet1.Eof  do
+          begin
+            self.SG_WBZ.Cells[0,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('bh').AsString;
+            self.SG_WBZ.Cells[1,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('Mt_address').AsString;
+            self.SG_WBZ.Cells[2,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('Zj_type').AsString;
+            self.SG_WBZ.Cells[3,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('zj_name').AsString;
+            ADODataSet1.Next;
+            if Sg_WBZ.RowCount-2 <ADODataSet1.RecNo then  Sg_WBZ.RowCount:=ADODataSet1.RecNo+2;
+
+          end;
+      self.ADODataSet1.Close();
+      ADODataSet1.CommandText:='select bh,zj_type,Mt_address,zj_name,Jindu,Weidu from Mapbh where mapXbz=''1''';
+      ADODataSet1.Open();
+          while not ADODataSet1.Eof  do
+          begin
+            self.SG_YBZ.Cells[0,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('bh').AsString;
+            bh:= ADODataSet1.FieldByName('bh').AsString;;
+            self.SG_YBZ.Cells[1,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('Mt_address').AsString;
+            self.SG_YBZ.Cells[2,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('Zj_type').AsString;
+            str:= bh+'|'+ADODataSet1.FieldByName('Mt_address').AsString+'|'+ADODataSet1.FieldByName('Zj_type').AsString;
+            self.SG_YBZ.Cells[3,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('zj_name').AsString;
+            x1:=ADODataSet1.FieldByName('Jindu').AsFloat;
+            y1:=ADODataSet1.FieldByName('weidu').AsFloat;
+            // { TODO : 标注地图 }
+            self.BiaoZhuZj(bh,str,somblName,x1,y1);
+            if Sg_YBZ.RowCount-2 <ADODataSet1.RecNo then  Sg_YBZ.RowCount:=ADODataSet1.RecNo+2;
+
+            ADODataSet1.Next;
+
+          end;
+          StatusBar1.Panels.Items[1].Text :='' ;
+          //通过权限来屏蔽按钮   录入 数据
+          if self.MapX_Input=0 then  begin
+             self.ToolButton1.Enabled :=false;
+             self.ToolButton2.Enabled :=false;
+             self.BitBtn1.Enabled :=false;
+             self.BitBtn2.Enabled :=false;
+          end else begin
+             self.ToolButton1.Enabled :=true;
+             self.ToolButton2.Enabled :=true;
+             self.BitBtn1.Enabled :=true;
+             self.BitBtn2.Enabled :=true;
+          end;
+
+
+ end;
+
+ //mapx
+  procedure TMapX_LuLei.initLayer(layaName:Widestring);
+  var
+    I:integer;
+    is_exit:Wordbool;
+    ALayer:CMapXLayer;
+    flds : CMapXFields;
+    lyr : layer;//层
+    layerInfo:CMapXLayerInfo;
+  begin
+      is_exit:=false;
+      for I := 1 to FMap.Layers.Count  do begin
+          if FMap.Layers.Item[i].Name =layaName then begin
+             FMap.Layers.Remove(i);
+             break;
+          end;
+      end;
+      //=====
+      FMap.Update;
+      //创建新图层
+       // lyr := MainMap.Layers.CreateLayer('液压支架', EmptyParam,1,EmptyParam, EmptyParam);
+       //在FMap中创建一个Layer
+        flds := CoFields.Create;
+       //  flds.AddIntegerField('ID',EmptyParam);
+        flds.AddStringField('CaptionShow',254,EmptyParam);
+        flds.AddStringField('name',254,EmptyParam);
+
+        layerInfo := CoLayerInfo.Create;
+        layerInfo.type_ := miLayerInfoTypeTemp;
+        layerInfo.AddParameter('FileSpec','液压支架');
+        layerInfo.AddParameter('Name','液压支架');
+        layerInfo.AddParameter('Fields',flds);
+
+        lyr := FMap.Layers.Add(layerInfo,1);
+
+
+  end;                                        //==================
+
+//===================
+procedure TMapX_LuLei.BiaoZhuZj(bh,str,Img:Widestring;xx,yy:double);
+var
+    lyr : layer;//层
+    fts : feature;//特征
+    pt : point;//点
+    fNewStyle: CMapxStyle;//样式
+    layerInfo:CMapXLayerInfo;
+
+   // ANewLayer : CMapXLayer;
+    unusedVt: OleVariant;
+begin
+        lyr:=FMap.Layers.Item['液压支架'];
+
+        FMap.Layers.AnimationLayer := lyr;//设为当前层
+
+        lyr.Editable := true;//可编辑
+        pt := copoint.Create;
+        fNewStyle := costyle.Create;
+        lyr.Style := FMap.Layers.item['省会'].Style;//层的样式
+        fNewStyle:=FMap.Layers.Item['省会'].Style;
+        fNewStyle.SymbolType:=miSymbolTypeBitmap;
+        fNewStyle.SymbolBitmapSize:=StrToInt(somblSize);
+        fNewStyle.SymbolBitmapName:=Img;
+        fNewStyle.SymbolBitmapTransparent:=True;
+        pt.Set_(xx,yy);
+        fts := FMap.FeatureFactory.CreateSymbol(pt,fNewStyle);//创建特征
+        fts.KeyValue := str;//标注
+
+        lyr.AddFeature(fts,emptyparam);//将特征添加到层
+
+
+          lyr.AutoLabel := true;//自动标注
+          lyr.Visible := true;//可见
+
+   end;
+//========================
+procedure TMapX_LuLei.ResetLayers(Layers, VisibleLayers: TStringList);
+var
+  I, J: Integer;
+begin
+ { if (Layers = nil) and (VisibleLayers = nil) then
+  begin
+    clbLayers.Clear;
+    Exit;
+  end;
+  clbLayers.Items.Assign(Layers);
+  for I:= 0 to clbLayers.Items.Count-1 do
+    clbLayers.Checked[I]:= False;
+  for I:= 0 to VisibleLayers.Count-1 do
+    for J:= 0 to clbLayers.Items.Count-1 do
+      if clbLayers.Items.Strings[J] = VisibleLayers.Strings[I] then
+      begin
+        clbLayers.Checked[J]:= True;
+        Break;
+      end;
+  if clbLayers.Count > 0 then
+  begin
+    clbLayers.ItemIndex:= 0;
+    clbLayers.OnClick(nil);
+  end;  }
+end;
+//================================
+
+
+
+ //=====
+
+ //=====
+
+//==============
+procedure TMapX_LuLei.ReadExcel(Sender: TObject;Excel:WideString);
+ var
+    Row_c,Col_C:integer;
+    i:integer;
+    //Ff,gg:String;
+ begin
+
+      
+    self.loadexcel(3000,75,Excel,stringGrid1);
+
+ end;
+
+
+procedure TMapX_LuLei.loadexcel(rowCount,colCount:integer; fileName:String; var grid:TStringGrid);{ Private declarations }
+//从Excel中读取数据到 Grid
+var
+   v:variant;
+   i,j:integer;
+begin
+   grid.RowCount:=rowCount;
+   grid.ColCount:=colCount;
+   v:=createoleobject('Excel.Application');//创建OLE对象
+   try
+      formProg:=TformProg.Create(Application);
+      formProg.show;
+      formProg.ProgressBar1.Position := 0;
+      formProg.ProgressBar1.Max :=  rowCount;
+      formProg.ProgressBar2.Position := 0;
+      formProg.ProgressBar2.Max := 76;
+      formProg.Label1.Caption:='正在读取第  条记录';
+     V.workBooks.Open(fileName);
+     //for i:=1 to rowCount do
+     for j:=2 to rowCount do  begin
+       formProg.ProgressBar1.Position:=j;
+       formProg.ProgressBar2.Position := 0;
+       grid.Cells[0,j-1]:=v.workbooks[1].sheets[1].cells[j,1];
+       formProg.Label1.Caption:='正在读取第 '+Trim(IntToStr(j))+' 条记录';
+       if Trim(grid.Cells[0,j-1])<>'' then begin
+           for i:=1 to 76 do   begin
+               formProg.ProgressBar2.Position := i;
+               grid.Cells[i-1,j-1]:=v.workbooks[1].sheets[1].cells[j,i];
+           end;
+       end else begin
+            break;
+       end;
+
+     end;
+        v.workbooks[1].close;
+   finally
+     v.quit;
+      formProg.Free ;
+   end
+end;
+
+//==========
+procedure TMapX_LuLei.DefinePropertyPages(DefinePropertyPage: TDefinePropertyPage);
+begin
+  { Define property pages here.  Property pages are defined by calling
+    DefinePropertyPage with the class id of the page.  For example,
+      DefinePropertyPage(Class_MapX_LuLeiPage); }
+end;
+
+procedure TMapX_LuLei.EventSinkChanged(const EventSink: IUnknown);
+begin
+  FEvents := EventSink as IMapX_LuLeiEvents;
+  inherited EventSinkChanged(EventSink);
+end;
+
+procedure TMapX_LuLei.Initialize;
+begin
+  inherited Initialize;
+  OnActivate := ActivateEvent;
+  OnClick := ClickEvent;
+  OnCreate := CreateEvent;
+  OnDblClick := DblClickEvent;
+  OnDeactivate := DeactivateEvent;
+  OnDestroy := DestroyEvent;
+  OnKeyPress := KeyPressEvent;
+  OnMouseEnter := MouseEnterEvent;
+  OnMouseLeave := MouseLeaveEvent;
+  OnPaint := PaintEvent;
+end;
+
+function TMapX_LuLei.Get_Active: WordBool;
+begin
+  Result := Active;
+end;
+
+function TMapX_LuLei.Get_AlignDisabled: WordBool;
+begin
+  Result := AlignDisabled;
+end;
+
+function TMapX_LuLei.Get_AlignWithMargins: WordBool;
+begin
+  Result := AlignWithMargins;
+end;
+
+function TMapX_LuLei.Get_AutoScroll: WordBool;
+begin
+  Result := AutoScroll;
+end;
+
+function TMapX_LuLei.Get_AutoSize: WordBool;
+begin
+  Result := AutoSize;
+end;
+
+function TMapX_LuLei.Get_AxBorderStyle: TxActiveFormBorderStyle;
+begin
+  Result := Ord(AxBorderStyle);
+end;
+
+function TMapX_LuLei.Get_Caption: WideString;
+begin
+  Result := WideString(Caption);
+end;
+
+function TMapX_LuLei.Get_Color: OLE_COLOR;
+begin
+  Result := OLE_COLOR(Color);
+end;
+
+function TMapX_LuLei.Get_DockSite: WordBool;
+begin
+  Result := DockSite;
+end;
+
+function TMapX_LuLei.Get_DoubleBuffered: WordBool;
+begin
+  Result := DoubleBuffered;
+end;
+
+function TMapX_LuLei.Get_DropTarget: WordBool;
+begin
+  Result := DropTarget;
+end;
+
+function TMapX_LuLei.Get_Enabled: WordBool;
+begin
+  Result := Enabled;
+end;
+
+function TMapX_LuLei.Get_ExplicitHeight: Integer;
+begin
+  Result := ExplicitHeight;
+end;
+
+function TMapX_LuLei.Get_ExplicitLeft: Integer;
+begin
+  Result := ExplicitLeft;
+end;
+
+function TMapX_LuLei.Get_ExplicitTop: Integer;
+begin
+  Result := ExplicitTop;
+end;
+
+function TMapX_LuLei.Get_ExplicitWidth: Integer;
+begin
+  Result := ExplicitWidth;
+end;
+
+function TMapX_LuLei.Get_Font: IFontDisp;
+begin
+  GetOleFont(Font, Result);
+end;
+
+function TMapX_LuLei.Get_HelpFile: WideString;
+begin
+  Result := WideString(HelpFile);
+end;
+
+function TMapX_LuLei.Get_KeyPreview: WordBool;
+begin
+  Result := KeyPreview;
+end;
+
+function TMapX_LuLei.Get_MouseInClient: WordBool;
+begin
+  Result := MouseInClient;
+end;
+
+function TMapX_LuLei.Get_PixelsPerInch: Integer;
+begin
+  Result := PixelsPerInch;
+end;
+
+function TMapX_LuLei.Get_PopupMode: TxPopupMode;
+begin
+  Result := Ord(PopupMode);
+end;
+
+function TMapX_LuLei.Get_PrintScale: TxPrintScale;
+begin
+  Result := Ord(PrintScale);
+end;
+
+function TMapX_LuLei.Get_Scaled: WordBool;
+begin
+  Result := Scaled;
+end;
+
+function TMapX_LuLei.Get_ScreenSnap: WordBool;
+begin
+  Result := ScreenSnap;
+end;
+
+function TMapX_LuLei.Get_SnapBuffer: Integer;
+begin
+  Result := SnapBuffer;
+end;
+
+function TMapX_LuLei.Get_UseDockManager: WordBool;
+begin
+  Result := UseDockManager;
+end;
+
+function TMapX_LuLei.Get_Visible: WordBool;
+begin
+  Result := Visible;
+end;
+
+function TMapX_LuLei.Get_VisibleDockClientCount: Integer;
+begin
+  Result := VisibleDockClientCount;
+end;
+
+procedure TMapX_LuLei._Set_Font(var Value: IFontDisp);
+begin
+  SetOleFont(Font, Value);
+end;
+
+procedure TMapX_LuLei.ActivateEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnActivate;
+end;
+
+procedure TMapX_LuLei.ActiveFormCreate(Sender: TObject);
+begin
+    //================
+      FMap:= TMap.Create(PanelMap);
+      FMap.Parent:= TWinControl(PanelMap);
+      FMap.Align:= alClient;
+      FMap.MousewheelSupport := miMousewheelNoAutoScroll;
+      FMap.OnMouseDown:= MapOnMouseDown;
+      FMap.OnMouseMove:= MapOnMouseMove;
+     // FMap.OnMouseUp:= FMapMouseUp;
+      FMap.OnMouseWheel:= MapOnMouseWheel;
+      FMap.OnToolUsed:= MapOnToolUsed;
+      //FMap.OnPolyToolUsed:= MapXOnPolyToolUsed;
+     // FMap.
+    //=============
+     self.InitFiledName;
+     //=========
+      SG_WBZ.ColCount :=4;
+      SG_WBZ.FixedCols:=1;
+      SG_WBZ.FixedRows:=1;
+      SG_WBZ.DefaultRowHeight:=18;
+      SG_WBZ.ColWidths[0]:=30;    SG_WBZ.Cells[0,0]:='序号';
+      SG_WBZ.ColWidths[1]:=80;    SG_WBZ.Cells[1,0]:='煤田区域';
+      SG_WBZ.ColWidths[2]:=80;    SG_WBZ.Cells[2,0]:='支架型号';
+      SG_WBZ.ColWidths[3]:=80;    SG_WBZ.Cells[3,0]:='支架名称';
+
+      SG_YBZ.ColCount :=4;
+      SG_YBZ.FixedCols:=1;
+      SG_YBZ.FixedRows:=1;
+      SG_YBZ.DefaultRowHeight:=18;
+      SG_YBZ.ColWidths[0]:=30;    SG_YBZ.Cells[0,0]:='序号';
+      SG_YBZ.ColWidths[1]:=80;    SG_YBZ.Cells[1,0]:='煤田区域';
+      SG_YBZ.ColWidths[2]:=80;    SG_YBZ.Cells[2,0]:='支架型号';
+      SG_YBZ.ColWidths[3]:=80;    SG_YBZ.Cells[3,0]:='支架名称';
+     //=========
+     PanelExcel.Align :=alClient;
+     PanelExcel.Visible:=false;
+     //===
+     PanelMap.Align :=alClient;
+    // self.ToolButton4.Click;
+
+     Baozhu:=0;
+end;
+
+procedure TMapX_LuLei.ActiveFormDestroy(Sender: TObject);
+begin
+    FMap.Free;
+end;
+
+procedure TMapX_LuLei.BitBtn1Click(Sender: TObject);
+begin
+     if Application.MessageBox('你确定要进行地图标注么？','操作提示',MB_ICONQUESTION+MB_OkCancel+MB_DEFBUTTON2)=idCancel then
+        exit;
+      Baozhu:=1;
+      //自定义鼠标形状
+       FMap.MousePointer := miCustomCursor;
+       FMap.MouseIcon := dllPath+'ChinaMap\PIN4-32.ico';
+end;
+
+procedure TMapX_LuLei.BitBtn2Click(Sender: TObject);
+var
+ s_sql:widestring;
+begin
+   if Application.MessageBox('你确定要删除地图标注么？','操作提示',MB_ICONQUESTION+MB_OkCancel+MB_DEFBUTTON2)=idCancel then
+        exit;
+       s_sql:='update mapbh set mapxbz=''0'' where bh='''+SelectbZj_bh+'''';
+       self.ADOCommand1.CommandText:=s_sql;
+       ADOCommand1.Execute;
+       self.BitBtn2.Enabled:=false;
+       //初始化图层
+       self.initLayer('液压支架') ;
+       //初始化stringGrid
+       self.InitSG_Map;
+
+end;
+
+procedure TMapX_LuLei.Clear_SG_Map;
+var
+  i,j:integer;
+begin
+    for I := 1 to SG_WBZ.RowCount - 1 do
+         for j := 0 to SG_WBZ.ColCount - 1 do
+                SG_WBZ.Cells[j,i]:='';
+    for I := 1 to SG_YBZ.RowCount - 1 do
+         for j := 0 to SG_YBZ.ColCount - 1 do
+                SG_YBZ.Cells[j,i]:='';
+    
+end;
+
+procedure TMapX_LuLei.ClickEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnClick;
+end;
+
+constructor TMapX_LuLei.Create;
+begin
+   // FMAP:=TMap.Create(self);
+end;
+
+procedure TMapX_LuLei.CreateEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnCreate;
+end;
+
+procedure TMapX_LuLei.DblClickEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnDblClick;
+end;
+
+procedure TMapX_LuLei.DeactivateEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnDeactivate;
+end;
+
+destructor TMapX_LuLei.Destroy;
+begin
+  // iMapX_LuLei.Free;
+  inherited;
+end;
+
+procedure TMapX_LuLei.DestroyEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnDestroy;
+end;
+
+procedure TMapX_LuLei.KeyPressEvent(Sender: TObject; var Key: Char);
+var
+  TempKey: Smallint;
+begin
+  TempKey := Smallint(Key);
+  if FEvents <> nil then FEvents.OnKeyPress(TempKey);
+  Key := Char(TempKey);
+end;
+
+procedure TMapX_LuLei.MapOnMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  ScreenX,ScreenY : single;
+  mapXX,mapYY : double;
+  s_sql:Ansistring;
+  
+begin
+   ShowInfoFrm:=false;
+   ScreenX := X;
+   ScreenY := Y;
+   FMap.MousePointer := miDefaultCursor;
+   FMap.ConvertCoord(ScreenX,ScreenY,MapXX,MapYY,miScreenToMap);
+
+    if Baozhu=1 then  begin
+       //改写数据库
+       s_sql:='update mapbh set mapxbz=''1'',Jindu='''+FloatToStr(MapXX)+''',weidu='''+FloatToStr(MapYY);
+       s_sql:=s_sql +''' where bh='''+SelectbZj_bh+'''';
+
+       self.ADOCommand1.CommandText:=s_sql;
+       self.ADOCommand1.Execute;
+       self.initLayer('液压支架') ;
+       self.InitSG_Map;
+       Baozhu:=0;
+       BitBtn1.Enabled :=false;
+     
+    end;
+
+end;
+
+procedure TMapX_LuLei.MapOnMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+ var
+  ScreenX,ScreenY : single;
+  mapXX,mapYY : double;
+begin
+   ScreenX := X;
+   ScreenY := Y;
+   FMap.ConvertCoord(ScreenX,ScreenY,MapXX,MapYY,miScreenToMap);
+   StatusBar1.Panels.Items[0].Text := '经度：'+ format('%3.6f',[MapXX])+'       '+'纬度：'+ format('%3.6f',[MapYY]);
+end;
+
+procedure TMapX_LuLei.MapOnMouseWheel(ASender: TObject; Flags: Integer;
+  zDelta: Smallint; var X, Y: Single; var EnableDefault: WordBool);
+var
+   Bs:double;
+begin
+      Bs:=StrToFloat(mouse_Bs);
+      if     zdelta   <   0   then           FMap.Zoom:=FMap.Zoom*Bs;     //可以自己定义缩放比例
+      if     zdelta   >   0       then           FMap.Zoom:=FMap.zoom/Bs;
+end;
+
+procedure TMapX_LuLei.MapOnToolUsed(ASender: TObject; ToolNum: Smallint; X1, Y1,
+  X2, Y2, Distance: Double; Shift, Ctrl: WordBool; var EnableDefault: WordBool);
+  var
+    pt: Point;
+    ftrs:Features;// CMapXFeatures;
+    I:integer;
+    temp1:Str_Dt_array;
+    Count1:integer;
+  begin
+      
+      ShowInfoFrm:=false;
+      if ToolNum=miRadiusSelectTool then
+          begin
+              if  Baozhu=2 then  begin
+                   pt := CoPoint.Create;
+                   pt.Set_(x1, y1);
+                   ftrs:=  FMap.Layers.Item[1].SearchWithinDistance(pt, Distance, miUnitKilometer,0);
+                   Baozhu:=0;
+                  if ftrs.Count>0  then  begin
+                       self.ShowInfoFrm:=true;
+                       FfrmInfor:=TfrmInfor.Create(Application);
+                       FfrmInfor.ADODataSet1.Connection:=self.ADOConnection1;
+                       FfrmInfor.init_SG_Dx();
+                       if FfrmInfor.SG_DX.RowCount < ftrs.Count then  FfrmInfor.SG_DX.RowCount:= ftrs.Count+2;
+
+                   end;
+                    //
+
+                    //
+                    for I := 0 to ftrs.Count - 1 do
+                    begin
+                       FfrmInfor.Label1.Caption:='    在以东经:'+format('%3.5f',[X1])+'度，北纬：'+
+                                      format('%3.5f',[Y1])+'度为圆心，以'+format('%5.2f',[Distance])+'公里为半径的圆内，共查找到'+
+                                      IntToStr(ftrs.Count)+'个对象';
+                       FfrmInfor.SG_DX.Cells[0,I+1]:= IntToStr(i+1);
+                       temp1:=split(ftrs.Item[i+1].KeyValue,'|',Count1);
+                       FfrmInfor.SG_DX.Cells[1,I+1]:= temp1[0];
+                       FfrmInfor.SG_DX.Cells[2,I+1]:= temp1[1];
+                       FfrmInfor.SG_DX.Cells[3,I+1]:= temp1[2];
+
+                    end;
+                        if ShowInfoFrm=true  then  begin
+                             FfrmInfor.Show ;
+                             if self.Mapx_Out=0 then begin
+                                 FfrmInfor.BitBtn1.Enabled :=false;
+                                 FfrmInfor.BitBtn2.Enabled :=false;
+                                 FfrmInfor.Mapx_Out_in:=0;
+                             end else begin
+                                 FfrmInfor.BitBtn1.Enabled :=true;
+                                 FfrmInfor.Mapx_Out_in:=1;
+                             end;
+
+                        end;
+                   FMap.MousePointer := miDefaultCursor;
+               end;
+        end;
+
+end;
+
+procedure TMapX_LuLei.MouseEnterEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnMouseEnter;
+end;
+
+procedure TMapX_LuLei.MouseLeaveEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnMouseLeave;
+end;
+
+procedure TMapX_LuLei.PaintEvent(Sender: TObject);
+begin
+  if FEvents <> nil then FEvents.OnPaint;
+end;
+
+procedure TMapX_LuLei.SelectButtonClick(Sender: TObject);
+Var
+ sql,bh,str:string;
+ wStr:AnsiString;
+ i:integer;
+ x1,y1:double;
+begin
+    if uFormSelect=nil then  exit;
+    sql:=uFormSelect.RunSql ;
+    ADODataSet1.Close ;
+    ADODataSet1.CommandText :=Sql;
+    try
+       ADODataSet1.Open;
+       if ADODataSet1.RecordCount >0 then  begin
+           self.Clear_SG_Map;
+           TabSheetZj.Caption:='查询到的支架';
+           uFormSelect.Hide;
+           //初始化支架
+           self.initLayer('液压支架');
+           SG_YBZ.RowCount:= ADODataSet1.RecordCount+2;
+           while not ADODataSet1.eof do  begin
+              self.SG_YBZ.Cells[0,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('bh').AsString;
+              bh:= ADODataSet1.FieldByName('bh').AsString;;
+              self.SG_YBZ.Cells[1,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('Mt_address').AsString;
+              self.SG_YBZ.Cells[2,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('Zj_type').AsString;
+              str:= bh+'|'+ADODataSet1.FieldByName('Mt_address').AsString+'|'+ADODataSet1.FieldByName('Zj_type').AsString;
+              self.SG_YBZ.Cells[3,ADODataSet1.RecNo]:=ADODataSet1.FieldByName('zj_name').AsString;
+              x1:=ADODataSet1.FieldByName('Jindu').AsFloat;
+              y1:=ADODataSet1.FieldByName('weidu').AsFloat;
+              // { TODO : 标注地图 }
+              self.BiaoZhuZj(bh,str,somblName,x1,y1);
+
+            ADODataSet1.Next ;
+           end;
+       end else begin
+           ShowMessage('没有查到数据，请重新设置查询条件！');
+       end;
+      ADODataSet1.Close ;
+    finally
+       uFormSelect.ButRun.Enabled :=false;
+    end;
+
+end;
+
+procedure TMapX_LuLei.Set_AlignWithMargins(Value: WordBool);
+begin
+  AlignWithMargins := Value;
+end;
+
+procedure TMapX_LuLei.Set_AutoScroll(Value: WordBool);
+begin
+  AutoScroll := Value;
+end;
+
+procedure TMapX_LuLei.Set_AutoSize(Value: WordBool);
+begin
+  AutoSize := Value;
+end;
+
+procedure TMapX_LuLei.Set_AxBorderStyle(Value: TxActiveFormBorderStyle);
+begin
+  AxBorderStyle := TActiveFormBorderStyle(Value);
+end;
+
+procedure TMapX_LuLei.Set_Caption(const Value: WideString);
+begin
+  Caption := TCaption(Value);
+end;
+
+procedure TMapX_LuLei.Set_Color(Value: OLE_COLOR);
+begin
+  Color := TColor(Value);
+end;
+
+procedure TMapX_LuLei.Set_DockSite(Value: WordBool);
+begin
+  DockSite := Value;
+end;
+
+procedure TMapX_LuLei.Set_DoubleBuffered(Value: WordBool);
+begin
+  DoubleBuffered := Value;
+end;
+
+procedure TMapX_LuLei.Set_DropTarget(Value: WordBool);
+begin
+  DropTarget := Value;
+end;
+
+procedure TMapX_LuLei.Set_Enabled(Value: WordBool);
+begin
+  Enabled := Value;
+end;
+
+procedure TMapX_LuLei.Set_Font(const Value: IFontDisp);
+begin
+  SetOleFont(Font, Value);
+end;
+
+procedure TMapX_LuLei.Set_HelpFile(const Value: WideString);
+begin
+  HelpFile := string(Value);
+end;
+
+procedure TMapX_LuLei.Set_KeyPreview(Value: WordBool);
+begin
+  KeyPreview := Value;
+end;
+
+procedure TMapX_LuLei.Set_PixelsPerInch(Value: Integer);
+begin
+  PixelsPerInch := Value;
+end;
+
+procedure TMapX_LuLei.Set_PopupMode(Value: TxPopupMode);
+begin
+  PopupMode := TPopupMode(Value);
+end;
+
+procedure TMapX_LuLei.Set_PrintScale(Value: TxPrintScale);
+begin
+  PrintScale := TPrintScale(Value);
+end;
+
+procedure TMapX_LuLei.Set_Scaled(Value: WordBool);
+begin
+  Scaled := Value;
+end;
+
+procedure TMapX_LuLei.Set_ScreenSnap(Value: WordBool);
+begin
+  ScreenSnap := Value;
+end;
+
+procedure TMapX_LuLei.Set_SnapBuffer(Value: Integer);
+begin
+  SnapBuffer := Value;
+end;
+
+procedure TMapX_LuLei.Set_UseDockManager(Value: WordBool);
+begin
+    UseDockManager := Value;
+end;
+
+procedure TMapX_LuLei.Set_Visible(Value: WordBool);
+begin
+  Visible := Value;
+end;
+
+procedure TMapX_LuLei.SG_WBZDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+begin
+     //改变对齐
+{ WITH Sender AS TStringGrid,Canvas DO
+   BEGIN
+       if ACol=0  then begin
+          SetTextAlign(Handle,TA_Center);
+          FillRect(Rect);
+          TextRect(Rect,   Rect.Right-(Rect.Right-rect.Left) DIV 2 ,
+          (Rect.Top +(Rect.Bottom -Rect.Bottom) DIV 2)+
+          (((Sender   AS   TStringGrid).RowHeights[aRow]-ABS((Sender   AS   TStringGrid).Font.Height)) DIV 2),
+          Cells[ACol,   ARow]);
+        end;
+
+    End; }
+end;
+
+procedure TMapX_LuLei.SG_WBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+      SelectbZj_bh :=Trim(SG_WBZ.Cells[0,ARow]);
+      Select_str :=Trim(SG_WBZ.Cells[0,ARow])+'|'+Trim(SG_WBZ.Cells[1,ARow])+'|'+Trim(SG_WBZ.Cells[2,ARow]);
+      if  length(trim(SelectbZj_bh))>0 then begin
+          StatusBar1.Panels.Items[1].Text :='正在对:  '+SelectbZj_bh+ '  号数据,'+ Select_str +'进行浏览' ;
+          if self.MapX_Input =1 then
+              self.BitBtn1.Enabled :=true;
+      end else begin
+          StatusBar1.Panels.Items[1].Text :='';
+          self.BitBtn1.Enabled :=false;
+      end;  
+end;
+
+procedure TMapX_LuLei.SG_YBZSelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+      SelectbZj_bh :=Trim(SG_YBZ.Cells[0,ARow]);
+      Select_str :=Trim(SG_YBZ.Cells[1,ARow])+'|'+Trim(SG_YBZ.Cells[2,ARow]);
+      if  length(trim(SelectbZj_bh))>0 then begin
+          StatusBar1.Panels.Items[1].Text :='正在对:  '+SelectbZj_bh+ '  号数据,'+ Select_str +'进行浏览' ;
+           if self.MapX_Input =1 then
+               self.BitBtn2.Enabled :=true;
+      end else begin
+          StatusBar1.Panels.Items[1].Text :='';
+          self.BitBtn2.Enabled :=false;
+      end;
+end;
+
+procedure TMapX_LuLei.ToolButton10Click(Sender: TObject);
+begin
+   //如果不好用，屏蔽，编译。然后在打开，编译即可
+   FMap.CurrentTool:=miRadiusSelectTool;
+   Baozhu:=2;
+end;
+
+procedure TMapX_LuLei.ToolButton11Click(Sender: TObject);
+var
+   i:integer;
+begin
+    // FMap.Layers.LayersDlg(EmptyParam,EmptyParam);  很好的工具
+    MapFormVisi:=TMapFormVisi.Create(nil);
+    MapFormVisi.Path :=self.dllPath;
+    MapFormVisi.ShowModal;
+
+
+end;
+
+procedure TMapX_LuLei.ToolButton12Click(Sender: TObject);
+begin
+     CheckForm:=TCheckForm.Create(Application);
+     CheckForm.Path :=self.dllPath;
+     CheckForm.InitForm(Sender);
+     CheckForm.ShowModal;
+
+     InitModel;
+end;
+
+procedure TMapX_LuLei.ToolButton13Click(Sender: TObject);
+begin
+    if uFormSelect=nil then   begin
+        uFormSelect:=TuFormSelect.Create(nil);
+        uFormSelect.ADODataSet1.Connection:=self.ADOConnection1;
+        uFormSelect.ButRun.OnClick:=self.SelectButtonClick;
+    end ;
+        uFormSelect.Show;
+end;
+
+procedure TMapX_LuLei.ToolButton1Click(Sender: TObject);
+var
+   Row_c,Col_c:integer;
+   I: Integer;
+begin
+   if Application.MessageBox('你确定要打开Excel文件读入数据么？','操作提示',MB_ICONQUESTION+MB_OkCancel+MB_DEFBUTTON2)=idCancel then
+        exit;
+        self.PanelLeft.Visible:=false;
+        self.PanelMap.Visible:=false;
+        self.PanelExcel.Visible :=true;
+        StringGrid1.FixedCols:=1;
+        StringGrid1.FixedRows:=1;
+        StringGrid1.ColCount:=76;
+        StringGrid1.DefaultRowHeight:=18;
+        for I := 1 to 74 do  begin
+           self.StringGrid1.ColWidths[i-1]:=length(self.Field_name[i])*8;
+           self.StringGrid1.Cells[i-1,0]:=self.Field_name[i];
+        end;
+
+
+
+    //==========
+      StringGrid1.Align:=alClient;
+      StringGrid1.Visible:=true;
+      self.OpenDialog1.Execute() ;
+      
+      if length(Trim(self.OpenDialog1.FileName))>0 then
+         if  UpperCase(Rightstr(Trim(self.OpenDialog1.FileName),3))='XLS' then begin
+              ReadExcel(sender,self.OpenDialog1.FileName);
+         end else  begin
+              ShowMessage('请仔细查看文件的格式');
+         end;        
+
+end;
+
+procedure TMapX_LuLei.ToolButton2Click(Sender: TObject);
+ var
+   i,j,xh_C,Insert_Count,Update_Count:Integer;
+   S_Sql,Filed_Name,Field_s:Ansistring;
+   st_xh:Ansistring;
+   ShowS:string;
+begin
+    Insert_Count:=0;  Update_Count:=0;
+    for j := 1 to self.StringGrid1.RowCount-1 do  begin
+          try
+             if Trim(self.StringGrid1.Cells[0,j])='' then break;
+             xh_C:=StrToInt(self.StringGrid1.Cells[0,j]) ;
+             self.ADODataSet1.Close;
+             self.ADODataSet1.CommandText:='select bh from Mapbh where bh='''+IntToStr(xh_C)+'''';
+             self.ADODataSet1.Open();
+             if ADODataSet1.RecordCount <1 then  begin
+                  Filed_Name:=''; Field_s:='';
+                  for I := 1 to 73 do  begin
+                         Filed_Name:=Filed_Name+self.Excel_field[i]+',' ;
+                         Field_s:=Field_s+''''+StringGrid1.Cells[i-1,j]+''',';
+                  end; //end i
+                  S_Sql:='insert into Mapbh ('+Filed_Name+'MapxBz'+') values ('+Field_s+'0)';
+                  self.ADOCommand1.CommandText:=s_Sql;
+                  self.ADOCommand1.Execute();
+                  Insert_Count:=Insert_Count+1;
+             end else begin
+                  if Trim(StringGrid1.Cells[73,j])='1' then
+                     begin
+                          Filed_Name:=''; Field_s:='';
+                          for I := 2 to 73 do  begin
+                                 Filed_Name:=Filed_Name+self.Excel_field[i]+'='''+StringGrid1.Cells[i-1,j]+''',' ;
+
+                          end; //end i
+                          Filed_Name:=Filed_Name+self.Excel_field[74]+'=''0''' ;
+                          S_Sql:='update  Mapbh set '+Filed_Name +' where  bh ='''+ADODataSet1.FieldByName('bh').AsString+'''' ;
+                          self.ADOCommand1.CommandText:=s_Sql;
+                         // ShowMessage(S_Sql);
+                          self.ADOCommand1.Execute();
+                          Update_Count:=Update_Count+1;
+                     end;  //end  if Trim(ADODataSet1.FieldByName('Edit_T_F').AsString)='1' then
+             end;  //end if   ADODataSet1.RecordCount >0
+
+              self.ADODataSet1.Close;
+
+          except
+              continue;
+          end;
+           //end try
+
+    end;   //end j
+
+     if Insert_Count>0  then  begin
+        if Update_Count> 0 then  begin
+           ShowS := '插入了'+IntToStr(Insert_Count)+'条,更新了'+IntToStr(Update_Count)+'条记录!';
+        end else begin
+           ShowS := '插入了'+IntToStr(Insert_Count)+'条记录!';
+        end;
+     end else begin
+       if Update_Count> 0 then  begin
+           ShowS := '更新了'+IntToStr(Update_Count)+'条记录!';
+        end else begin
+           ShowS := '无记录更新!';
+        end;
+     end;
+           Application.MessageBox( PChar(ShowS),'信息提示', MB_ICONINFORMATION +MB_Ok);
+
+end;
+procedure TMapX_LuLei.InitMap();
+var
+    ModuleName,Vis:Widestring;
+    pIniFile:     TIniFile;
+    i:integer;
+begin
+        SetLength(ModuleName, 255);
+     //取得Ocx自身路径
+        GetModuleFileName(HInstance, PChar(ModuleName), Length(ModuleName));
+        dllPath:=Trim(PChar(ModuleName)) ;
+        dllPath:=Copy(dllPath,1,Length(dllPath)-12);
+
+
+         // somblName,somblsize
+         self.PanelLeft.Visible:=true;
+         self.PanelMap.Visible:=true;
+         self.PanelExcel.Visible :=false;
+         FMap.GeoSet:= dllPath+'ChinaMap\ChinaMap.gst';
+         FMap.Title.Visible :=False;
+         //初始化图层信息
+         self.initLayer('液压支架') ;
+         //设置地图单位
+         FMap.MapUnit:=  miUnitKilometer;
+
+         if not FileExists(dllPath+'ChinaMap\mapx_lulei.dat') then
+         begin
+             somblName:='PIN4-32.BMP';
+             somblsize:='18';
+             mouse_Bs:='1.15';
+         end else begin
+             pIniFile := Tinifile.create(dllPath+'ChinaMap\mapx_lulei.dat');
+             somblName:=Trim(pIniFile.ReadString('LB','Name','PIN4-32.BMP'));
+             somblsize:=Trim(pIniFile.ReadString('LB','Size','18'));
+             mouse_Bs:= Trim(pIniFile.ReadString('LB','Mouse','1.15'));
+
+             if somblsize='' then somblsize:='18';
+             if mouse_Bs='' then  mouse_Bs:='1.15';
+             //把图层的显示与隐藏搞清楚
+              for I := 1 to FMap.Layers.Count do begin
+                 Vis:= Trim(pIniFile.ReadString('TCVis',Trim(FMap.Layers[i].Name),'false'));
+
+                 if Vis='true' then   begin
+                      FMap.Layers[i].Visible :=true;
+                 end else begin
+                      FMap.Layers[i].Visible :=False;
+                 end;
+
+              end; // end for
+
+              pIniFile.Free;
+         end;
+
+end;
+
+procedure TMapX_LuLei.ToolButton4Click(Sender: TObject);
+begin
+        //InitModel;
+      InitMap();
+      self.TabSheetZj.Caption:='已标注信息' ;
+    //初始化图层
+      self.initLayer('液压支架') ;
+       //初始化stringGrid
+      self.InitSG_Map;
+
+end;
+
+procedure TMapX_LuLei.ToolButton5Click(Sender: TObject);
+begin
+     //如果不好用，屏蔽，编译。然后在打开，编译即可
+       FMap.CurrentTool:=miZoomInTool;
+end;
+
+procedure TMapX_LuLei.ToolButton6Click(Sender: TObject);
+begin
+      //如果不好用，屏蔽，编译。然后在打开，编译即可
+//      FMap.CurrentTool:=miZoomOutTool	;
+end;
+
+procedure TMapX_LuLei.ToolButton7Click(Sender: TObject);
+begin
+     //如果不好用，屏蔽，编译。然后在打开，编译即可
+      FMap.CurrentTool:= miPanTool;
+end;
+
+procedure TMapX_LuLei.ToolButton8Click(Sender: TObject);
+ var
+   ALayer:CMapXLayer;
+begin
+     ALayer := FMap.Layers['液压支架'];
+     if ALayer.Visible then   begin
+           ALayer.Visible:=false;
+           StatusBar1.Panels.Items[1].Text :='图层已经隐藏' ;
+
+     end else begin
+          ALayer.Visible:=true;
+     end;
+
+end;
+
+procedure TMapX_LuLei.ToolButton9Click(Sender: TObject);
+begin
+   //如果不好用，屏蔽，编译。然后在打开，编译即可
+   FMap.CurrentTool:= miArrowTool;
+end;
+
+function TMapX_LuLei.DataLink(const Str: WideString): WideString;
+var
+   s_Out:wideString;
+begin
+    self.ADOConnection1.Close();
+    self.ADOConnection1.ConnectionString:=Str;
+    try
+       ADOConnection1.Open();
+       s_out:='OK';
+       self.Enabled:=true; 
+    except
+       s_out:='Fail';
+       self.Enabled:=false;
+    end;
+     Result:=s_out;
+end;
+
+function TMapX_LuLei.InitModel: WideString;
+begin
+//     if iMapX_LuLei= nil then
+//        iMapX_LuLei:=iMapX_LuLei.Create;
+     self.MapX_Input := 0;
+     self.Mapx_Out:=0;
+     InitMap();
+    //初始化图层
+     self.initLayer('液压支架') ;
+       //初始化stringGrid
+     self.InitSG_Map;
+
+
+end;
+
+procedure TMapX_LuLei.mapX_quanxian(Input_shuju, Out_shuju: Integer);
+begin
+     self.MapX_Input := Input_shuju;
+     self.Mapx_Out:= Out_shuju;
+     //初始化图层
+     self.initLayer('液压支架') ;
+       //初始化stringGrid
+     self.InitSG_Map;
+end;
+
+initialization
+  TActiveFormFactory.Create(
+    ComServer,
+    TActiveFormControl,
+    TMapX_LuLei,
+    Class_MapX_LuLei,
+    1,
+    '',
+    OLEMISC_SIMPLEFRAME or OLEMISC_ACTSLIKELABEL,
+    tmApartment);
+end.

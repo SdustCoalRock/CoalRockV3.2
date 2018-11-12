@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2018/10/15 20:34:59.000.933,=C:\Users\lulei\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/10/15 20:35:57.000.075,C:\Users\lulei\Documents\Embarcadero\Studio\Projects\Unit1.pas=E:\work_lulei\CoalPressProject\V3.1\ReportWord\MainReport.pas</Transaction>
+    <Transaction>2018/10/15 20:35:57.000.075,C:\Users\lulei\Documents\Embarcadero\Studio\Projects\Unit1.dfm=E:\work_lulei\CoalPressProject\V3.1\ReportWord\MainReport.dfm</Transaction>
+    <Transaction>2018/10/15 20:36:14.000.488,C:\Users\lulei\Documents\Embarcadero\Studio\Projects\Project1.dproj=E:\work_lulei\CoalPressProject\V3.1\ReportWord\ReportWord.dproj</Transaction>
+    <Transaction>2018/10/15 20:42:46.000.267,=E:\work_lulei\CoalPressProject\V3.1\UsedForm\uIRockPress.pas</Transaction>
+    <Transaction>2018/10/15 20:42:46.000.195,=E:\work_lulei\CoalPressProject\V3.1\UsedForm\UICallPstope.pas</Transaction>
+    <Transaction>2018/10/15 20:42:46.000.354,=E:\work_lulei\CoalPressProject\V3.1\UsedForm\UIWinFrame.pas</Transaction>
+    <Transaction>2018/10/15 20:42:46.000.216,=E:\work_lulei\CoalPressProject\V3.1\UsedForm\UIGuideMapDll.pas</Transaction>
+    <Transaction>2018/10/15 20:42:46.000.237,=E:\work_lulei\CoalPressProject\V3.1\UsedForm\UIPStopeGuidUnit.pas</Transaction>
+    <Transaction>2018/10/15 20:46:34.000.268,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\Lu_Public_BasicModual.pas</Transaction>
+    <Transaction>2018/10/15 21:02:33.000.763,=E:\work_lulei\CoalPressProject\V3.1\ReportWord\uForm\RockPressReport.pas</Transaction>
+    <Transaction>2018/10/15 21:06:16.000.259,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\unWord_Lu.pas</Transaction>
+    <Transaction>2018/10/15 21:07:06.000.296,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\PStope_GzmGuidClass.pas</Transaction>
+    <Transaction>2018/10/15 21:09:57.000.163,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\uDrawGraphClass.pas</Transaction>
+    <Transaction>2018/10/15 21:12:09.000.794,=E:\work_lulei\CoalPressProject\V3.1\ReportWord\uForm\UMakeRuleClass.pas</Transaction>
+    <Transaction>2018/10/15 21:13:46.000.947,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\RockPressBasicClass.pas</Transaction>
+    <Transaction>2018/10/15 21:15:27.000.522,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\mysql.pas</Transaction>
+    <Transaction>2018/10/15 21:16:34.000.355,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\uLuSqliteDealWith.pas</Transaction>
+    <Transaction>2018/10/15 21:16:34.000.298,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\uLuDataAdo.pas</Transaction>
+    <Transaction>2018/10/15 21:16:34.000.235,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\StopWatch.pas</Transaction>
+    <Transaction>2018/10/15 21:16:34.000.060,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\SQLite3.pas</Transaction>
+    <Transaction>2018/10/15 21:16:34.000.119,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\sqlite3udf.pas</Transaction>
+    <Transaction>2018/10/15 21:16:34.000.178,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\SQLiteTable3.pas</Transaction>
+    <Transaction>2018/10/15 21:17:07.000.169,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\UMainDataModule.pas</Transaction>
+    <Transaction>2018/10/15 21:18:42.000.371,=E:\work_lulei\CoalPressProject\V3.1\PublicSysForm\UFormWait.pas</Transaction>
+    <Transaction>2018/10/15 21:21:13.000.640,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\RockPresstool.pas</Transaction>
+    <Transaction>2018/10/15 21:21:14.000.217,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\UForm_ContourGraph.pas</Transaction>
+    <Transaction>2018/10/15 21:21:14.000.805,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\UForm_LineGraph.pas</Transaction>
+    <Transaction>2018/10/15 21:21:14.000.161,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\UForm_Brand_Bar.pas</Transaction>
+    <Transaction>2018/10/15 21:22:06.000.895,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UClass\uDrarLineGraph.pas</Transaction>
+    <Transaction>2018/10/15 21:23:04.000.564,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\MakeDataRule.pas</Transaction>
+    <Transaction>2018/10/15 21:23:52.000.669,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\UForm_phaseGraph_Tongji.pas</Transaction>
+    <Transaction>2018/10/15 21:23:52.000.209,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\UForm_MoveSupportGraph.pas</Transaction>
+    <Transaction>2018/10/15 21:23:53.000.333,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\UForm_ThreeDimGraph.pas</Transaction>
+    <Transaction>2018/10/15 21:24:34.000.912,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UForm\UForm_StepResult.pas</Transaction>
+    <Transaction>2018/10/15 21:25:23.000.274,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UClass\uMainFun.pas</Transaction>
+    <Transaction>2018/10/15 21:27:22.000.491,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UClass\UGraphLineClass.pas</Transaction>
+    <Transaction>2018/10/15 21:27:22.000.343,=E:\work_lulei\CoalPressProject\V3.1\RockPressDll\UClass\uDisPoseData.pas</Transaction>
+    <Transaction>2018/11/11 16:51:34.767,D:\work_lulei\CoalPressProject\V3.1\ReportWord\uForm\RockPressReport.pas=</Transaction>
+    <Transaction>2018/11/11 16:52:58.046,=D:\work_lulei\CoalPressProject\V3.1\PublicSysForm\RockPressReport.pas</Transaction>
+  </Transactions>
+</BorlandProject>

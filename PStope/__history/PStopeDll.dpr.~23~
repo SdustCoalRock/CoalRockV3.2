@@ -1,0 +1,41 @@
+library PStopeDll;
+
+{ Important note about DLL memory management: ShareMem must be the
+  first unit in your library's USES clause AND your project's (select
+  Project-View Source) USES clause if your DLL exports any procedures or
+  functions that pass strings as parameters or function results. This
+  applies to all strings passed to and from your DLL--even those that
+  are nested in records and classes. ShareMem is the interface unit to
+  the BORLNDMM.DLL shared memory manager, which must be deployed along
+  with your DLL. To avoid using BORLNDMM.DLL, pass string information
+  using PChar or ShortString parameters. }
+
+uses
+  System.SysUtils,
+  System.Classes,
+  UIPStopeGuidUnit in '..\UsedForm\UIPStopeGuidUnit.pas',
+  UPstopeGuideUnit in 'UForm\UPstopeGuideUnit.pas',
+  mysql in '..\PublicSysForm\mysql.pas',
+  SQLite3 in '..\PublicSysForm\SQLite3.pas',
+  sqlite3udf in '..\PublicSysForm\sqlite3udf.pas',
+  SQLiteTable3 in '..\PublicSysForm\SQLiteTable3.pas',
+  Main_PStope in 'UForm\Main_PStope.pas',
+  Lu_Public_BasicModual in '..\PublicSysForm\Lu_Public_BasicModual.pas',
+  uLuDataAdo in '..\PublicSysForm\uLuDataAdo.pas',
+  WorKFaceClass in '..\PublicSysForm\WorKFaceClass.pas',
+  ImmediateClass in '..\PublicSysForm\ImmediateClass.pas',
+  PStope_SupportClass in '..\PublicSysForm\PStope_SupportClass.pas',
+  Pstope_ShowWindows in '..\PublicSysForm\Pstope_ShowWindows.pas';
+
+{$R *.res}
+
+function TPstopeGuid:TClassStateMent_PStopeGuid;
+  begin
+      Result:=TPStopeGuideBody;
+  end;
+
+exports
+   TPstopeGuid;
+
+begin
+end.

@@ -1,0 +1,44 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：uMainform.pas
+//<<      卢国志使用的个人Delphi文件                            <<
+//<<      该文件主要记录了个人函数                   <<
+//<<      创建日期：2016.5.12                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+unit uWinMainFun;
+
+interface
+uses
+  Winapi.Windows, SysUtils, Classes, Messages, Controls, Forms, StdCtrls, ExtCtrls,
+  ComCtrls ,math,Grids,WordXP,COMobj,SQLiteTable3,StrUtils,Vcl.Dialogs,
+  uDataModule, uDisPoseData, GzmClass, uThread, UsecondThread,
+  uThirdthread,uFourththread,
+  FootageThread,MySQLDataSet,SyncObjs, UInputThread;
+
+type
+  TWinMainForm =class (TObject)
+  private
+
+
+        function TestDataBaseParameter(const Dtype, IP, User, Password,  Path: WideString): WordBool;  safecall;
+
+
+
+
+  public
+
+
+          //日志文件
+           function Get_DllPath: WideString; safecall;
+           procedure WriteLog(const data:Ansistring; FFM : Ansistring='FFQ');
+
+  end;
+
+   
+implementation
+// 局部变量，仅限本函数使用
+
+
+end.

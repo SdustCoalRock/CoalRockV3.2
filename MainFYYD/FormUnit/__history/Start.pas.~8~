@@ -1,0 +1,33 @@
+unit Start;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls;
+
+type
+  TKcover = class(TForm)
+    Image1: TImage;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+     ExePath:AnsiString;
+  end;
+
+var
+  Kcover: TKcover;
+
+implementation
+
+{$R *.dfm}
+
+procedure TKcover.FormCreate(Sender: TObject);
+
+begin
+   Image1.Picture.LoadFromFile(ExePath+'BJTP/Welcome.Bmp') ;
+end;
+
+end.

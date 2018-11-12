@@ -1,0 +1,301 @@
+unit UUserINfo;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, Grids, ImgList, ComCtrls, ToolWin, ExtCtrls, System.ImageList,
+  MySQLDataSet;
+
+type
+  TUserManagerForm = class(TForm)
+    CoolBar1: TCoolBar;
+    StringGrid1: TStringGrid;
+    ImageList1: TImageList;
+    ToolBar1: TToolBar;
+    Addbtn: TToolButton;
+    savebtn: TToolButton;
+    deletebtn: TToolButton;
+    exitbtn: TToolButton;
+    Panel1: TPanel;
+    Label2: TLabel;
+    ComboBox1: TComboBox;
+    Label1: TLabel;
+    Edit1: TEdit;
+    StatusBar1: TStatusBar;
+    procedure FormCreate(Sender: TObject);
+    procedure AddbtnClick(Sender: TObject);
+    procedure savebtnClick(Sender: TObject);
+    procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure exitbtnClick(Sender: TObject);
+    procedure deletebtnClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormDestroy(Sender: TObject);
+    procedure ComboBox1Change(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure Edit1Click(Sender: TObject);
+   // procedure AddButtonClick(Sender: TObject);
+  private
+    { Private declarations }
+    KARow:integer;
+    MySqlDataSet1:TMyDataSet;
+    MyCommand1:TMyCommand;
+    kid:String;
+    procedure InitGrid(S_id:String);
+    procedure OptionTip(Str:String);
+  public
+    { Public declarations }
+    tag,mcId:integer;
+
+  end;
+
+
+var
+  UserManager: TUserManagerForm;
+
+
+implementation
+uses   Lu_base_function, uWinFrameClass, UMainDataModule;
+
+{$R *.dfm}
+
+
+
+procedure TUserManagerForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+
+end;
+
+procedure TUserManagerForm.FormCreate(Sender: TObject);
+
+begin
+   //
+    MySqlDataSet1:=TMyDataSet.Create(nil);
+    MySqlDataSet1.MySqlConnection :=MainDataModule.uPublicDM.ExConn;
+
+    MyCommand1:=TMyCommand.Create (nil);
+    MyCommand1.MySqlConnection :=MainDataModule.uPublicDM.ExConn;     //
+
+
+   self.StringGrid1.ColCount:=4;
+   self.StringGrid1.Cells[0,0]:='编号';
+   self.StringGrid1.Cells[1,0]:='矿井';
+   self.StringGrid1.ColWidths[1]:=200;
+   self.StringGrid1.Cells[2,0]:='煤层';
+   self.StringGrid1.Cells[3,0]:='主键';
+   self.StringGrid1.ColWidths[3]:=0;
+
+
+   //2016-6-14
+   savebtn.Enabled:=false;
+   deletebtn.Enabled:=false;
+
+   ComboBox1.Enabled:=false; //2016-6-29
+   Edit1.Enabled:=false;  //2016-6-29
+end;
+
+procedure TUserManagerForm.FormDestroy(Sender: TObject);
+begin
+    FreeAndNil(MySqlDataSet1);
+    FreeAndNil(MyCommand1);
+end;
+
+procedure TUserManagerForm.FormShow(Sender: TObject);
+var
+   s_temp:Str_DT_array;
+   C1,i:integer;
+begin
+   MySQlFillComBox(MySqlDataSet1,ComboBox1,'select * from KuangJingXinXiBiao order by KuangJingBianHao',
+                                 'id','MeiKuangMing','');
+
+   for I := 0 to self.ComboBox1.Items.Count -1  do
+          begin
+              s_temp:=split(self.ComboBox1.Items.Strings[i] ,'_',C1);
+                if s_temp[0]=MainDataModule.uPublicDM.i_kid then
+                  begin
+                   self.ComboBox1.ItemIndex :=i;
+                   break;
+                  end;
+           end;
+  InitGrid(MainDataModule.uPublicDM.i_kid );
+  MainDataModule.uPublicDM.InitStatusBar(self.StatusBar1);
+end;
+
+procedure TUserManagerForm.StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+var
+  str:String;
+  C1,i:integer;
+  s_temp:Str_DT_array;
+begin
+     if (ARow=0) or (kArow=ARow) then   exit;
+         KARow:=AROW;
+
+     if length(Trim(StringGrid1.Cells[1,ARow]))>0 then  begin
+         mcId:=StrToInt(Trim(StringGrid1.Cells[3,ARow]));    //c1 采区编号
+       end else begin
+          exit;
+       end;
+       tag:=1;
+
+       str:=self.StringGrid1.cells[1,ARow];
+//       self.ComboBox1.Text:=self.StringGrid1.cells[1,ARow];
+
+       if length(Trim(StringGrid1.Cells[1,ARow]))>0 then
+         //控制combokname
+         for I := 0 to self.ComboBox1.Items.Count -1  do
+            begin
+                  s_temp:=split(self.ComboBox1.Items.Strings[i] ,'_',C1);
+                    if s_temp[0]=split(Trim(StringGrid1.Cells[1,ARow]),'_',C1)[0] then
+                      begin
+                       self.ComboBox1.ItemIndex :=i;
+                       break;
+                      end;
+            end;
+       self.Edit1.Text:=self.StringGrid1.cells[2,ARow];
+       self.ComboBox1.Enabled:=false;
+
+   //2016-6-14
+   savebtn.Enabled:=false;
+   deletebtn.Enabled:=true;
+end;
+
+procedure TUserManagerForm.AddbtnClick(Sender: TObject);
+begin
+    self.ComboBox1.Text:='';
+    self.Edit1.Text:='';
+    tag:=0;
+    self.ComboBox1.Enabled:=true;
+
+
+   savebtn.Enabled:=true;
+
+   ComboBox1.Enabled:=true; //2016-6-29
+   Edit1.Enabled:=true;//2016-6-29
+   OptionTip('正在进行【添加】操作!');
+end;
+
+procedure TUserManagerForm.savebtnClick(Sender: TObject);
+var
+IMcSql:String;
+begin
+      if (self.Edit1.Text<>'') and (self.ComboBox1.Text<>'') then
+      begin
+           if tag=0 then begin
+                kid:= MainDataModule.uPublicDM.SplitString(self.ComboBox1.Text,'_')[0];
+                IMcSql:='insert into MeiCeng (KuangJingBianHao,MeiCengMing) values ('+kid+','''+self.Edit1.Text+''')';
+                MyCommand1.CommandText:=IMcSql;
+                MyCommand1.Execute;
+           end;
+           if tag=1 then begin
+                kid:= MainDataModule.uPublicDM.SplitString(self.ComboBox1.Text,'_')[0];
+                IMcSql:='update MeiCeng set MeiCengMing='''+self.Edit1.Text+''' where ID='+inttostr(mcId);     //wd2015-1-14
+                MyCommand1.CommandText:=IMcSql;
+                MyCommand1.Execute;
+           end;
+           InitGrid(kid);
+           OptionTip('数据保存成功!');
+      end else   begin
+           messagebox(self.Handle,'数据不能为空 ','系统提示',mb_iconerror+mb_ok);
+
+      end;
+   savebtn.Enabled:=false;
+   deletebtn.Enabled:=false;
+   Edit1.Text:='';
+
+   ComboBox1.Enabled:=false; //2016-6-29
+   Edit1.Enabled:=false;//2016-6-29
+end;
+
+procedure TUserManagerForm.ComboBox1Change(Sender: TObject);
+var
+  C1,i:integer;
+  s_temp:Str_DT_array;
+begin
+   s_temp:=split(self.ComboBox1.text ,'_',C1);
+   if length( s_temp[0])>0 then begin
+       kid:=s_temp[0];
+       InitGrid(s_temp[0]);
+   end;
+
+end;
+
+procedure TUserManagerForm.deletebtnClick(Sender: TObject);
+var
+sqlStr:string;
+begin
+    sqlStr:='select * from zkycb where mcId='''+inttostr(mcId)+'''';
+    MySqlDataSet1.Close;
+    MySqlDataSet1.CommandText:=sqlStr;
+    MySqlDataSet1.Open;
+    if MySqlDataSet1.RecordCount>0 then
+    begin
+      messagebox(self.Handle,'此煤层使用中,请勿删除 ','系统提示',mb_iconerror+mb_ok);
+
+      exit;
+    end;
+    sqlStr:='select * from cqcsb where mcId='''+inttostr(mcId)+'''';
+    MySqlDataSet1.Close;
+    MySqlDataSet1.CommandText:=sqlStr;
+    MySqlDataSet1.Open;
+    if MySqlDataSet1.RecordCount>0 then
+    begin
+       messagebox(self.Handle,'此煤层使用中,请勿删除 ','系统提示',mb_iconerror+mb_ok);
+       exit;
+    end;
+    sqlStr:='delete from  meiceng where ID='''+inttostr(mcId)+'''';
+   try
+    MyCommand1.CommandText:=sqlStr;
+    MyCommand1.Execute;
+   except
+     exit;
+   end;
+    OptionTip('数据删除成功!');
+    self.InitGrid(Kid);
+    ComboBox1.Enabled:=false; //2016-6-29
+    Edit1.Enabled:=false;//2016-6-29
+end;
+
+procedure TUserManagerForm.Edit1Click(Sender: TObject);
+begin
+   Edit1.SetFocus;
+end;
+
+procedure TUserManagerForm.exitbtnClick(Sender: TObject);
+begin
+    self.Close ;
+end;
+
+procedure  TUserManagerForm.InitGrid(S_id:String);
+var
+   sqlStr:string;
+   n:integer;
+begin
+    sqlStr:='select m.KuangJingBianHao,k.MeiKuangMing,m.MeiCengMing,m.ID from Meiceng as m,KuangJingXinXiBiao as k '+
+          ' where m.KuangJingBianHao=k.id and m.KuangJingBianHao='+S_id;
+    MySqlDataSet1.Close;
+    MySqlDataSet1.CommandText:=sqlStr;
+    MySqlDataSet1.Open;
+     n:=1;
+    self.StringGrid1.RowCount:=MySqlDataSet1.RecordCount+1;
+    while not MySqlDataSet1.Eof do
+    begin
+      self.StringGrid1.Cells[0,n]:=inttostr(n);
+      self.StringGrid1.Cells[1,n]:=  MySqlDataSet1.FieldByName('KuangJingBianHao').AsString+'_'+
+                    MySqlDataSet1.FieldByName('MeiKuangMing').AsString;
+
+      self.StringGrid1.cells[2,n]:= MySqlDataSet1.FieldByName('MeiCengMing').AsString;
+      self.StringGrid1.cells[3,n]:= MySqlDataSet1.FieldByName('ID').AsString;
+      n:=n+1;
+
+      MySqlDataSet1.Next;
+    end;
+    MySqlDataSet1.Close;
+end;
+procedure TUserManagerForm.OptionTip(Str: String);
+begin
+     self.StatusBar1.Panels[0].Text :=str;
+end;
+
+end.

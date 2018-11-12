@@ -1,0 +1,372 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：RockPressBasicClass                         <<
+//<<      lulei使用的个人Delphi文件                            <<
+//<<      该文件主要是作为矿压数据分析使用
+//<<      主要是类名，便于定义使用                    <<
+//<<      创建日期：2018.1010                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+unit RockPressBasicClass;
+interface
+
+uses
+  Windows, SysUtils, Classes, Messages, Controls, Forms, StdCtrls, ExtCtrls,
+  ComCtrls,math,IniFiles,Jpeg,Graphics,Dialogs;
+
+type
+
+   //定义岩石类,为 TRock
+   TRock =class(Tobject)
+
+    public
+      R_Name  :WideString;    //岩石名称
+      R_h     :double;        //岩石厚度
+      R_kyqd  : double;       // 抗压强度
+      R_klqd  : double;       // 抗拉强度
+      R_fchd  :double;        // 分层厚度
+      R_k_Rock: double;      // 岩石碎胀系数
+      R_r      : double;     //  岩石容重
+      PNG_Change:integer;   //岩层是否更换纹理
+      R_kjqd :double;//抗剪强度
+      R_MinH :double; //岩层最小厚度
+      R_MaxH :double;  // 岩层最大厚度
+      R_sffc :bool;//     是否分层
+      R_sfhsc:bool;//     是否含水
+      BMP_File:String; //   图片文件名称
+      MCId:integer; //煤层的id编号
+           end;
+
+ //定义岩层类 TYc_Rcok
+  TYc_Rock =class(TRock)
+
+    public
+      //外部传入变量
+      Yc_No       :integer;    //岩层编号
+      M_Kc_YandN  :bool;      // 是否是开采煤层
+      L_qx_xiashan   :double ;    //倾斜方向裂断拱下山距离倾斜中心线的长度
+      L_qx_shangshan   :double ;    //倾斜方向裂断拱上山距离倾斜中心线的长度
+      L_Tj        :double;     //推进方向裂断拱边线距离采煤工作面的距离
+      //内部计算变量
+      Step0      :double;    //计算每一个岩层的初次来压步距
+      step_i     : array [0..4] of double ; // 计算每一个岩层的1-4次周期来压步距 ，第0 次 为 稳定周期步距
+      Sa : array [0..2] of double ;     //  记录顶板下沉量 0 为初始下沉 1为 见方下沉；0.95  2 为 稳定下沉  0.85
+    end;
+
+  //定义岩梁类
+   TYL_beam =class (Tobject)
+      public
+        Start_YC_No :  integer;    //
+        End_Yc_NO   :  integer;    //
+        Ztc_ms      :double;       //支托层的厚度
+        Sdc_mc      :double;       //随动层的厚度
+        Step_0_Compr    :  double;     //  考虑随动层
+        Step_i_Compr    :  array[0..5] of double;     //    下标0 为 稳定步距，1-5 为第一次到第5次周期来压
+        Step_0_Simple   :  double;     //  不考虑随动层
+        step_i_simple   :  array[0..5] of double;     //   下标0 为 稳定步距，1-5 为第一次到第5次周期来压
+     //   is_init         :  bool ; //记录是否被初始化
+        end;
+
+  //定义钻孔类 TZk
+   TZk_bore =class(Tobject)
+     public
+            Zk_No       :integer;             // 钻孔编号
+            Zk_Yc_Count :integer;            // 岩层层数
+            Zk_name     : WideString;        // 钻孔名称
+            Yc_Rock    :array of TYc_Rock;   // 岩层数组（动态数组，下标为岩层的层数）
+          //  Beam_Def_count    :integer;      //钻孔内挠曲岩梁的个数
+            Beam_Def  :array[0..4] of TYL_beam;   //钻孔内挠曲岩梁的动态数组
+           // Beam_step_count   :integer;     //  钻孔内步距岩梁的个数
+            Beam_step :array[0..4] of TYL_beam;  // 钻孔内步距梁的动态数组
+            main_coal  :  integer;  // 该处为岩层数组的编号
+            is_init    :bool  ;
+            Zk_ldg_end_no:integer;//  // 该处为裂断拱岩层终止的 岩层数组编号
+           // 20160830
+            Mineid:integer;
+
+   end;
+
+  TBasic_Stop=Class
+    private
+       List_Cmsf:string;           // 1_炮采 2_普采  3_综采(一次采全高) 4_放顶煤 5_分层开采(上分层) 6_分层开采(下分层)
+       List_mtyd:string;           /// 51煤体硬度,对应的是编号 1(0.8);2(0.8-1.5) 3(1.5-2.5) 4(2.5 以上)
+       List_yxfx:string;             // 24  1	水平推进   		2	仰斜推进  3	俯斜推进
+       List_JYHD	   :string;            // 25   1	薄基岩  	2	一般基岩   3	中厚基岩     	4	巨厚基岩
+       List_DCGZ     :string;            //26 	1	地质构造较少    	2	背斜轴部     3	向斜轴部   4	断层密集，但不影响推进   5	断层密集，影响推进  6	构造极其复杂
+       List_WSFC	   :string;            // 27   1	瓦斯含量较低   	2	低瓦斯，局部超限  3	高瓦斯
+       List_TopWater :string;            // 28  	1	顶板无水  	2	含水层距离顶板较远  	3	含水层距离顶板较近   4	曾发生透水事故   	5	其他
+       List_BottomWater: string;          // 29 	1	底板无水源   2	底板有水源，较远  3	底板有水源，较近   4	曾发生底板突出事故    5	其他
+       List_HeoStress	:string;           //  30  1	基本无水平应力  2	水平应力小于垂直应力  3	水平应力与垂直应力相当  4	水平应力大于垂直应力1.5倍以上
+       List_Kyxx       :string;          // 31  	1	矿压显现不明显   2	有矿压显现，不影响生产  3	矿压显现较剧烈，影响生  4	发生过顶板事故
+       List_HangDaoSup :string;         // 	32	巷道基本不需要支护  	2	巷道简单锚网支护   3	巷道架棚支护，基本不变形  	4	巷道变形，底鼓，安全影响小  5	巷道急速变形，底鼓，严重影响安全
+       List_Zhqk      : string;       // 52 支护情况 1  单体支护  2 综采支架
+
+    public
+       procedure InitListString;
+
+       constructor Create;
+       destructor Destroy;
+  End;
+  //定义工作面类 TG_stope
+  TG_stope =class(TBasic_Stop)
+       public
+        S_Name   :WideString;         //  1工作面名称
+        S_No     :WideString;         // 2 工作面编号
+        S_mc_name:WideString;         // 3 所在煤层id  就是煤层编号
+        S_Cg_h   :double;             // 4 工作面采高
+        S_cmfs   :WideString;         // 5 采煤方式
+        S_Fm_h   :double;             // 6 放煤高度
+        S_qj     :double;             // 7 煤层倾角
+        S_mcsd_h :double;             // 8 埋藏深度
+        S_L_qx   :double;             // 9 工作面倾斜长
+        S_Sx_zx  :double;             // 10 工作面走向长
+        S_Jc_L   :double;             // 11 工作面累计进尺
+        S_f_PS   :double;             // 12  煤体的普氏系数
+        S_M_mcj  :double;             // 13  煤体的内摩擦角
+        S_M_njl  :double;             // 14  煤体的内聚力
+        S_Bsb    :double;             // 15  媒体的泊松比
+        S_K_zcfz :double;             // 16  支承压力峰值系数
+        S_Dblb   :Widestring;         // 17   工作面顶板类别
+        ZCYL_sx  :array[0..3] of double; //18 支承压力的范围   0 工作面前方， 1 下方 2 后方  3 上方
+        ZCYL_s0  :double;             // 19  内应力场的范围
+        ZCYL_s1  :array[0..3] of double;//20 支承压力高峰的范围 0为工作面前方与后方，1为 工作面两侧
+        Hg_ldg   :double;              // 21 支承压力裂断拱
+        is_init  :bool ;               // 22
+        mbcsnl_l :double;              //23 煤壁丧失支撑能力的距离
+        Dz_yxfx     :integer;             // 24  1	水平推进   		2	仰斜推进  3	俯斜推进
+        Dz_JYHD	   :integer;            // 25   1	薄基岩  	2	一般基岩   3	中厚基岩     	4	巨厚基岩
+        Dz_DCGZ     :integer;            //26 	1	地质构造较少    	2	背斜轴部     3	向斜轴部   4	断层密集，但不影响推进   5	断层密集，影响推进  6	构造极其复杂
+        Dz_WSFC	   :integer;            // 27   1	瓦斯含量较低   	2	低瓦斯，局部超限  3	高瓦斯
+        Dz_TopWater :integer;            // 28  	1	顶板无水  	2	含水层距离顶板较远  	3	含水层距离顶板较近   4	曾发生透水事故   	5	其他
+        Dz_BottomWater: Integer;          // 29 	1	底板无水源   2	底板有水源，较远  3	底板有水源，较近   4	曾发生底板突出事故    5	其他
+        Dz_HeoStress	:integer;           //  30  1	基本无水平应力  2	水平应力小于垂直应力  3	水平应力与垂直应力相当  4	水平应力大于垂直应力1.5倍以上
+        Dz_Kyxx       :Integer;          // 31  	1	矿压显现不明显   2	有矿压显现，不影响生产  3	矿压显现较剧烈，影响生  4	发生过顶板事故
+        Dz_HangDaoSup :integer;          //32   	1	巷道基本不需要支护  	2	巷道简单锚网支护   3	巷道架棚支护，基本不变形  	4	巷道变形，底鼓，安全影响小  5	巷道急速变形，底鼓，严重影响安全
+        CK_Upkc       :integer;          //33      上届开采情况     0 未采  1 以采
+        CK_UpMz       :double;           //34       上届煤柱
+        CK_downkc     :integer;          //35     下届开采       0 未采  1 以采
+        CK_downmz     :double;          // 36    下届煤住
+        S_DayStep_speed: double;       //  37  工作面日推进速度
+        S_Sh_UP       :double;         //  38  工作面上边界采深
+        S_Sh_Down     :double;         //  39  工作面下边界采深
+        S_SX_qj       :double;         //  40  工作面推进方向倾角
+        UP_Ckq        :Integer;         // 41 工作面上方是否存在采空区
+        UP_CKQ_Kc_H   :double;         // 42 采空区的采高
+        UP_CKQ_JuLI   :double;         //43 采空区距离该工作面的距离
+        Mc_FdBs       :double;         //44 煤层的放大倍数）画覆岩运动时使用
+        Ci_xs         :double;         // 45  周期来压步距计算系数
+        yklh          :integer;        // 46是否能实施高效沿空留巷，0 不能 1 可以  2 需要处理顶板  3 需要处理底板
+        yklh_hpct_h   :double;         // 47  沿空留巷 巷旁充填的高度
+        yklh_tc_lu_w:    double;          //  48 沿空留巷填充墙体的 录入 宽度
+        yklh_tc_js_w:    double;          //  49 沿空留巷填充墙体的  计算 宽度
+        S_AGV_MCH    :double;        //50 煤层平均厚度
+        S_Mtyd       :Integer;         // 51煤体硬度,对应的是编号 1(0.8);2(0.8-1.5) 3(1.5-2.5) 4(2.5 以上)
+        DZ_Zhqk      : integer;       // 52 支护情况 1  单体支护  2 综采支架
+        S_CMFS_INteger: integer;     //53采煤方法  的数字表示 1_炮采 2_普采  3_综采(一次采全高) 4_放顶煤 5_分层开采(上分层) 6_分层开采(下分层)
+        ZjName        : string;     //补充 支架名称，用于没有绑定支架的工作使用
+
+
+       //2018 property
+       gzm_b,gzm_k,gzm_d:String; // 用于属性矿的列表
+       procedure initFiledListName;
+
+       constructor Create;
+       destructor Destroy;
+
+      end;
+
+   //定义直接顶 类
+    TImmediate_roof=class
+      Public
+          Start_No  :integer;   //    直接顶开始 岩层数组下标
+          End_No    :integer;    //   直接顶结束 岩层数组下标
+          Surplus_h :double;     //   分层后的剩余高度
+          Immroof_M  :double;   //    直接顶的累积高度
+          Immroof_C0  :double;   //   直接顶的初次来压步距
+          is_init     :bool;      //  直接顶是否初始化
+          Imm_leibie      :Integer;//  直接顶类别
+          FDm_leibie      :Integer;//顶煤冒放性类别
+        end;
+
+  //定义老顶类
+  TOld_roof=class
+      public
+        YL_struc: integer;//标记老顶的结构， 1 为单岩梁，2 为多岩梁
+        YL_start :integer;    //  老顶开始岩层
+        yl_max_End : integer;  //老顶最大结束岩层
+        YL_min_End   :integer;    //  老顶最小结束岩层
+        YL_max_m     :double;     //  老顶最大高度
+        YL_min_m     :double;     //  老顶最小高度
+        YL_First_step     : array[0..2] of double;    //初次来压步距  0 为最大值，1为最小值，2为平均值
+        YL_Zhouqi_step    : array[0..2] of double;    //周期来压步距  0 为最大值，1为最小值，2为平均值
+        is_init      :bool;
+        Old_leibie       :Integer; // 老顶类别
+        diban_leobie     :Integer; //底板类别
+
+      end;
+   // //定义支架类
+  TZJ_Class=class
+      public
+         Zj_Name: WideString;    //支架的名称
+         ZJ_Tu_Bianhao:widestring; //支架图例编号
+         Zj_BianHao:WideString;  //支架的编号
+         Zj_XingHao:WideString;   //支架的型号
+         Zj_leixing:WideString;   //支架的型号
+         Zj_Lizhu_count: Integer;  //支架立柱数量
+         Zj_toall_F:double;       //支架整架阻抗力
+         zj_toall_P:double;       //支架支护强度
+         Zj_suoliang:double;      //支架最大缩量
+         Zj_Max_h:double;         //支架最大高度
+         Zj_min_h:double;         //支架最小高度
+         Zj_KongdingJU:double;    //支架控顶距
+         Zj_zhongxinju:double;    //支架中心矩
+         Zj_hlzyd:double;        //合力作用点
+         Zj_hubang_h:double;      //支架护帮高度
+         Zj_hubang_jishu:integer;  //支架护帮级数
+         zj_hubang_F:double;     //支架护帮阻力
+         zj_hubang_P:double;     //支架护帮强度
+         Zj_JiSuan_suoliang: double;// 支架计算的缩量
+         Zj_JiSuan_C0_F: array[0..2] of double;// 初次来压时支架计算的阻力  0 最大值 1 最小值 2 平均值
+         Zj_JiSuan_C0_P: array[0..2] of double;// 初次来压时支架计算的支护强度  0 最大值 1 最小值 2 平均值
+         Zj_JiSuan_Ci_F: array[0..2] of double;// 周期来压时支架计算的阻力  0 最大值 1 最小值 2 平均值
+         Zj_JiSuan_Ci_P: array[0..2] of double;// 期来压时支架计算的支护强度  0 最大值 1 最小值 2 平均值
+         Zj_Jisuan_SL: array[0..2] of double;// 支架计算的缩量  0 最大值 1 最小值 2 平均值
+         Zj_JiSuan_hubang_H: array[0..5] of double;// 支架计算互帮高度   '(0)为剪切滑移面，(1)为内摩擦角计算,(2)为压杆计算,(3)为煤体自身能力 ,(4)支架工作阻力方式计算
+         Zj_JiSuan_hubang_P: array[0..2] of double;// 支架计算互帮强度   0 最大值 1 最小值 2 平均值
+         JG_jx:widestring;     //  架型结构
+         JG_Dl:widestring;     //  顶梁结构
+         JG_Dz:widestring;     // 底座结构
+         JG_slg:widestring;     // 四连干结构
+         JG_ty:widestring;     // 推移结构
+         JG_Fm:widestring;     // 放煤结构
+         JG_Wl:widestring;     // 尾梁结构
+         JG_Qc:widestring;     // 前梁、尾梁侧护板
+         JG_Ct:widestring;     // 侧推结构
+         JG_Dt:widestring;     //底调结构
+         JG_Ql:widestring;     //前梁结构
+         ZJ_JianYi_Type:Widestring;  //支架的选择型号
+         zhiJia_F_xs  :double; // 支架阻力修订系数
+         zhijia_L_xs  :double; // 支架缩量修订系数
+         zhijia_hb_Q_xs :double;// 支架护帮强度修订系数
+         Zj_DBFD_xs:  array[1..9] of double;// 保存不同类别的 参数
+         OcxPath:widestring; //Ocx路径
+         Zj_imm_p:double; // 支架支撑直接顶的压强
+         Zj_old_C0_p:array[0..2] of double;// 初次来压时支架计算的支护强度  0 最大值 1 最小值 2 平均值
+         Zj_old_Ci_p:array[0..2] of double;// 周期来压时支架计算的支护强度  0 最大值 1 最小值 2 平均值
+         Zj_Lz_Diameter:double; //立柱的直径
+
+
+  end;
+
+
+   TSupportStep =Class(TZj_Class)
+        Lz_Diameter  :double;//立柱的直径（计算使用的）
+        SupportBh:integer;//   支架的编号 与 Zj_BianHao 一致
+        initLoad:double; //    支架初始支撑强度 或者也叫初撑力
+        EndOpenLoad: double; // 支架液压阀开启时强度
+   End;
+
+
+implementation
+
+{ TSupportStep }
+
+
+
+
+{ TBasic_Stop }
+
+constructor TBasic_Stop.Create;
+begin
+   InitListString ;
+end;
+
+destructor TBasic_Stop.Destroy;
+begin
+
+end;
+
+
+
+procedure TBasic_Stop.InitListString;
+begin
+      // 1_炮采 2_普采  3_综采(一次采全高) 4_放顶煤 5_分层开采(上分层) 6_分层开采(下分层)
+       List_Cmsf:='炮采,普采,综采(一次采全高),放顶煤,分层开采(上分层),分层开采(下分层)';
+      /// 51煤体硬度,对应的是编号 1(0.8);2(0.8-1.5) 3(1.5-2.5) 4(2.5 以上)
+       List_mtyd:='0.8以下,0.8-1.5,1.5-2.5,2.5以上';
+       // 24  1	水平推进   		2	仰斜推进  3	俯斜推进
+       List_yxfx:='水平推进,仰斜推进,俯斜推进';
+        // 25   1	薄基岩  	2	一般基岩   3	中厚基岩     	4	巨厚基岩
+       List_JYHD:='薄基岩,一般基岩,中厚基岩,巨厚基岩';
+       //26 	1	地质构造较少    	2	背斜轴部     3	向斜轴部   4	断层密集，但不影响推进   5	断层密集，影响推进  6	构造极其复杂
+       List_DCGZ :='地质构造较少,背斜轴部,向斜轴部,断层密集，但不影响推进,断层密集，影响推进,构造极其复杂';
+       // 27   1	瓦斯含量较低   	2	低瓦斯，局部超限  3	高瓦斯
+       List_WSFC:='瓦斯含量较低,低瓦斯，局部超限,高瓦斯';
+         // 28  	1	顶板无水  	2	含水层距离顶板较远  	3	含水层距离顶板较近   4	曾发生透水事故   	5	其他
+       List_TopWater :='顶板无水,含水层距离顶板较远,含水层距离顶板较近,曾发生透水事故,其他';
+         // 29 	1	底板无水源   2	底板有水源，较远  3	底板有水源，较近   4	曾发生底板突出事故    5	其他
+       List_BottomWater:='底板无水源,底板有水源，较远,底板有水源，较近,曾发生底板突出事故,其他';
+        //  30  1	基本无水平应力  2	水平应力小于垂直应力  3	水平应力与垂直应力相当  4	水平应力大于垂直应力1.5倍以上
+       List_HeoStress	:='基本无水平应力,水平应力小于垂直应力,水平应力与垂直应力相当,水平应力大于垂直应力1.5倍以上';
+         // 31  	1	矿压显现不明显   2	有矿压显现，不影响生产  3	矿压显现较剧烈，影响生  4	发生过顶板事故
+       List_Kyxx :='矿压显现不明显,有矿压显现，不影响生产,矿压显现较剧烈，影响生产,发生过顶板事故';
+        // 	32	巷道基本不需要支护  	2	巷道简单锚网支护   3	巷道架棚支护，基本不变形  	4	巷道变形，底鼓，安全影响小  5	巷道急速变形，底鼓，严重影响安全
+       List_HangDaoSup:='巷道基本不需要支护,巷道简单锚网支护,巷道架棚支护，基本不变形,巷道变形，底鼓，安全影响小,巷道急速变形，底鼓，严重影响安全';
+        // 52 支护情况 1  单体支护  2 综采支架
+       List_Zhqk:='单体支护,综采支架,放顶煤支架';
+
+end;
+
+{ TG_stope }
+
+constructor TG_stope.Create;
+begin
+  inherited;
+
+end;
+
+destructor TG_stope.Destroy;
+ var
+  i:integer;
+begin
+
+  inherited;
+end;
+
+procedure TG_stope.initFiledListName;
+begin
+  gzm_b:='s_name,工作面名称,edit,1,;'    //  S_Name   :WideString; 1工作面名称
+         +'S_mcsd_h,工作面开采深度,edit,1,;'    //  8 埋藏深度
+         +'S_qj,工作面倾角,edit,1,;'    // 7 煤层倾角
+         +'S_L_qx,工作面倾斜长度,edit,1,;'    // 9 工作面倾斜长
+         +'S_Sx_zx,工作面推进长度,edit,1,;'    //10 工作面走向长
+         +'s_name,工作面名称,edit,1,;'   //  1工作面名称
+
+
+                + '' ;
+ gzm_k:= 'S_Cg_h,采高高度,edit,1,;'    //  S_Cg_h   :double;  // 4 工作面采高
+        +'S_CMFS_INteger,采煤方法,list,1,list_cmfs;'    //  S_CMFS_INteger: integer;     //53采煤方法
+        +'DZ_Zhqk,支护方法,list,1,List_Zhqk;'    //   List_Zhqk:='单体支护,综采支架,放顶煤支架';
+        +'S_Jc_L,累计进尺,edit,1,;'    //  11 工作面累计进尺
+        +'S_Mtyd,煤体硬度,list,1,list_mtyd;'    // 12  煤体的普氏系数
+        +'S_M_mcj,【煤】内摩擦角,edit,1,;'    //  13  煤体的内摩擦角
+        +'S_M_njl,【煤】内聚力,edit,1,;'    // 14  煤体的内聚力
+        +'S_Bsb,【煤】泊松比,edit,1,;'    // 15  媒体的泊松比
+
+        + '' ;
+ gzm_d:= 'Dz_yxfx,仰斜/俯斜推进,list,1,List_yxfx;'    //   24  1	水平推进   		2	仰斜推进  3	俯斜推进
+       + 'Dz_JYHD,上覆岩层基岩状况,list,1,List_JYHD;'  //  Dz_JYHD	   :integer;            // 25   1	薄基岩  	2	一般基岩   3	中厚基岩     	4	巨厚基岩
+       + 'Dz_DCGZ,工作面地质构造,list,1,List_DCGZ;'  //   Dz_DCGZ     :integer;            //26 	1	地质构造较少    	2	背斜轴部     3
+       + 'Dz_WSFC,工作面瓦斯含量状况,list,1,List_WSFC;'  //  Dz_WSFC	   :integer;            // 27   1	瓦斯含量较低   	2	低瓦斯
+      + 'Dz_TopWater,工作面顶板水源状况,list,1,List_TopWater;'  //  Dz_TopWater :integer;            // 28  	1	顶板无水  	2	含水层距离顶板较远
+      + 'Dz_BottomWater,工作面底板水源状况,list,1,List_BottomWater;'  //   Dz_BottomWater: Integer;          // 29 	1	底板无水源   2	底板有水源
+      + 'Dz_HeoStress,巷道水平应力与垂直应力,list,1,List_HeoStress;'  //    Dz_HeoStress	:integer;           //  30  1	基本无水平应力
+      + 'Dz_Kyxx,该采区矿压显现状况,list,1,List_Kyxx;'  //   Dz_Kyxx       :Integer;          // 31  	1	矿压显现不明显   2	有矿压显现，不影响生
+      + 'Dz_HangDaoSup,工作面煤巷支护方式,list,1,List_HangDaoSup;'  //   Dz_HangDaoSup :integer;          //32   	1	巷道基本不需要支护  	2	巷道简单
+      +'';
+
+
+end;
+
+
+end.

@@ -1,0 +1,72 @@
+unit UFormWait;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Imaging.pngimage,
+  Vcl.ExtCtrls;
+
+type
+  TFormWait = class(TForm)
+    Image1: TImage;
+    WaitLabel: TLabel;
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+function CreateFromWait(AHandle:THandle;ACaption:string;Wid,Hi:integer):THandle;stdcall;
+Function CloseFromWait; stdcall;
+
+var
+  FormWait: TFormWait;
+
+implementation
+
+{$R *.dfm}
+Function CloseFromWait;stdcall;
+begin
+    if Assigned(FormWait) then
+       FormWait.Close ;
+
+end;
+
+
+function CreateFromWait(AHandle:THandle;ACaption:string;Wid,Hi:integer):THandle;stdcall;
+{
+
+  Single 0 正常页面  1 全屏页面
+}
+begin
+        if Assigned(FormWait) then  FreeAndNil(FormWait);
+        Application.Handle :=AHandle;
+        FormWait:=TFormWait.Create(Application);
+
+         try
+           with FormWait do begin
+               Caption:=ACaption;
+
+               ParentWindow:=Ahandle;
+               if Hi >Height then
+                   Top :=Round((Hi-Height)/3)  else   Top :=0;
+               if Wid> Width then
+                   Left:=Round((Wid-Width)/2)  else   Left:=0;
+
+               Show;
+               Result:=FormWait.Handle ;//函数值
+          end ;
+        except
+           FreeAndNil(FormWait);
+        end;
+
+end;
+
+procedure TFormWait.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+     if Assigned(FormWait) then
+        freeAndNil(FormWait);
+end;
+
+end.

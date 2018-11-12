@@ -1,0 +1,33 @@
+unit F_Stope;
+{$WARN SYMBOL_PLATFORM OFF}
+
+interface
+
+uses
+  ActiveX, Mtsobj, Mtx, ComObj, RockPressure_TLB, StdVcl,SysUtils,Windows,Messages,math,
+  ComServ,StrUtils ;
+
+type
+  TC_Stope = class(TMtsAutoObject, IC_Stope)
+
+ // protected
+  private
+
+  protected
+
+  public
+
+
+  end;
+ var
+    P_Stope:TC_Stope;
+implementation
+
+
+//---------变量定义
+
+
+initialization
+  TAutoObjectFactory.Create(ComServer, TC_Stope, Class_C_Stope,
+    ciMultiInstance, tmApartment);
+end.

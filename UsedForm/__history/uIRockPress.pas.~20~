@@ -1,0 +1,52 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：uRockPressClass.pas                          <<
+//<<      lulei使用的个人Delphi文件                            <<
+//<<      该文件是pressureClass.dll delphi  引用文件           <<
+//<<      该文件与 dll文件一同发布，dll不需要注册使用          <<
+//<<      创建日期：2016.5.12                                   <<
+//<<      2017.11.9  对数据的步距算法做了更改
+//<<      2017.12.4  修改了接口函数的字符类型                  <<
+//<<      更改了RealTimeFootAge 与   Inputdata 的返回值       <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+unit uIRockPress;
+
+interface
+
+uses  Classes;
+
+type
+
+   TDefine_RockPress = class (TObject)
+     protected
+
+     public
+           //20180411
+            procedure SetStatuesCaption(Value:PansiChar); virtual;abstract;
+            function CreateBatInputD(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle; virtual;abstract;
+            function CreateEditFootage_Data(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            function  CreateRockPressGraph(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            function  CreateEditJinDao(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            function  CreateRockLineGraph(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            procedure SetPublic_BasicLicending(Value:Boolean;UName:Pansichar);  virtual;abstract;
+            procedure CloseRockPressTool; virtual;abstract;
+
+            //
+            function GetWinFormIsExsit(WinName:Pansichar):Boolean;virtual;abstract;
+            function CloseActiveForm(FormStr:Pansichar):Boolean; virtual;abstract;
+            function SetOpenFormChangeParentPanel(WinName:Pansichar;AHandle:THandle):Boolean; virtual;abstract;
+            function OpenConTourChildForm(WinName:Pansichar;AHandle:THandle;Width,Heigth:integer):Boolean; virtual;abstract;
+            procedure GetMinAndMaxJinDao(var MinD,MaxD:integer); virtual;abstract;;
+         //系统函数
+          constructor Create; virtual;abstract;
+   end;
+
+   TClassStateMent_RockPress = class of TDefine_RockPress;
+
+implementation
+    //no context
+{ TIRockPress }
+
+
+end.

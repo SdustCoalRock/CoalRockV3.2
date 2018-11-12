@@ -1,0 +1,2294 @@
+unit UFormEditFootage;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.ComCtrls,Vcl.StdCtrls ,
+  UMainDataModule,uDrawGraphClass, Vcl.Buttons, Vcl.CheckLst ,System.TypInfo,
+  VclTee.TeeGDIPlus, VCLTee.TeEngine, VCLTee.TeeProcs, VCLTee.Chart,
+  VCLTee.TeeSurfa, Vcl.Menus, System.ImageList, Vcl.ImgList, Vcl.ToolWin,
+  Vcl.Grids,Vcl.Clipbrd, VCLTee.TeeLegendPalette, VCLTee.TeePieTool,
+  VCLTee.TeeTriSurface, VCLTee.TeePoin3, VCLTee.TeeTools, VCLTee.TeeDragPoint,
+  VCLTee.Series,VCLTee.TeeMapSeries, Vcl.ExtDlgs,
+  UMakeRuleClass
+  ;
+
+ type
+
+  TEditFootage_From = class(TForm)
+    StatusBar1: TStatusBar;
+    Main_PageControl: TPageControl;
+    GB_DW: TGroupBox;
+    Label3: TLabel;
+    Label1: TLabel;
+    Label45: TLabel;
+    JITuanCombo: TComboBox;
+    ComboKName: TComboBox;
+    GzmCombo: TComboBox;
+    PopMemu_Footage: TPopupMenu;
+    Pop_Foot_oneday: TMenuItem;
+    Pop_Foot_AddStep: TMenuItem;
+    N4: TMenuItem;
+    Pop_Foot_EditTime: TMenuItem;
+    N6: TMenuItem;
+    Pop_Foot_Update_PartData: TMenuItem;
+    Pop_Foot_Update_allData: TMenuItem;
+    N9: TMenuItem;
+    Pop_Foot_Paste: TMenuItem;
+    Pop_Foot_UpdateTime: TMenuItem;
+    N3: TMenuItem;
+    Pop_Foot_Save: TMenuItem;
+    Pop_Foot_Refresh: TMenuItem;
+    Pop_Foot_InsertStep: TMenuItem;
+    Pop_Foot_DeleteStep: TMenuItem;
+    Pop_Foot_DeleteAll: TMenuItem;
+    ImageList1: TImageList;
+    Pop_Rock_Paste: TMenuItem;
+    Pop_Rock_DeleteOne: TMenuItem;
+    N10: TMenuItem;
+    Pop_Rock_Save: TMenuItem;
+    N12: TMenuItem;
+    Pop_Rock_Refresh: TMenuItem;
+    N14: TMenuItem;
+    Pop_Rock_DeletaAll: TMenuItem;
+    N5: TMenuItem;
+    Pop_Rock_Input_Memo: TMenuItem;
+    Pop_Rock_Disp_Memo: TMenuItem;
+    N7: TMenuItem;
+    Label_DataPress_Unit: TLabel;
+    N11: TMenuItem;
+    Pop_Rock_Disp_50: TMenuItem;
+    Pop_Rock_Disp_300: TMenuItem;
+    Pop_Rock_Disp_All: TMenuItem;
+    Panel_ProcessBar: TPanel;
+    FirstPGBar: TProgressBar;
+    SecondPGBar: TProgressBar;
+    ColorDialog1: TColorDialog;
+    ImageList2: TImageList;
+    SavePictureDialog1: TSavePictureDialog;
+    TopPanel: TPanel;
+    SaveDialog1: TSaveDialog;
+    N24: TMenuItem;
+    Pop_Foot_Auto: TMenuItem;
+    Pop_Foot_UpdateDao: TMenuItem;
+    Pop_Rock_Auto: TMenuItem;
+    PopupMenu_RockData: TPopupMenu;
+    Pop_Rock_SaveExcel: TMenuItem;
+    PageControl4: TPageControl;
+    TabSheet10: TTabSheet;
+    FootageGrid: TStringGrid;
+    FootageToolPanel: TPanel;
+    GroupBox7: TGroupBox;
+    Label9: TLabel;
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    Label15: TLabel;
+    Label16: TLabel;
+    Label17: TLabel;
+    Label18: TLabel;
+    Label30: TLabel;
+    Label39: TLabel;
+    ComboFootSteps: TComboBox;
+    ComboBoxStepTime: TComboBox;
+    Footsteps_L: TEdit;
+    Button6: TButton;
+    Button7: TButton;
+    Edit_SupportNumber: TEdit;
+    Edit_interVal_support: TEdit;
+    RG_JD_Basic: TRadioGroup;
+    Edit_JD_support: TEdit;
+    RG_JD_Time: TRadioGroup;
+    TabSheet11: TTabSheet;
+    RockDataGrid: TStringGrid;
+    RockDataRightGrid: TStringGrid;
+    ScrollBar1: TScrollBar;
+    RG_Rock_DataType: TRadioGroup;
+    RockDataGrid_Edit: TStringGrid;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure JITuanComboChange(Sender: TObject);
+    procedure ComboKNameChange(Sender: TObject);
+    procedure GzmComboChange(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure RG_Yun_MainClick(Sender: TObject);
+    procedure BitBtn5Click(Sender: TObject);
+
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FootageGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure FootageGridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure FootageGridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button6Click(Sender: TObject);
+    procedure Button7Click(Sender: TObject);
+    procedure Footsteps_LClick(Sender: TObject);
+    procedure Footsteps_LKeyPress(Sender: TObject; var Key: Char);
+    procedure Pop_Foot_onedayClick(Sender: TObject);
+    procedure Pop_Foot_AddStepClick(Sender: TObject);
+    procedure Pop_Foot_EditTimeClick(Sender: TObject);
+    procedure Pop_Foot_InsertStepClick(Sender: TObject);
+    procedure Pop_Foot_DeleteStepClick(Sender: TObject);
+    procedure Pop_Foot_UpdateTimeClick(Sender: TObject);
+    procedure Pop_Foot_PasteClick(Sender: TObject);
+    procedure Pop_Foot_Update_PartDataClick(Sender: TObject);
+    procedure Pop_Foot_Update_allDataClick(Sender: TObject);
+    procedure Pop_Foot_SaveClick(Sender: TObject);
+    procedure Pop_Foot_RefreshClick(Sender: TObject);
+    procedure Pop_Foot_DeleteAllClick(Sender: TObject);
+    procedure Edit_SupportNumberKeyPress(Sender: TObject; var Key: Char);
+    procedure Edit_interVal_supportKeyPress(Sender: TObject; var Key: Char);
+    procedure Edit_SupportNumberClick(Sender: TObject);
+    procedure Edit_interVal_supportChange(Sender: TObject);
+    procedure RockDataGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure RockDataRightGridDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure RockDataGridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure RockDataGridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure ScrollBar1Change(Sender: TObject);
+    procedure Pop_Rock_PasteClick(Sender: TObject);
+    procedure Pop_Rock_Input_MemoClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure Pop_Rock_Disp_MemoClick(Sender: TObject);
+    procedure N7Click(Sender: TObject);
+    procedure Pop_Rock_SaveClick(Sender: TObject);
+    procedure Pop_Rock_Disp_50Click(Sender: TObject);
+    procedure Pop_Rock_Disp_300Click(Sender: TObject);
+    procedure Pop_Rock_Disp_AllClick(Sender: TObject);
+    procedure Pop_Rock_DeletaAllClick(Sender: TObject);
+    procedure Pop_Rock_RefreshClick(Sender: TObject);
+    procedure Pop_Rock_DeleteOneClick(Sender: TObject);
+    procedure Main_PageControlDrawTab(Control: TCustomTabControl; TabIndex: Integer;
+      const Rect: TRect; Active: Boolean);
+    procedure PageControl4DrawTab(Control: TCustomTabControl; TabIndex: Integer;
+      const Rect: TRect; Active: Boolean);
+
+    procedure ContourPop_ChangUnitClick(Sender: TObject);
+    procedure Edit_StartPtKeyPress(Sender: TObject; var Key: Char);
+    procedure Edit_EndPtKeyPress(Sender: TObject; var Key: Char);
+    procedure Edit_Sup_ConKeyPress(Sender: TObject; var Key: Char);
+    procedure Edit_Foot_ConKeyPress(Sender: TObject; var Key: Char);
+    procedure Edit_Min_PtKeyPress(Sender: TObject; var Key: Char);
+    procedure TreeView1Collapsed(Sender: TObject; Node: TTreeNode);
+    procedure TreeView1Expanding(Sender: TObject; Node: TTreeNode;
+      var AllowExpansion: Boolean);
+
+    procedure Edit_AxisKeyPress(Sender: TObject; var Key: Char);
+    procedure EndEditKeyPress(Sender: TObject; var Key: Char);
+
+    procedure Edit_StartDaoKeyPress(Sender: TObject; var Key: Char);
+    procedure Edit_EndDaoKeyPress(Sender: TObject; var Key: Char);
+
+    procedure ChartPageControlDrawTab(Control: TCustomTabControl;
+      TabIndex: Integer; const Rect: TRect; Active: Boolean);
+    procedure Edit_JD_supportClick(Sender: TObject);
+    procedure RG_JD_BasicClick(Sender: TObject);
+    procedure Pop_Foot_AutoClick(Sender: TObject);
+    procedure Pop_Foot_UpdateDaoClick(Sender: TObject);
+    procedure Pop_Rock_AutoClick(Sender: TObject);
+    procedure RG_Rock_DataTypeClick(Sender: TObject);
+    procedure Pop_Rock_SaveExcelClick(Sender: TObject);
+
+  private
+    { Private declarations     }
+     FootStringGrid_SelectCol,FootStringGrid_SelectRow:integer;
+     RockStringGrid_SelectCol,RockStringGrid_SelectRow:integer;
+     DataPress_Unit_Flag:integer; // 1为MPa  2为Bar
+     SelectRockDataRecordNumber:String;// 查询记录 的数量
+     Mouse_x,Mouse_y:integer;
+     MySqlDataSet1:TMyDataSet;
+     MySqlDataSet2:TMyDataSet;
+     MyCommand1:TMyCommand;
+     DrawGzm:TDrawGrap;
+     s_MinName,S_WorkFaceName:string;
+     StringGroupColor:String;
+     CurrentChart:String;
+     SaveBmpPath:String; //图片文件保存的路径
+     BasicJinDao:TBasicJinDao;
+     //
+     MapSeries:TMapSeries;
+     TreeView_Stepid,TreeView_APolid:integer;
+
+    procedure InitForm;      //初始化界面部分功能
+    procedure RefreshForm; //刷新整个界面的数据
+    function  InitDateTimeFootage :Boolean;  //在工作面编号确定的情况下进行的初始化
+    procedure OptionTip(index:integer;Str:String);
+    procedure AutoLoadcomboBox(MkName,WkName:string);
+   //-----------------------
+    procedure RefreshSize;     // 刷新界面布局
+    function  GetDataClass:Boolean;    //获取数据选择结果
+    function  GetTimeAndFootage:Boolean; // 获取开始时间与进尺的 选择结果
+    procedure RefreshMemoInfo(Memo:TMemo);  // 刷新消息窗口
+    procedure RefreshInputData; //对录入条件进行更新
+    procedure RefreshFootageStringGrid;
+    procedure RefreshRockPressStringGrid(Flag:string);
+
+    function  GetBatInputDataMaxGenTime(Support:integer):TDateTime;
+    Procedure FillBasicJinDao(B_JinDao:TBasicJinDao;Support:integer);
+    procedure UpdateBatInputData; // 对导入的数据进行处理
+    //---------------------------
+
+    procedure InitFootageGrid; // 初始化进尺数据表
+    procedure InitRockDataGrid;// 初始化矿压数据录入表
+    
+    procedure initInputRockPressData ;//初始化矿山压力录入数据
+    procedure InitKyfxResultStringGrid;// 初始化矿压显示结果表格
+    function  ZoomRect(mRect: TRect; mZoom: Integer): TRect;// 绘制表格线
+    //--------------------------
+    procedure DispFootAgePopMumu(px,py,Col,Row:integer); //显示进尺数据快捷菜单
+    procedure DispRockDataPopMumu(px,py,Col,Row:integer); //显示矿压数据快捷菜单
+    
+    //----------------------------
+
+    procedure InsertNextDayFootage(StrGrid:TStringGrid;Row,dayOrstep:integer);
+    function  GetFootStepCount:Integer; // 获取一天进刀数
+    function  GetFootStepTime:double;overload;  // 获取进刀间隔时间  1天为 1
+    function  GetFootStepTime(FistSt,SecondSt:String;Interval:integer):double;Overload; // 获取进刀间隔时间  1天为 1
+    function  GetFootOneStepDis:double;  // 获取进刀间隔距离
+    //---------------------------------
+    procedure InserOneRecordToFootage(StrGrid:TstringGrid;Row:integer);  //插入一条记录
+    procedure DeleteOnRecordToFootage(StrGrid:TstringGrid;Row:integer);  //删除一条记录
+    procedure MoveStringGridRecord(StrGrid:TstringGrid;FRow,MRow:integer); //移动一条记录的数据
+    procedure UpdateFootageStringGridFromRow(StrGrid:TstringGrid;InserOrdelete:string;Row:integer);// 从当前行开始更新数据
+    procedure UpdateTdateTimeFormCurrRow(StrGrid:TstringGrid;Row:integer);// 从当前行开始更新时间
+    procedure CopyDataToStringGridFromPaste(StrGrid:TstringGrid;Col,Row,ColNumber:integer);  // 拷贝数据进入StringGrid
+    function  UpdateShouDongInputFootae(StrGrid:TstringGrid;Row:integer;DownOrUp:string):integer;//更新收到录入进尺
+    function  AutoUpdateFootage(StrGrid: TStringGrid;Row:integer):Boolean;
+    //---------------------------
+    procedure ChangePressDataUnit(Flag:integer);  // 更改数据单位
+    function  SetAnalysisSenstive(Index:integer):Boolean;//通过选择灵敏度来改变判定数值
+    procedure GetMyContourGroupColor(NumLevel:integer);
+    procedure FillStringGridColorGroup(NumLevel:integer);
+    procedure FillStringGridPhase(Number:integer);
+    procedure SplitWorkFaceMemo1Text;
+    procedure SaveWorkFaceMemo1Text ;
+
+
+  public
+     EXCaption:String; // 外部传过来的标题
+    { Public declarations }
+      procedure Return_CallEditDateTime(DTS:String);//调用修改时间界面的回调函数
+      procedure Return_CallEditRockPressMemo(DTS:String);
+
+  end;
+
+function CreateFootage_Data(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):THandle;stdcall;
+
+var
+ EditFootage_From: TEditFootage_From;
+
+implementation
+
+{$R *.dfm}
+
+uses Lu_Public_BasicModual, PStope_GzmGuidClass,
+  UEditFootageDateTime, UEditRockDataMemo;
+function CreateFootage_Data(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):THandle;stdcall;
+{Flag 1 进尺维护  Flag 2 矿压数据维护  3 矿压数据分析}
+begin
+        if Assigned(EditFootage_From) then  FreeAndNil(EditFootage_From);
+        Application.Handle :=AHandle;
+        EditFootage_From:=TEditFootage_From.Create(Application);
+
+         try
+           with EditFootage_From do begin
+               EXCaption:=ACaption;
+               WindowState:= wsMaximized;
+               ParentWindow:=Ahandle;
+
+               if Hi >Height then
+                   Top :=Round((Hi-Height)/3)  else   Top :=0;
+               if Wid> Width then
+                   Left:=Round((Wid-Width)/2)  else   Left:=0;
+
+               Show;
+               SetFocus;
+
+               if Flag=1 then begin//  维护进尺
+                  PageControl4.ActivePage:= TabSheet10;
+
+               end else if Flag=2 then begin  // 矿压分析
+                  PageControl4.ActivePage:= TabSheet11;
+
+               end;
+
+
+                Result:=EditFootage_From.Handle ;//函数值
+          end ;
+        except
+           FreeAndNil(EditFootage_From);
+        end;
+
+
+end;
+
+{ TForm1 }
+
+procedure TEditFootage_From.AutoLoadcomboBox(MkName, WkName: string);
+var
+   s_temp:Str_DT_array;
+   i,C1:integer;
+begin
+   if length(trim(WkName))=0 then  exit;
+   if not DrawGzm.SelectMineAndWorkFaceBh(MkName, WkName) then   exit;
+   //判断与工作面相关的数据表是否创建，如果没有创建，再此创建
+   if not MainDataModule.IsExsitTableName('D_'+inttostr(DrawGzm.FGzm.Gzmbh)+'_BasicData') then begin
+       MainDataModule.CreateTable('2',MainDataModule.DataType,inttostr(DrawGzm.FGzm.Gzmbh),'') ;
+   end;
+
+    //控制JiTuancombo
+     for I := 0 to self.JiTuanCombo.Items.Count -1  do
+        begin
+              s_temp:=Public_Basic.split(self.JiTuanCombo.Items.Strings[i] ,'_',C1);
+                if s_temp[0]=IntToStr(DrawGzm.Jituan_id) then
+                  begin
+                   self.JiTuanCombo.ItemIndex :=i;
+                   break;
+                  end;
+        end;
+   // 加载 ComboKName
+    MainDataModule.MySQlFillComBox(MySqlDataSet1,ComboKName,'select * from KuangJingXinXiBiao  where Jituanid=' +
+                  IntToStr(DrawGzm.Jituan_id)+' order by id ','id','MeiKuangMing','');
+
+   //ComboKName
+     for I := 0 to self.ComboKName.Items.Count -1  do
+        begin
+              s_temp:=Public_Basic.split(self.ComboKName.Items.Strings[i] ,'_',C1);
+                if s_temp[0]=IntTostr(DrawGzm.Mk_id) then
+                  begin
+                   self.ComboKName.ItemIndex :=i;
+                   break;
+                  end;
+        end;
+
+   // 加载 GzmCombo
+    MainDataModule.MySQlFillComBox(MySqlDataSet1,GzmCombo,' select cqid,cqName from cqcsb where kid = ' + IntTostr(DrawGzm.Mk_id)  +
+                                           ' order by cqid','cqid','cqName','');
+    //GzmCombo
+     for I := 0 to self.GzmCombo.Items.Count -1  do
+        begin
+              s_temp:=Public_Basic.split(self.GzmCombo.Items.Strings[i] ,'_',C1);
+                if s_temp[0]=IntTostr(DrawGzm.FGzm.Gzmbh ) then
+                  begin
+                   self.GzmCombo.ItemIndex :=i;
+                   break;
+                  end;
+        end;
+
+     OptionTip(0,'对【'+DrawGzm.FGzm.S_Name+'】数据进行分析!');
+
+end;
+
+function TEditFootage_From.AutoUpdateFootage(StrGrid: TStringGrid;Row:integer): Boolean;
+var
+  i:integer;
+  sRow:Integer;
+  EndTime:TDateTime;
+  Sql,Strdt:string;
+  Step_Footage:double;
+  RecordCount,left_FootageCount,Right_FootageCount:Integer;
+  Left_Sum_Footage,Right_SumFootage:Double;
+begin
+  if DrawGzm.FGzm.Gzmbh <0 then exit;
+
+  for I := 2 to StrGrid.RowCount-1 do
+       if Trim(StrGrid.Cells[0,i])='' then  begin
+          sRow:=i-1;
+          if i>2 then  begin
+            EndTime:=StrToDateTime(Trim(StrGrid.Cells[1,i-1]),Public_Basic.FSetting);
+            left_FootageCount:=public_Basic.StrToInt_lu(Trim(StrGrid.Cells[2,i-1]));
+            Right_FootageCount:=public_Basic.StrToInt_lu(Trim(StrGrid.Cells[10,i-1]));
+            Left_Sum_Footage:=public_Basic.StrToDouble_Lu(Trim(StrGrid.Cells[4,i-1]));
+            Right_SumFootage:=public_Basic.StrToDouble_Lu(Trim(StrGrid.Cells[8,i-1]));
+            RecordCount:=public_Basic.StrToInt_lu(Trim(StrGrid.Cells[0,i-1]));
+          end else begin
+            EndTime:=0;
+            left_FootageCount:=0;
+            Right_FootageCount:=0;
+            Left_Sum_Footage:=0;
+            Right_SumFootage:=0;
+            RecordCount:=0;
+          end;
+          break;
+       end;
+  if i=StrGrid.RowCount then begin
+     sRow:=StrGrid.RowCount-1;
+  end;
+
+   // 到数据库把进尺查出来
+   MySqlDataSet1.Close ;
+   Step_Footage:=self.GetFootOneStepDis;
+   Strdt:=Public_Basic.ReturnDateTimeString(MainDataModule.DataType ,EndTime);
+   Sql:=' select endtime from  D_'+IntToStr(DrawGzm.FGzm.Gzmbh)+'_SupportMoveInfo ' +
+        ' where supportbh =' + IntTostr(DrawGzm.FGzm.RockPressAnalysis.JinDao_Support) + ' and  EndTime > ' + Strdt  +
+        ' order by endtime ';
+   MySqlDataSet1.CommandText :=sql;
+   try
+     if MySqlDataSet1.Open  then
+       while not MySqlDataSet1.Eof  do begin
+          inc(sRow);
+          if StrGrid.RowCount <=sRow+1 then  StrGrid.RowCount:=  sRow+2;
+          RecordCount:=RecordCount+1;
+          StrGrid.Cells[0,SRow]:= IntToStr(RecordCount);
+          StrGrid.Cells[1,SRow]:= FormatDateTime('yyyy-mm-dd HH:nn:ss',MySqlDataSet1.FieldByName('endtime').AsDateTime);
+          left_FootageCount:=left_FootageCount+1;
+          StrGrid.Cells[2,SRow]:= IntToStr(left_FootageCount);
+          StrGrid.Cells[3,SRow]:= FormatFloat('0.000',Step_Footage);
+          Left_Sum_Footage:=Left_Sum_Footage+Step_Footage;
+          StrGrid.Cells[4,SRow]:= FormatFloat('0.00',Left_Sum_Footage);
+          //
+          Right_SumFootage:=Right_SumFootage+Step_Footage;
+          StrGrid.Cells[8,SRow]:= FormatFloat('0.00',Right_SumFootage);
+          StrGrid.Cells[9,SRow]:= FormatFloat('0.000',Step_Footage);
+          Right_FootageCount:=Right_FootageCount+1;
+          StrGrid.Cells[10,SRow]:= IntToStr(Right_FootageCount);
+          MySqlDataSet1.Next ;
+       end;
+   finally
+      MySqlDataSet1.Close ;
+   end;
+  
+end;
+
+procedure TEditFootage_From.BitBtn5Click(Sender: TObject);
+begin
+     RefreshInputData;
+end;
+
+
+
+
+procedure TEditFootage_From.Button6Click(Sender: TObject);
+begin
+   SaveWorkFaceMemo1Text;
+
+
+end;
+
+procedure TEditFootage_From.Button7Click(Sender: TObject);
+begin
+   SplitWorkFaceMemo1Text;
+end;
+
+
+
+
+procedure TEditFootage_From.MoveStringGridRecord(StrGrid: TstringGrid; FRow,
+  MRow: integer);
+var
+   i:integer;
+begin
+    for I := 0 to StrGrid.ColCount -1 do
+        StrGrid.Cells[i,MRow]:= StrGrid.Cells[i,FRow];
+
+end;
+
+procedure TEditFootage_From.N7Click(Sender: TObject);
+begin
+  if DataPress_Unit_Flag=1 then  begin
+     DataPress_Unit_Flag:=2;
+  end else if DataPress_Unit_Flag=2 then   begin
+     DataPress_Unit_Flag:=1;
+  end;
+
+    ChangePressDataUnit(DataPress_Unit_Flag);
+end;
+
+procedure TEditFootage_From.UpdateBatInputData;
+var
+  i,Sup:integer;
+  sql1,sql2,Strdt:String;
+  MaxTime:TdateTime;
+  JinDao,SupportBh:integer;
+  Data0,Data1,Data2,Data3:double;
+begin
+
+   //打开 进度条
+   DrawGzm.SetProcegressBarVisual(Panel_ProcessBar,FirstPGBar,SecondPGBar,true,100,100);
+   DrawGzm.StepProcegressBar(FirstPGBar,SecondPGBar,10,0);
+   Sup:= DrawGzm.FGzm.RockPressAnalysis.ManulInput_Interval_support;
+   while Sup<=DrawGzm.FGzm.SupEndNumber  do  begin
+      DrawGzm.StepProcegressBar(FirstPGBar,SecondPGBar,10,0);
+      Data0:=0;
+      // 填充 进刀类
+      FillBasicJinDao(BasicJinDao,Sup);
+      for I := 0 to BasicJinDao.Count-1 do   begin
+         if (i>1) and (Data0<1) then  break;
+         DrawGzm.StepProcegressBar(FirstPGBar,SecondPGBar,0,20);
+         Strdt:=Public_Basic.ReturnDateTimeString(MainDataModule.DataType ,BasicJinDao.ArrayBasicJinDao[i].ShotTime);
+         Sql1:=' select * from  D_'+IntToStr(DrawGzm.FGzm.Gzmbh)+'_SupportMoveInfo ' +
+               ' where supportbh >=' + IntTostr(Sup) + ' and supportbh < '+IntTostr(Sup+DrawGzm.FGzm.RockPressAnalysis.ManulInput_Interval_support)  +
+               ' and  EndTime >= ' + Strdt + ' and StartTime <= ' +Strdt;
+         MySqlDataSet1.Close ;
+         MySqlDataSet1.CommandText :=sql1;
+         try
+         if MySqlDataSet1.Open  then
+           if MySqlDataSet1.RecordCount >0 then   begin
+              MySqlDataSet1.First ;
+              Data0:=MySqlDataSet1.FieldByName('Max_Value').AsFloat;
+              Data1:=MySqlDataSet1.FieldByName('AGVData').AsFloat;
+              Data2:=MySqlDataSet1.FieldByName('BeforeMoveValue').AsFloat;
+              Data3:=MySqlDataSet1.FieldByName('SameTimeValue').AsFloat;
+           end;
+         finally
+            if Data0>0 then
+              DrawGzm.FGzm.SaveMultPressDataToDAteBase(
+                                          FormatdateTime('yyyy-mm-dd HH:NN:SS',BasicJinDao.ArrayBasicJinDao[i].ShotTime) ,
+                                          BasicJinDao.ArrayBasicJinDao[i].Daoshu,
+                                          Sup,
+                                          Data0,Data1,Data2,Data3,0,''
+                                          ) ;
+            MySqlDataSet1.Close ;
+         end;
+
+
+      end;
+
+      Sup:=Sup+DrawGzm.FGzm.RockPressAnalysis.ManulInput_Interval_support;
+   end;
+   // 关闭进度条
+   DrawGzm.SetProcegressBarVisual(Panel_ProcessBar,FirstPGBar,SecondPGBar,false,0,0);
+end;
+
+procedure TEditFootage_From.UpdateFootageStringGridFromRow(StrGrid: TstringGrid;
+  InserOrdelete:string;Row: integer);
+var
+   i:integer;
+   StepTime,Step_L:double;
+begin
+   if Row <2 then  exit;
+   for I := Row to StrGrid.RowCount -2  do begin
+
+      // 第0列累加更新         编号
+        if(i=2) then  begin
+           StrGrid.Cells[0,i]:= '1';
+        end else begin
+           StrGrid.Cells[0,i]:= IntTostr(Public_Basic.StrToInt_lu(StrGrid.Cells[0,i-1])+1);
+        end;
+
+      //第1 列 取 时间 中值 更新  时间
+       if (InserOrdelete='Insert') and (i=Row)  then  begin //只有插入 当前行在改变时间 其他情况不改变时间
+          if Trim(StrGrid.Cells[1,i+1])='' then  begin
+             StepTime:=self.GetFootStepTime;
+          end else begin
+              StepTime:=self.GetFootStepTime(Trim(StrGrid.Cells[1,i-1]),Trim(StrGrid.Cells[1,i+1]),2);
+          end;
+          StrGrid.Cells[1,i]:=  FormatDateTime('yyyy-mm-dd HH:nn:ss',StrToDateTime(Trim(StrGrid.Cells[1,i-1]),Public_Basic.FSetting)+StepTime );
+       end;
+        // 第2列累加更新    left 进刀数
+        if i=2 then  begin
+            StrGrid.Cells[2,i]:='1';
+        end else begin
+            StrGrid.Cells[2,i]:= IntTostr(Public_Basic.StrToInt_lu(StrGrid.Cells[2,i-1])+1);
+        end;
+
+       //  //获取第3 列 的值   left 步长
+        if (Trim(StrGrid.Cells[3,i-1])='') or (i=2) then  begin
+           Step_L:=self.GetFootOneStepDis;
+        end else   begin
+           Step_L:=Public_Basic.StrToDouble_Lu(Trim(StrGrid.Cells[3,i-1]));
+        end;
+
+        if Trim(StrGrid.Cells[5,i])='' then
+           StrGrid.Cells[3,i]:=FormatFloat('0.000',Step_L);
+
+        //  //第4 列 取 累计进尺
+        if i=2 then  begin
+           StrGrid.Cells[4,i]:=FormatFloat('0.000',Step_L);
+        end else if Trim(StrGrid.Cells[5,i])='' then  begin
+           StrGrid.Cells[4,i]:=FormatFloat('0.000',Public_Basic.StrToDouble_Lu(Trim(StrGrid.Cells[2,i-1]))+Step_L);
+        end;
+        // 第10 行累计更新    right  进刀数
+         if i=2 then  begin
+            StrGrid.Cells[10,i]:='1';
+        end else begin
+            StrGrid.Cells[10,i]:= IntTostr(Public_Basic.StrToInt_lu(StrGrid.Cells[10,i-1])+1);
+        end;
+
+          //  //获取第9 列 的值   right 步长
+        if (Trim(StrGrid.Cells[9,i-1])='') or (i=2) then  begin
+           Step_L:=self.GetFootOneStepDis;
+        end else  begin
+           Step_L:=Public_Basic.StrToDouble_Lu(Trim(StrGrid.Cells[9,i-1]));
+        end;
+
+        if Trim(StrGrid.Cells[7,i])='' then
+            StrGrid.Cells[9,i]:=FormatFloat('0.000',Step_L);
+        //  //第8 列 取 累计进尺
+         if i=2 then  begin
+           StrGrid.Cells[8,i]:=FormatFloat('0.000',Step_L);
+         end else if Trim(StrGrid.Cells[7,i])='' then  begin
+           StrGrid.Cells[8,i]:=FormatFloat('0.000',Public_Basic.StrToDouble_Lu(Trim(StrGrid.Cells[8,i-1]))+Step_L);
+         end;
+
+         //退出机制
+         if Trim(StrGrid.Cells[1,i+1])='' then  break;
+   end;
+
+end;
+
+function TEditFootage_From.UpdateShouDongInputFootae(StrGrid: TstringGrid;
+  Row: integer;DownOrUp:string) :Integer ;
+var
+  i:integer;
+  StartRow,EndRow:integer;
+  StepDis:Double;
+  StartFootage,EndFootage:Double;
+  StepCol,AutoCol,SelectCol:integer;
+  AutoAddlastData:Boolean;
+begin
+   if DownOrUp='Down' then  begin
+       StepCol:=3;
+       AutoCol:=4;
+       SelectCol:=5;
+   end else begin
+       StepCol:=9;
+       AutoCol:=8;
+       SelectCol:=7;
+   end;
+   if Row= StrGrid.RowCount-1  then  AutoAddlastData:=true
+       else AutoAddlastData:=false;
+   EndRow:=Row;
+   StartRow:=2; //最初的行
+   for i :=EndRow  downto 2 do
+       if (Trim(StrGrid.Cells[SelectCol,i]) <> '')  and  (Trim(StrGrid.Cells[AutoCol,i]) <> '' )then begin
+           EndRow:=i;
+           break;
+       end;
+   for i := EndRow-1 downto 2 do   begin
+       if (Trim(StrGrid.Cells[SelectCol,i]) <> '')  and  (Trim(StrGrid.Cells[AutoCol,i]) <> '' )then begin
+           StartRow:=i;
+           break;
+       end;
+   end;
+   // 如果 开始时第一行数据
+   if StartRow=2 then  begin
+      StrGrid.Cells[SelectCol,StartRow]:=StrGrid.Cells[AutoCol,StartRow] ;
+   end;
+
+   if  (Trim(StrGrid.Cells[SelectCol,EndRow]) <> '' ) and (StartRow >=2) then  begin   //下顺槽的 更新
+       if  Trim(StrGrid.Cells[SelectCol,StartRow]) ='' then begin
+           StartFootage:=0;
+       end else begin
+           StartFootage:=Public_Basic.StrToDouble_Lu(StrGrid.Cells[SelectCol,StartRow]);
+       end;
+       // 开始计算
+       EndFootage:=Public_Basic.StrToDouble_Lu(StrGrid.Cells[SelectCol,EndRow]);
+       StepDis:=(EndFootage-StartFootage)/(EndRow-StartRow);
+       if StepDis>=0  then
+         for I := StartRow+1 to EndRow do  begin
+             StrGrid.Cells[AutoCol,i]:=FormatFloat('0.00',StartFootage+StepDis);
+             StrGrid.Cells[StepCol,i]:=FormatFloat('0.000',StepDis);
+             StartFootage:=StartFootage+StepDis;
+         end;
+   end;
+   //继续修订后面的数据
+   if AutoAddlastData then
+       for I := EndRow+1 to StrGrid.RowCount -1 do begin
+          if trim(StrGrid.Cells[AutoCol,i]) ='' then  break;
+          if (trim(StrGrid.Cells[AutoCol,i-1]) ='') or (i-1<2) then  break;
+           StrGrid.Cells[AutoCol,i]:=FormatFloat('0.00',Public_Basic.StrToDouble_Lu(StrGrid.Cells[AutoCol,i-1])
+                                                       +Public_Basic.StrToDouble_Lu(StrGrid.Cells[StepCol,i]) );
+       end;
+   Result:= StartRow;
+end;
+
+procedure TEditFootage_From.UpdateTdateTimeFormCurrRow(StrGrid: TstringGrid;
+  Row: integer);
+var
+   i,j,FromRow,ToRow:integer;
+   StepTime:double;
+   StartDatatime,DateTime_1,DateTime_2,UseddateTime:TdateTime;
+begin
+   if Row <2 then  exit;
+   if Trim(StrGrid.Cells[1,Row])='' then  exit;
+      StartDatatime:= StrToDateTime( FormatDateTime('yyyy-mm-dd',StrToDateTime(Trim(StrGrid.Cells[1,Row]),Public_Basic.FSetting) )
+                                      +' 00:00:00',Public_Basic.FSetting );
+   FromRow:=Row+1;
+   ToRow:=-1;
+   UseddateTime:=StrToDateTime(Trim(StrGrid.Cells[1,Row]),Public_Basic.FSetting) ;
+   while FromRow <= StrGrid.RowCount -1  do begin
+       if Trim(StrGrid.Cells[1,FromRow])= ''  then break;
+       //找当天数据
+       for j := FromRow to StrGrid.RowCount -2 do  begin
+          if Trim(StrGrid.Cells[1,j+1])= '' then begin
+              ToRow:=j;
+              break;
+          end;
+
+          DateTime_1:=StrToDateTime( FormatDateTime('yyyy-mm-dd',StrToDateTime(Trim(StrGrid.Cells[1,j]),Public_Basic.FSetting) )
+                                      +' 00:00:00',Public_Basic.FSetting );
+          DateTime_2:=StrToDateTime(Trim(StrGrid.Cells[1,j+1]),Public_Basic.FSetting);
+
+           if DateTime_2 - DateTime_1 >=1 then  begin
+              ToRow:=j;
+              break;
+           end;
+       end;
+
+      if ToRow < FromRow then  begin
+         ToRow:=StrGrid.RowCount -1;
+      end;
+
+       //  填写数据
+       if ToRow =FromRow then  begin
+           StepTime:=self.GetFootStepTime;
+       end else begin
+           StepTime:=self.GetFootStepTime(Trim(StrGrid.Cells[1,FromRow]),Trim(StrGrid.Cells[1,ToRow]),ToRow-FromRow);
+       end;
+
+       for j := FromRow to ToRow do  begin
+           UseddateTime:=UseddateTime+ StepTime;
+           StrGrid.Cells[1,j]:=  FormatDateTime('yyyy-mm-dd HH:nn:ss',UseddateTime);
+       end;
+
+       FromRow:=ToRow+1;
+       UseddateTime:= StrToDateTime( FormatDateTime('yyyy-mm-dd',StrToDateTime(Trim(StrGrid.Cells[1,ToRow]),Public_Basic.FSetting)+1 )
+                                      +' 00:00:00',Public_Basic.FSetting );
+   end;
+
+end;
+
+procedure TEditFootage_From.ChangePressDataUnit(Flag: integer);
+var
+  i,j:integer;
+  TemValue:Double;
+begin
+  if Flag=1 then   begin
+     Label_DataPress_Unit.Caption :='当前数据单位为 MPa' ;
+     DrawGzm.ColorValue.UnitType :=1;
+     DataPress_Unit_Flag:=1;
+
+  end else begin
+     Label_DataPress_Unit.Caption :='当前数据单位为 Bar' ;
+     DrawGzm.ColorValue.UnitType:=2;
+     DataPress_Unit_Flag:=2;
+
+  end;
+
+  for I := 4 to RockDataGrid.ColCount-1 do  begin
+      for j := 2 to RockDataGrid.RowCount -1 do  begin
+         TemValue:=Public_Basic.StrToDouble_Lu(RockDataGrid.Cells[i,j]);
+         if TemValue>0 then   begin
+            if DataPress_Unit_Flag=1 then  begin
+               RockDataGrid.Cells[i,j]:=FormatFloat('0.00',TemValue/10) ;
+            end else begin
+               RockDataGrid.Cells[i,j]:=FormatFloat('0.00',TemValue*10) ;
+            end;
+         end else begin
+             RockDataGrid.Cells[i,j]:='';
+         end;
+      end;
+  end;
+
+   Caption:=EXCaption+'【'+ Label_DataPress_Unit.Caption+'】';
+end;
+
+procedure TEditFootage_From.ChartPageControlDrawTab(Control: TCustomTabControl;
+  TabIndex: Integer; const Rect: TRect; Active: Boolean);
+begin
+   if Active then
+    begin
+        Control.Canvas.Brush.Color := ClHighLight;
+        Control.Canvas.Font.Color := clWhite;
+    end;
+    Control.Canvas.FillRect(Rect);
+
+end;
+
+
+procedure TEditFootage_From.ComboKNameChange(Sender: TObject);
+var
+   s_temp:Str_DT_array;
+   C1:integer;
+begin
+   s_temp:=Public_Basic.split(ComboKName.Text,'_',C1);
+   if length(trim(s_temp[0])) >0  then  begin
+       DrawGzm.Mk_id:=strToInt(s_temp[0]);
+       DrawGzm.Mk_Name:=s_temp[1];
+       MainDataModule.MySQlFillComBox(MySqlDataSet1,GzmCombo,' select cqid,cqName from cqcsb where kid = ' +  s_temp[0]+
+                                              ' order by cqid','cqid','cqName','');
+
+   end;
+
+end;
+
+
+
+
+
+procedure TEditFootage_From.ContourPop_ChangUnitClick(Sender: TObject);
+begin
+  if DataPress_Unit_Flag=1 then  begin
+     DataPress_Unit_Flag:=2;
+  end else if DataPress_Unit_Flag=2 then   begin
+     DataPress_Unit_Flag:=1;
+  end;
+
+    ChangePressDataUnit(DataPress_Unit_Flag);
+end;
+
+procedure TEditFootage_From.CopyDataToStringGridFromPaste(StrGrid: TstringGrid; Col,
+  Row, ColNumber: integer);
+var
+  arr: array[0..99999] of Char;
+  i,j,inColNumber:Integer;
+  s_temp:Str_DT_array;
+  C1,ColS:integer;
+  List1:TStringList;
+begin
+
+  Clipboard.GetTextBuf(arr, Length(arr));
+  List1:=TStringList.Create ;
+  List1.Text:=arr;
+  try
+     for I := 0 to List1.Count-1 do  begin
+          s_temp:=Public_Basic.split(List1.Strings[i],#9,C1);
+          if ColNumber < 1   then inColNumber:=C1
+              else  inColNumber:=ColNumber;
+
+          for j := 0 to inColNumber-1 do  begin
+             if Col+j>StrGrid.ColCount-1 then   break;
+
+             StrGrid.Cells[Col+j,Row]:=s_temp[j];
+          end;
+
+          Row:=Row+1;
+          if Row> StrGrid.RowCount -1 then break;
+
+    end;
+
+  finally
+     FreeAndNil(List1);
+  end;
+
+
+end;
+
+
+procedure TEditFootage_From.DeleteOnRecordToFootage(StrGrid: TstringGrid;
+  Row: integer);
+var
+  i:integer;
+begin
+   if Row <2  then exit;
+   for i:=Row to StrGrid.RowCount-2 do
+       MoveStringGridRecord(StrGrid,i+1,i);
+    //清除最后一行
+    FootageGrid.Rows[StrGrid.RowCount-1].Clear ;
+    StrGrid.RowCount:=StrGrid.RowCount-1;
+    UpdateFootageStringGridFromRow(StrGrid,'Detlete',Row);
+    //重新调整
+   RefreshFootageStringGrid
+end;
+
+
+procedure TEditFootage_From.DispFootAgePopMumu(px,py,Col,Row:integer);
+begin
+   if  (Row <=1) or (Col<0)  then exit;
+
+    //
+    Pop_Foot_oneday.Enabled :=False;
+    self.Pop_Foot_AddStep.Enabled :=False;
+    self.Pop_Foot_InsertStep.Enabled :=False;
+    self.Pop_Foot_DeleteStep.Enabled :=False;
+
+    Pop_Foot_EditTime.Enabled :=False;
+    Pop_Foot_UpdateTime.Enabled :=False;
+    Pop_Foot_Update_PartData.Enabled :=False;
+    Pop_Foot_Update_allData.Enabled :=False;
+    Pop_Foot_Paste.Enabled :=False;
+    Pop_Foot_UpdateDao.Enabled:=False;
+//    if col=0 then  begin   //选中 的操作
+        Pop_Foot_oneday.Enabled :=true;
+        self.Pop_Foot_AddStep.Enabled :=true;
+        self.Pop_Foot_InsertStep.Enabled :=true;
+        self.Pop_Foot_DeleteStep.Enabled :=true;
+//    end;
+
+    if col=1 then  begin
+        Pop_Foot_EditTime.Enabled :=true;
+        Pop_Foot_UpdateTime.Enabled :=true;
+    end;
+
+    if (col=5) or (col=7 )  then  begin
+       Pop_Foot_Update_PartData.Enabled :=true;
+       Pop_Foot_Update_allData.Enabled :=true;
+       Pop_Foot_Paste.Enabled :=true;
+    end;
+
+    if (col=2) or (col=10 )  then  begin
+       Pop_Foot_Paste.Enabled :=true;
+       Pop_Foot_UpdateDao.Enabled:=true;
+    end;
+
+
+    PopMemu_Footage.Popup(px,py);
+
+end;
+
+
+procedure TEditFootage_From.DispRockDataPopMumu(px, py, Col, Row: integer);
+begin
+     if  (Row <=1) or (Col<4)  then exit;
+
+     if  RG_Rock_DataType.ItemIndex <4 then  begin
+         Pop_Rock_Paste.Enabled :=false;
+     end else begin
+         Pop_Rock_Paste.Enabled :=true;
+     end;
+
+//     self.Pop_Rock_Paste.Enabled :=false;
+//     self.Pop_Rock_DeleteOne .Enabled :=false;
+//     //self.Pop_Rock_Save.Enabled :=false;
+//     self.Pop_Rock_Refresh.Enabled :=false;
+//     self.Pop_Rock_DeletaAll.Enabled :=false;
+       //Pop_Rock_Input_Memo.Enabled :=False;
+
+       Pop_Rock_Disp_Memo.Enabled :=False;
+     if Trim(RockDataRightGrid.Cells[RockStringGrid_SelectCol,RockStringGrid_SelectRow]) <> '' then
+              Pop_Rock_Disp_Memo.Enabled :=true;
+
+     PopupMenu_RockData.Popup(px,py);
+end;
+
+
+
+procedure TEditFootage_From.Edit_StartDaoKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_EndDaoKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9',#8]) then key:=#0
+end;
+
+
+
+procedure TEditFootage_From.Edit_AxisKeyPress(Sender: TObject; var Key: Char);
+begin
+    if not (key in ['0'..'9',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_EndPtKeyPress(Sender: TObject; var Key: Char);
+begin
+    if not (key in ['0'..'9','.',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_Foot_ConKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_interVal_supportChange(Sender: TObject);
+begin
+   Edit_interVal_support.SetFocus;
+end;
+
+procedure TEditFootage_From.Edit_interVal_supportKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+   if not (key in ['0'..'9','.',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_JD_supportClick(Sender: TObject);
+begin
+   Edit_JD_support.SetFocus ;
+end;
+
+procedure TEditFootage_From.Edit_Min_PtKeyPress(Sender: TObject; var Key: Char);
+begin
+    if not (key in ['0'..'9','.',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_StartPtKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9','.',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_SupportNumberClick(Sender: TObject);
+begin
+    self.Edit_SupportNumber.SetFocus ;
+end;
+
+procedure TEditFootage_From.Edit_SupportNumberKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+   if not (key in ['0'..'9',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.Edit_Sup_ConKeyPress(Sender: TObject; var Key: Char);
+begin
+    if not (key in ['0'..'9',#8]) then key:=#0  ;
+end;
+
+
+
+procedure TEditFootage_From.EndEditKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9','.',#8]) then key:=#0  ;
+end;
+
+
+
+procedure TEditFootage_From.FillBasicJinDao(B_JinDao: TBasicJinDao;Support:integer);
+var
+  sql,Strdt:string;
+  MaxTime:TDateTime;
+  Rd:TJinDaoRecord;
+begin
+   MaxTime:=GetBatInputDataMaxGenTime(Support);
+   MySqlDataSet2.Close ;
+
+   Strdt:=Public_Basic.ReturnDateTimeString(MainDataModule.DataType ,MaxTime);
+
+   Sql:=' select * from  D_'+IntToStr(DrawGzm.FGzm.Gzmbh)+'_footage ' +
+        ' where  footday > ' + Strdt +
+        ' order by Daoshu  ' ;
+   B_JinDao.ClearArray;
+   MySqlDataSet2.CommandText :=sql;
+   try
+      if MySqlDataSet2.Open then
+       while not MySqlDataSet2.Eof  do  begin
+          Rd.ShotTime :=MySqlDataSet2.FieldByName('FootDay').AsDateTime;
+          Rd.Daoshu:=MySqlDataSet2.FieldByName('DaoShu').AsInteger;
+          B_JinDao.Add(RD);
+          MySqlDataSet2.Next;
+       end;
+   finally
+      MySqlDataSet2.Close ;
+   end;
+end;
+
+procedure TEditFootage_From.FillStringGridColorGroup(NumLevel: integer);
+var
+  i:integer;
+  UpValue:Integer;
+  PerValue:integer;
+begin
+
+end;
+
+procedure TEditFootage_From.FillStringGridPhase(Number:integer);
+var
+  i:integer;
+begin
+
+
+end;
+
+procedure TEditFootage_From.FootageGridDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+Var
+  iRect:TRect;
+begin
+      with FootageGrid do  begin
+          if (ACol =6) or(ACol=0) or (ARow=0) or (ARow=1) then       begin
+            iRect:=ZoomRect(Rect, 1);
+
+            Canvas.Font.Color   :=   clBlack; //字体颜色为红的
+            Canvas.Brush.color:=clMoneyGreen; //背景为 美元绿色
+            Canvas.FillRect(iRect);
+            Canvas.TextOut(Rect.Left+2,Rect.Top+2,Cells[ACol,ARow]);
+         end;
+
+          if (State = []) and (FootStringGrid_SelectRow = ARow) then  begin
+             Canvas.Brush.Color := clSkyBlue;
+             Canvas.FillRect(Rect);
+             Canvas.TextOut(Rect.left , Rect.top, Cells[ACol, ARow]);
+          end;
+      end;
+
+end;
+
+procedure TEditFootage_From.FootageGridMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+ pt:TPoint;
+ col, row: Longint;
+begin
+   FootageGrid.MouseToCell(X, Y, col, row);
+
+   if Button=mbRight then  begin
+      pt:= FootageGrid.ClientToScreen(Point(0,0));
+      Mouse_x:=pt.X+x;
+      Mouse_y:=Pt.Y+y;
+      FootStringGrid_SelectCol :=col;
+      FootStringGrid_SelectRow := row;
+      DispFootAgePopMumu(Mouse_x,Mouse_y,FootStringGrid_SelectCol,FootStringGrid_SelectRow);
+     // FootStringGrid_SelectRow:=0;
+   end else if Button = mbLeft then  begin
+       if row <> FootStringGrid_SelectRow then  begin
+          FootStringGrid_SelectRow := row;
+          FootageGrid.Repaint;
+       end;
+   end;
+
+
+
+end;
+
+procedure TEditFootage_From.FootageGridSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+   FootStringGrid_SelectCol:=ACol;
+   FootStringGrid_SelectRow:=ARow;
+end;
+
+procedure TEditFootage_From.Footsteps_LClick(Sender: TObject);
+begin
+  Footsteps_L.SetFocus ;
+end;
+
+procedure TEditFootage_From.Footsteps_LKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not (key in ['0'..'9','.',#8]) then key:=#0  ;
+end;
+
+procedure TEditFootage_From.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+   {关闭窗体，还得需要发出Close命令}
+   if Assigned(EditFootage_From) then  FreeAndNil(EditFootage_From);
+end;
+
+procedure TEditFootage_From.FormCreate(Sender: TObject);
+begin
+    MySqlDataSet1:=TMyDataSet.Create(nil);
+    MySqlDataSet1.MySqlConnection :=MainDataModule.ExConn;
+    MySqlDataSet2:=TMyDataSet.Create(nil);
+    MySqlDataSet2.MySqlConnection :=MainDataModule.ExConn;
+    MyCommand1:=TMyCommand.Create (nil);
+    MyCommand1.MySqlConnection :=MainDataModule.ExConn;
+    DrawGzm:=TDrawGrap.Create(MainDataModule.ExConn);
+    //create
+
+
+    MainDataModule.ReadPublicUsedMkInfoFromFile;
+    s_MinName :=MainDataModule.Coal_Name;
+    S_WorkFaceName :=MainDataModule.WorkFace_Name;
+    // 初始化表格
+    InitFootageGrid;
+    FootStringGrid_SelectCol:=-1;
+    FootStringGrid_SelectRow:=-1;
+    // 矿压数据表
+     SelectRockDataRecordNumber:='50';
+
+     RockStringGrid_SelectCol:=-1;
+     RockStringGrid_SelectRow:=-1;
+     {手动分析数据 封闭两个页面}
+    // LeftPageControl.Pages[1].TabVisible:=False;
+
+
+     //默认机尾显示 时间
+     DrawGzm.ConTourSeriesPar.Display_UpperFootage:=0;
+     DrawGzm.ConTourSeriesPar.Display_DownFootage:=1;
+
+     BasicJinDao:=TBasicJinDao.Create ;
+end;
+
+procedure TEditFootage_From.FormDestroy(Sender: TObject);
+begin
+     FreeAndNil(MySqlDataSet1);
+     FreeAndNil(MyCommand1);
+     FreeAndNil(MySqlDataSet2);
+     FreeAndNil(DrawGzm);
+
+     FreeAndNil(MapSeries);
+     FreeAndNil(BasicJinDao);
+
+end;
+
+procedure TEditFootage_From.FormResize(Sender: TObject);
+begin
+   RefreshSize;
+end;
+
+procedure TEditFootage_From.FormShow(Sender: TObject);
+begin
+   InitForm;
+   Caption:=EXCaption+'【'+ Label_DataPress_Unit.Caption+'】';
+end;
+
+function TEditFootage_From.GetBatInputDataMaxGenTime(Support:integer): TDateTime;
+var
+  sql:String;
+begin
+   Result:=-1;
+   MySqlDataSet2.Close ;
+   Sql:=' select Max(generatetime) as MAXTime from  D_'+IntToStr(DrawGzm.FGzm.Gzmbh)+'_ManualInputPressData  '  +
+        ' where supportbh = ' +IntTostr(Support) ;
+   MySqlDataSet2.CommandText :=sql;
+   try
+       if MySqlDataSet2.Open then
+        Result:= MySqlDataSet2.FieldByName('MAXTime').AsDateTime
+
+   finally
+       MySqlDataSet2.Close ;
+   end;
+end;
+
+
+
+function TEditFootage_From.GetDataClass: Boolean;
+var
+ i:integer;
+ Str:string;
+begin
+
+end;
+
+function TEditFootage_From.GetFootOneStepDis: double;
+begin
+    Result:=Public_Basic.StrToDouble_Lu(self.Footsteps_L.Text);
+end;
+
+function TEditFootage_From.GetFootStepCount: Integer;
+begin
+   Result:=Public_Basic.StrToInt_lu(self.ComboFootSteps.Text);
+end;
+
+function TEditFootage_From.GetFootStepTime(FistSt, SecondSt: String;Interval:integer): double;
+var
+  Fir,Sec:TdateTime;
+begin
+   Fir:=StrToDateTime(FistSt,Public_Basic.FSetting);
+   Sec:=StrToDateTime(SecondSt,Public_Basic.FSetting);
+   Result:=(Sec-Fir)/Interval;
+end;
+
+procedure TEditFootage_From.GetMyContourGroupColor(NumLevel: integer);
+var
+  i:integer;
+begin
+    if NumLevel >10 then  exit;
+    for I := 0 to NumLevel-1 do  begin
+       DrawGzm.MyContourColor[i].ContourColor:=DrawGzm.GetContourColor(NumLevel,
+        i,DrawGzm.MyContourColor[i].UpToValue );
+       DrawGzm.MyContourColor[i].xh :=i;
+    end;
+
+end;
+
+function TEditFootage_From.GetFootStepTime: double;
+var
+   DT:integer;
+begin
+  DT:=Public_Basic.StrToInt_lu(self.ComboBoxStepTime.Text);
+  Result:=DT/1440;
+end;
+
+function TEditFootage_From.GetTimeAndFootage: Boolean;
+var
+  MaxDao,MInDao:integer;
+begin
+    Result:=False;
+
+end;
+
+procedure TEditFootage_From.GzmComboChange(Sender: TObject);
+var
+   s_temp:Str_DT_array;
+   C1:integer;
+begin
+   s_temp:=Public_Basic.split(GzmCombo.Text,'_',C1);
+   if length(trim(s_temp[0])) >0  then  begin
+       DrawGzm.FGzm.Gzmbh:=strToInt(s_temp[0]);
+       DrawGzm.FGzm.S_Name:=s_temp[1];
+         //判断与工作面相关的数据表是否创建，如果没有创建，再此创建
+       if not MainDataModule.IsExsitTableName('D_'+inttostr(DrawGzm.FGzm.Gzmbh)+'_BasicData') then begin
+           MainDataModule.CreateTable('2',MainDataModule.DataType,inttostr(DrawGzm.FGzm.Gzmbh),'') ;
+       end;
+       OptionTip(0,'对【'+DrawGzm.FGzm.S_Name+'】数据进行分析!');
+
+       // 刷新界面数据
+       RefreshForm;
+
+   end;
+
+end;
+
+function TEditFootage_From.InitDateTimeFootage:boolean;
+var
+ i:integer;
+ str:string;
+begin
+
+end;
+
+procedure TEditFootage_From.InitFootageGrid;
+var
+   i:integer;
+begin
+
+    for i := 1 to  FootageGrid.RowCount - 1 do
+          FootageGrid.Rows[i].Clear ;
+      FootageGrid.ColCount :=11;
+      FootageGrid.RowCount :=3;
+      FootageGrid.Font.Size:=9;
+      FootageGrid.FixedRows :=2;
+
+      FootageGrid.Cells [3,0]:='    机';
+      FootageGrid.Cells [4,0]:='      头';
+      FootageGrid.Cells [0,1]:='序号';
+         FootageGrid.ColWidths[0]:=40;
+      FootageGrid.Cells [1,1]:='时间日期';
+         FootageGrid.ColWidths[1]:=150;
+      FootageGrid.Cells [2,1]:='推进刀数';
+         FootageGrid.ColWidths[2]:=60;
+      FootageGrid.Cells [3,1]:='每刀(米)';
+         FootageGrid.ColWidths[3]:=60;
+      FootageGrid.Cells [4,1]:='累计进尺(米)';
+         FootageGrid.ColWidths[4]:=80;
+      FootageGrid.Cells [5,1]:='修订进尺(米)';
+         FootageGrid.ColWidths[5]:=80;
+      FootageGrid.Cells [6,1]:='';
+         FootageGrid.ColWidths[6]:=30;
+
+      //
+      FootageGrid.Cells [8,0]:='    机';
+      FootageGrid.Cells [9,0]:='      尾';
+
+      FootageGrid.Cells [7,1]:='修订进尺(米)';
+         FootageGrid.ColWidths[7]:=80;
+      FootageGrid.Cells [8,1]:='累计进尺(米)';
+         FootageGrid.ColWidths[8]:=80;
+      FootageGrid.Cells [9,1]:='每刀(米)';
+         FootageGrid.ColWidths[9]:=60;
+      FootageGrid.Cells [10,1]:='推进刀数';
+         FootageGrid.ColWidths[10]:=60;
+
+
+      //
+     FootageGrid.Align :=alClient;
+     FootageGrid.Options:=FootageGrid.Options +[goEditing]    ;
+
+end;
+
+procedure TEditFootage_From.InitForm;
+begin
+
+
+    Public_basic.InitStatusBar(StatusBar1);
+    MainDataModule.MySQlFillComBox(MySqlDataSet1,JiTuanCombo,'select * from JItuanName order by id','id','DwName','');
+    AutoLoadcomboBox(s_MinName,S_WorkFaceName);
+    //刷新整个界面
+    DrawGzm.CloudClass.X_Axis_Disp_Type :=0;
+    DrawGzm.CloudClass.X_Axis_Disp_Dao :=100;
+
+
+    RefreshForm;
+    DrawGZm.MapSeriesEditState :=-1;  // 默认没有加载数据
+    DrawGzm.CloudClass.OldStepDisplay :=False; //云图不显示来压步距
+
+end;
+
+procedure TEditFootage_From.initInputRockPressData;
+var
+   s_temp,S2:Str_DT_array;
+   C1,C2:integer;
+begin
+   {从数据库中读取相关 Memo1 数据}
+   SplitWorkFaceMemo1Text;
+
+
+   {初始化工作面的进尺数据}
+    InitFootageGrid; // 初始化工作面录入
+    if DrawGzm.FGzm.Gzmbh>0 then
+       DrawGzm.FGzm.ReadFootageDataToStringGrid(FootageGrid) ;
+
+  //=============矿压数据表的维护
+   RockDataGrid.OnMouseWheelDown  :=RockDataRightGrid.OnMouseWheelDown;
+   RockDataGrid.OnMouseWheelUp :=RockDataRightGrid.OnMouseWheelUp;
+   ChangePressDataUnit(2);//MPa
+   {刷新工作面数据录入数据表}
+   RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.InitKyfxResultStringGrid;
+var
+   i:integer;
+begin
+
+
+end;
+
+procedure TEditFootage_From.InitRockDataGrid;
+var
+   i:integer;
+   Cols:integer;
+   SupperNumber,interVal_support,ColDiv:integer;
+begin
+    RockDataRightGrid.Align  :=alRight;
+    RockDataGrid.Align :=alClient;
+    RockDataRightGrid.Width:=95;
+
+    for i := 0 to  RockDataGrid.RowCount - 1 do  begin
+        RockDataGrid.Rows[i].Clear ;
+        RockDataRightGrid.Rows[i].Clear;
+        RockDataGrid_Edit.Rows[i].Clear;
+    end;
+      SupperNumber:= Public_Basic.StrToInt_lu(Edit_SupportNumber.text);
+      interVal_support:= Public_Basic.StrToInt_lu(Edit_interVal_support.text);
+      Cols:= SupperNumber div interVal_support;
+
+      Cols:=Cols+4;
+      RockDataGrid.ColCount :=Cols;
+      RockDataGrid.RowCount :=3;
+      RockDataGrid.FixedRows:=2;
+      RockDataGrid.FixedCols:=4;
+      // RockDataGrid_Edit
+      RockDataGrid_Edit.ColCount :=Cols;
+      RockDataGrid_Edit.RowCount :=3;
+      RockDataGrid_Edit.FixedRows:=2;
+      RockDataGrid_Edit.FixedCols:=4;
+      //
+      RockDataRightGrid.ColCount :=Cols;
+      RockDataRightGrid.RowCount:=3;
+      RockDataRightGrid.FixedRows:=2;
+      RockDataRightGrid.FixedCols:=2;
+
+
+      RockDataGrid.Cells [0,1]:='序号';
+         RockDataGrid.ColWidths[0]:=30;
+      RockDataGrid.Cells [1,0]:='  机';
+      RockDataGrid.Cells [1,1]:='时间日期';
+         RockDataGrid.ColWidths[1]:=120;
+      RockDataGrid.Cells [2,1]:='刀数';
+         RockDataGrid.ColWidths[2]:=30;
+      RockDataGrid.Cells [3,0]:='头';
+      RockDataGrid.Cells [3,1]:='进尺(米)';
+         RockDataGrid.ColWidths[3]:=40;
+
+      RockDataRightGrid.Cells [0,0]:='  机';
+      RockDataRightGrid.Cells [0,1]:='进尺(米)';
+         RockDataRightGrid.ColWidths[0]:=40;
+      RockDataRightGrid.Cells [1,0]:='  尾';
+      RockDataRightGrid.Cells [1,1]:='刀数';
+         RockDataRightGrid.ColWidths[1]:=40;
+         RockDataRightGrid.ColWidths[2]:=60;
+      // 其他表头
+      ColDiv:= (Cols-4) div 8;
+      RockDataGrid.Cells [4+ColDiv,0]:=' 液';
+      RockDataGrid.Cells [4+2*ColDiv,0]:=' 压';
+      RockDataGrid.Cells [4+3*ColDiv,0]:=' 支';
+      RockDataGrid.Cells [4+4*ColDiv,0]:=' 架';
+      RockDataGrid.Cells [4+5*ColDiv,0]:=' 压';
+      RockDataGrid.Cells [4+6*ColDiv,0]:=' 力';
+      RockDataGrid.Cells [4+7*ColDiv,0]:=' 数';
+      RockDataGrid.Cells [4+8*ColDiv,0]:=' 据';
+
+      for i := 4 to Cols-1 do  begin
+         RockDataGrid.Cells [i,1]:='  '+IntTostr((i-3)*interVal_support);
+         RockDataGrid.ColWidths[i]:=40;
+      end;
+
+
+end;
+
+
+
+procedure TEditFootage_From.InserOneRecordToFootage(StrGrid:TstringGrid;Row: integer);
+var
+  i:integer;
+begin
+   StrGrid.RowCount := StrGrid.RowCount+1;
+   for i:=StrGrid.RowCount-2  downto Row+1 do
+       MoveStringGridRecord(StrGrid,i,i+1);
+   UpdateFootageStringGridFromRow(StrGrid,'Insert',Row+1);
+   //重新调整
+   RefreshFootageStringGrid;
+end;
+
+procedure TEditFootage_From.InsertNextDayFootage(StrGrid: TStringGrid; Row,dayOrstep:integer);
+var
+  NDataTime:TdateTime;
+  StrDateTime:String;
+  StepCount,i,SRow:Integer;
+  StepTime:double;
+  SelectCurrRow:integer;
+  RecordCount,left_FootageCount,Right_FootageCount:Integer;
+  Left_Sum_Footage,Right_SumFootage:Double;
+  Step_Footage:Double;
+begin
+   //查找最后一行数据
+   SRow:=Row;
+   SelectCurrRow:=0;
+   {当前行为空，向前找，找到第一个不为空的行，下一行为插入行}
+   while Trim(StrGrid.Cells[1,SRow])='' do begin
+     SRow:=SRow-1;
+     SelectCurrRow:=1;
+     if SRow=1 then  break;
+   end;
+  {当前行为不为空，向后找，找到第一个为空的行，当前行为插入行}
+   while (Trim(StrGrid.Cells[1,SRow])<>'') and ( SelectCurrRow <>1) do begin
+      SRow:=SRow+1;
+      SelectCurrRow:=2;
+      if SRow = StrGrid.RowCount -1 then  break;
+   end;
+   if SelectCurrRow=2 then  SRow:=SRow-1; //向后找，找到后，移到上一行
+   // 取出最后一行时间字符串
+   if SRow =1 then    begin
+      StrDateTime:=FormatDateTime('yyyy-mm-dd',Now)+ ' 00:00:00';
+      RecordCount:=0;
+      left_FootageCount:=0;
+      Right_FootageCount:=0;
+      Left_Sum_Footage:=0;
+      Right_SumFootage:=0;
+
+   end else begin
+      if dayOrstep= 1 then  begin
+          StrDateTime:=FormatDateTime('yyyy-mm-dd',StrToDateTime(Trim(StrGrid.Cells[1,SRow]),Public_Basic.FSetting)+1 )+
+                   ' 00:00:00';
+      end else begin
+          StrDateTime:=Trim(StrGrid.Cells[1,SRow]);
+      end;
+
+      RecordCount:=Public_Basic.StrToInt_lu(StrGrid.Cells[0,SRow]);
+      left_FootageCount:=Public_Basic.StrToInt_lu(StrGrid.Cells[2,SRow]) ;
+      Right_FootageCount:=Public_Basic.StrToInt_lu(StrGrid.Cells[10,SRow]);
+      Left_Sum_Footage:=Public_Basic.StrToDouble_Lu(StrGrid.Cells[4,SRow]);
+      Right_SumFootage:=Public_Basic.StrToDouble_Lu(StrGrid.Cells[8,SRow]);;
+   end;
+
+   NDataTime:=StrToDateTime(StrDateTime,Public_Basic.FSetting);
+   if dayOrstep=1 then   begin
+      StepCount:=self.GetFootStepCount;
+   end else begin
+      StepCount:=1;
+   end;
+
+
+   StepTime:=self.GetFootStepTime;
+   Step_Footage:=self.GetFootOneStepDis;
+
+   for I := 1 to StepCount do   begin
+      if StepTime*i>=1 then break;
+      NDataTime:=NDataTime+StepTime;
+      SRow:=SRow+1;
+      if StrGrid.RowCount <=sRow+1 then  StrGrid.RowCount:=  SRow+2;
+      RecordCount:=RecordCount+1;
+      StrGrid.Cells[0,SRow]:= IntToStr(RecordCount);
+      StrGrid.Cells[1,SRow]:= FormatDateTime('yyyy-mm-dd HH:nn:ss',NDataTime);
+      left_FootageCount:=left_FootageCount+1;
+      StrGrid.Cells[2,SRow]:= IntToStr(left_FootageCount);
+      StrGrid.Cells[3,SRow]:= FormatFloat('0.000',Step_Footage);
+      Left_Sum_Footage:=Left_Sum_Footage+Step_Footage;
+      StrGrid.Cells[4,SRow]:= FormatFloat('0.00',Left_Sum_Footage);
+      //
+      Right_SumFootage:=Right_SumFootage+Step_Footage;
+      StrGrid.Cells[8,SRow]:= FormatFloat('0.00',Right_SumFootage);
+      StrGrid.Cells[9,SRow]:= FormatFloat('0.000',Step_Footage);
+      Right_FootageCount:=Right_FootageCount+1;
+      StrGrid.Cells[10,SRow]:= IntToStr(Right_FootageCount);
+   end;
+
+end;
+
+procedure TEditFootage_From.JITuanComboChange(Sender: TObject);
+ var
+   s_temp:Str_DT_array;
+   C1:integer;
+begin
+
+   s_temp:=Public_Basic.split(self.JituanCombo.Text,'_',C1);
+   if s_temp[0]='' then exit;
+
+   DrawGzm.Jituan_id:=strToInt(s_temp[0]);
+   DrawGzm.Jituan_name:=s_temp[1];
+   MainDataModule.MySQlFillComBox(MySqlDataSet1,ComboKName,'select * from KuangJingXinXiBiao  where Jituanid=' +
+                  IntToStr(DrawGzm.Jituan_id)+' order by id ','id','MeiKuangMing','');
+   //清除数据
+   GzmCombo.Items.Clear ;
+   OptionTip(0,'');
+   DrawGzm.FGzm.Gzmbh:=-1;
+   DrawGzm.FGzm.S_Name :='';
+
+end;
+
+procedure TEditFootage_From.OptionTip(index:integer;Str:String);
+begin
+   self.StatusBar1.Panels[index].Text :=str;
+end;
+
+
+
+procedure TEditFootage_From.Pop_Foot_EditTimeClick(Sender: TObject);
+var
+  sDT:String;
+  pt:TPoint;
+begin
+   sDT:=FootageGrid.Cells[1,FootStringGrid_SelectRow] ;
+   if Trim(SDT)<> '' then begin
+      pt.X:=mouse_x;
+      Pt.y:=Mouse_y;
+      CreateEditTime(FootageGrid.Handle,pt,sDT);
+   end;
+end;
+
+procedure TEditFootage_From.Pop_Foot_InsertStepClick(Sender: TObject);
+begin
+ InserOneRecordToFootage(FootageGrid,FootStringGrid_SelectRow);
+end;
+
+procedure TEditFootage_From.Main_PageControlDrawTab(Control: TCustomTabControl;
+  TabIndex: Integer; const Rect: TRect; Active: Boolean);
+begin
+    if Active then
+    begin
+        Control.Canvas.Brush.Color := ClGreen;
+        Control.Canvas.Font.Color := clWhite;
+    end;
+    Control.Canvas.FillRect(Rect);
+    Control.Canvas.TextOut(Rect.Left + 4,Rect.Top + 4,Main_PageControl.Pages[TabIndex].Caption);
+end;
+
+procedure TEditFootage_From.PageControl4DrawTab(Control: TCustomTabControl;
+  TabIndex: Integer; const Rect: TRect; Active: Boolean);
+begin
+    if Active then
+    begin
+        Control.Canvas.Brush.Color := ClHighLight;
+        Control.Canvas.Font.Color := clWhite;
+    end;
+    Control.Canvas.FillRect(Rect);
+    Control.Canvas.TextOut(Rect.Left + 4,Rect.Top + 4,PageControl4.Pages[TabIndex].Caption);
+end;
+
+procedure TEditFootage_From.Pop_Foot_AddStepClick(Sender: TObject);
+begin
+   InsertNextDayFootage(FootageGrid,FootStringGrid_SelectRow,0);
+end;
+
+procedure TEditFootage_From.Pop_Foot_AutoClick(Sender: TObject);
+begin
+  AutoUpdateFootage(FootageGrid,FootStringGrid_SelectRow);
+end;
+
+procedure TEditFootage_From.Pop_Foot_DeleteAllClick(Sender: TObject);
+var
+  t_s:string;
+begin
+   t_s:='你确定要删除所有数据么?';
+    if Application.MessageBox(Pwidechar(t_s),'提示',MB_OKCANCEL+MB_ICONQUESTION) =2 then  exit;
+    if DrawGzm.FGzm.DeleteAllFootageData then begin
+        Optiontip(0,'数据清理成功');
+        InitFootageGrid;
+    end;
+end;
+
+procedure TEditFootage_From.Pop_Foot_DeleteStepClick(Sender: TObject);
+begin
+  DeleteOnRecordToFootage(FootageGrid,FootStringGrid_SelectRow);
+end;
+
+procedure TEditFootage_From.Pop_Foot_onedayClick(Sender: TObject);
+begin
+  InsertNextDayFootage(FootageGrid,FootStringGrid_SelectRow,1);
+end;
+
+procedure TEditFootage_From.Pop_Foot_PasteClick(Sender: TObject);
+begin
+    CopyDataToStringGridFromPaste(FootageGrid,FootStringGrid_SelectCol,FootStringGrid_SelectRow,1);
+end;
+
+procedure TEditFootage_From.Pop_Foot_RefreshClick(Sender: TObject);
+begin
+  InitFootageGrid;
+  DrawGzm.FGzm.ReadFootageDataToStringGrid(FootageGrid) ;
+end;
+
+procedure TEditFootage_From.Pop_Foot_SaveClick(Sender: TObject);
+var
+  i:integer;
+  t_s:string;
+  Daoshu:integer;
+begin
+   if DrawGzm.FGzm.Gzmbh <0 then exit;
+    DrawGzm.FGzm.DeleteAllFootageData;
+    Daoshu:=0;
+   for I := 2 to FootageGrid.RowCount-1 do  begin
+      if Trim(FootageGrid.Cells[0,i]) ='' then  break;
+      if Public_Basic.StrToInt_lu(FootageGrid.Cells[2,i]) < Public_Basic.StrToInt_lu(FootageGrid.Cells[10,i]) then
+         FootageGrid.Cells[2,i]:=FootageGrid.Cells[10,i];
+
+      if Public_Basic.StrToInt_lu(FootageGrid.Cells[2,i])<=DaoShu then   begin
+         inc(DaoShu);
+      end else  begin
+         Daoshu:=Public_Basic.StrToInt_lu(FootageGrid.Cells[2,i]);
+      end;
+
+      DrawGzm.FGzm.Manual_InputFootage(StrToDateTime(Trim(FootageGrid.Cells[1,i]),Public_Basic.FSetting),
+                                      Public_Basic.StrToDouble_Lu(FootageGrid.Cells[3,i]) ,  //downStepDis
+                                      Public_Basic.StrToDouble_Lu(FootageGrid.Cells[4,i]) ,  //autoDownFootage
+                                      Public_Basic.StrToDouble_Lu(FootageGrid.Cells[5,i]) ,  //EditDownFootage
+                                      Public_Basic.StrToDouble_Lu(FootageGrid.Cells[9,i]) ,  //UpperStepDis
+                                      Public_Basic.StrToDouble_Lu(FootageGrid.Cells[8,i]) ,  //autoUpperFootage
+                                      Public_Basic.StrToDouble_Lu(FootageGrid.Cells[7,i]) ,  //EditUpperFootage
+                                      Daoshu ,  //jinDaoshu
+                                      1   //flag
+                                      );
+
+
+   end;
+   t_s:= '数据存储成功！';
+   Application.MessageBox(Pwidechar(t_s),'提示',MB_OK+MB_ICONQUESTION) ;
+   OptionTip(0,t_s);
+   // 刷新表格
+   InitFootageGrid;
+   DrawGzm.FGzm.ReadFootageDataToStringGrid(FootageGrid) ;
+end;
+
+procedure TEditFootage_From.Pop_Foot_UpdateDaoClick(Sender: TObject);
+var
+  i:integer;
+begin
+   if FootStringGrid_SelectCol=2 then  begin
+      FootageGrid.Cells[10,FootStringGrid_SelectRow]:=FootageGrid.Cells[2,FootStringGrid_SelectRow];
+   end else  if FootStringGrid_SelectCol=10 then  begin
+      FootageGrid.Cells[2,FootStringGrid_SelectRow]:=FootageGrid.Cells[10,FootStringGrid_SelectRow];
+   end else begin
+      exit;
+   end;
+
+   for I := FootStringGrid_SelectRow+1 to FootageGrid.RowCount -1 do  begin
+       if FootageGrid.Cells[10,i]<> ''  then  begin
+          FootageGrid.Cells[10,i]:=IntTostr(Public_Basic.StrToInt_lu(FootageGrid.Cells[10,i-1])+1);
+       end;
+
+       if FootageGrid.Cells[2,i]<> ''  then  begin
+          FootageGrid.Cells[2,i]:=IntTostr(Public_Basic.StrToInt_lu(FootageGrid.Cells[2,i-1])+1);
+       end;
+
+   end;
+
+
+
+end;
+
+procedure TEditFootage_From.Pop_Foot_UpdateTimeClick(Sender: TObject);
+begin
+   UpdateTdateTimeFormCurrRow(FootageGrid,FootStringGrid_SelectRow);
+end;
+
+procedure TEditFootage_From.Pop_Foot_Update_allDataClick(Sender: TObject);
+begin
+   RefreshFootageStringGrid;
+end;
+
+procedure TEditFootage_From.Pop_Foot_Update_PartDataClick(Sender: TObject);
+var
+  CurrRow:integer;
+begin
+   CurrRow:=FootageGrid.RowCount-1;
+   CurrRow:=UpdateShouDongInputFootae(FootageGrid,CurrRow,'Down');
+   CurrRow:=FootageGrid.RowCount-1;
+   CurrRow:=UpdateShouDongInputFootae(FootageGrid,CurrRow,'Up');
+
+end;
+
+procedure TEditFootage_From.Pop_Rock_AutoClick(Sender: TObject);
+begin
+  UpdateBatInputData;
+  RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.Pop_Rock_DeletaAllClick(Sender: TObject);
+var
+  t_s:string;
+begin
+   t_s:='你确定要删除所有数据么?';
+   if Application.MessageBox(Pwidechar(t_s),'提示',MB_OKCANCEL+MB_ICONQUESTION) =2 then  exit;
+
+   if DrawGzm.FGzm.Gzmbh<1 then exit ;
+       DrawGzm.FGzm.DeleteRockPressData(0,0,0);
+    RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.Pop_Rock_DeleteOneClick(Sender: TObject);
+var
+  t_s:string;
+  daoshu,Support,j:integer;
+begin
+   t_s:='你确定要删除当前行的数据么?';
+   if Application.MessageBox(Pwidechar(t_s),'提示',MB_OKCANCEL+MB_ICONQUESTION) =2 then  exit;
+
+   daoshu:=public_Basic.StrToInt_lu(RockDataGrid.Cells[2,RockStringGrid_SelectRow] );
+   if (DrawGzm.FGzm.Gzmbh<1) and (Daoshu < 1) then exit ;
+
+   for j := 4 to RockDataGrid.ColCount-1 do  begin
+       Support:=public_Basic.StrToInt_lu(RockDataGrid.Cells[j,1] );
+       if (daoshu>0) and (Support>0) then
+       DrawGzm.FGzm.DeleteRockPressData(daoshu,Support,1);
+   end;
+
+    RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.Pop_Rock_Disp_300Click(Sender: TObject);
+begin
+    SelectRockDataRecordNumber:='300';
+    RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.Pop_Rock_Disp_50Click(Sender: TObject);
+begin
+    SelectRockDataRecordNumber:='50';
+     RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.Pop_Rock_Disp_AllClick(Sender: TObject);
+begin
+   SelectRockDataRecordNumber:='All';
+   RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.Pop_Rock_Disp_MemoClick(Sender: TObject);
+var
+  sDT:String;
+begin
+   sDT:=RockDataGrid.Cells[RockStringGrid_SelectCol,RockStringGrid_SelectRow] ;
+   if Trim(SDT)<> '' then begin
+      CreateEditRockDataMemo(TabSheet11.Handle,
+                             TabSheet11.Width,TabSheet11.Height,
+                             '进刀数:'+ RockDataGrid.Cells[2,RockStringGrid_SelectRow]+  '   '  +
+                             '支架编号:' + RockDataGrid.Cells[RockStringGrid_SelectCol,1] + '   '  +
+                             '数据值:' + SDT ,
+                             RockDataRightGrid.Cells[RockStringGrid_SelectCol,RockStringGrid_SelectRow]
+                             );
+   end;
+
+end;
+
+procedure TEditFootage_From.Pop_Rock_Input_MemoClick(Sender: TObject);
+var
+  sDT:String;
+begin
+   sDT:=RockDataGrid.Cells[RockStringGrid_SelectCol,RockStringGrid_SelectRow] ;
+   if Trim(SDT)<> '' then begin
+      CreateEditRockDataMemo(TabSheet11.Handle,
+                             TabSheet11.Width,TabSheet11.Height,
+                             '进刀数:'+ RockDataGrid.Cells[2,RockStringGrid_SelectRow]+  '   '  +
+                             '支架编号:' + RockDataGrid.Cells[RockStringGrid_SelectCol,1] + '   '  +
+                             '数据值:' + SDT ,
+                             RockDataRightGrid.Cells[RockStringGrid_SelectCol,RockStringGrid_SelectRow]
+                             );
+   end;
+end;
+
+procedure TEditFootage_From.Pop_Rock_PasteClick(Sender: TObject);
+begin
+  CopyDataToStringGridFromPaste(self.RockDataGrid ,RockStringGrid_SelectCol,RockStringGrid_SelectRow,0);
+end;
+
+procedure TEditFootage_From.Pop_Rock_RefreshClick(Sender: TObject);
+begin
+    RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+procedure TEditFootage_From.Pop_Rock_SaveClick(Sender: TObject);
+var
+  i,j,Daoshu,supportbh:integer;
+  DataV:double;
+  Memo,t_s:string;
+  td:String;
+begin
+     DrawGzm.SetProcegressBarVisual(Panel_ProcessBar,FirstPGBar,SecondPGBar,true,RockDataGrid.RowCount,RockDataGrid.ColCount);
+    t_s:= '正在保存数据，耐心等待...';
+    OptionTip(0,t_s);
+
+    for I := 2 to RockDataGrid.RowCount -1  do  begin
+       Daoshu:=Public_Basic.StrToInt_lu(Trim(RockDataGrid.Cells[2,i]));
+      DrawGzm.StepProcegressBar(FirstPGBar,SecondPGBar,1,0);
+       if Daoshu <=0 then  break;
+       for j := 4 to RockDataGrid.ColCount-1 do  begin
+           supportbh:=Public_Basic.StrToInt_lu(Trim(RockDataGrid.Cells[j,1]));
+           DrawGzm.StepProcegressBar(FirstPGBar,SecondPGBar,0,10);
+           if Supportbh<=0  then continue;
+           // 把该条记录先清除
+           //DrawGzm.FGzm.DeleteRockPressData(Daoshu,Supportbh,1);
+           if RockDataGrid_Edit.Cells[j,i]= '1'  then  begin  // 证明被修改了
+               DataV:=Public_Basic.StrToDouble_Lu(Trim(RockDataGrid.Cells[j,i]));
+               if DataV <=1 then  continue;
+               if DataPress_Unit_Flag =2 then //如果单位是bar
+                  DataV:=DataV/10;
+               if Trim(RockDataRightGrid.Cells[j,i])<> '' then  Memo:= Trim(RockDataRightGrid.Cells[j,i])
+                  else Memo:='';
+                 td:=Trim(RockDataGrid.Cells[1,i]);
+                DrawGzm.FGzm.UpdateRockPressDataToDataBase(DaoShu,Supportbh,RG_Rock_DataType.ItemIndex,Memo,DataV) ;
+               // DrawGzm.FGzm.SaveRockPressDataToDataBase(td,DaoShu,Supportbh,DataV,Memo);
+           end;
+       end;
+    end;
+    // 清理数据库中以前录入比当前进刀数大的记录
+    if Daoshu >0 then    begin
+       DrawGzm.FGzm.DeleteRockPressData(Daoshu,0,2);
+    end;
+   DrawGzm.SetProcegressBarVisual(Panel_ProcessBar,FirstPGBar,SecondPGBar,False,0,0);
+
+    t_s:= '数据存储成功！';
+    Application.MessageBox(Pwidechar(t_s),'提示',MB_OK+MB_ICONQUESTION) ;
+    OptionTip(0,t_s);
+
+end;
+
+procedure TEditFootage_From.Pop_Rock_SaveExcelClick(Sender: TObject);
+var
+  Tilte:string;
+begin
+   if self.RG_Rock_DataType.ItemIndex =0 then   begin
+     Tilte:=s_MinName +'['+S_WorkFaceName+']工作面每次进刀压力数据最大值';
+   end else if self.RG_Rock_DataType.ItemIndex =1 then   begin
+     Tilte:=s_MinName +'['+S_WorkFaceName+']工作面每次进刀压力数据平均值';
+   end else if self.RG_Rock_DataType.ItemIndex =2 then   begin
+     Tilte:=s_MinName +'['+S_WorkFaceName+']工作面每次进刀压力数据末阻力';
+   end else if self.RG_Rock_DataType.ItemIndex =3 then   begin
+     Tilte:=s_MinName +'['+S_WorkFaceName+']工作面每次进刀压力数据同一时刻抓取值';
+   end else if self.RG_Rock_DataType.ItemIndex =4 then   begin
+     Tilte:=s_MinName +'['+S_WorkFaceName+']工作面每次进刀压力数据手动录入值';
+   end;
+
+
+   Public_Basic.StringGridtoExcel(Tilte,RockDataGrid,14 );
+end;
+
+function TEditFootage_From.ZoomRect(mRect: TRect; mZoom: Integer): TRect;
+begin
+  Result.Left := mRect.Left - mZoom;
+  Result.Right := mRect.Right + mZoom;
+  Result.Top := mRect.Top;// - mZoom;
+  Result.Bottom := mRect.Bottom- mZoom;
+end;
+
+
+
+procedure TEditFootage_From.RefreshFootageStringGrid;
+var
+  CurrRow:integer;
+begin
+  CurrRow:=FootageGrid.RowCount-1;
+  while CurrRow >1 do
+       CurrRow:=UpdateShouDongInputFootae(FootageGrid,CurrRow,'Down');
+
+  CurrRow:=FootageGrid.RowCount-1;
+  while CurrRow >1 do
+       CurrRow:=UpdateShouDongInputFootae(FootageGrid,CurrRow,'UP');
+end;
+
+procedure TEditFootage_From.RefreshForm;
+begin
+     {初始化时间进尺选择的控件数据 }
+    InitDateTimeFootage ;
+    {初始化采煤工左面进尺录入与 矿压数据手动录入}
+    initInputRockPressData ;
+
+    {处理ContourChart 云图 颜色定制表格  }
+   // DisPoseContourGroupColor
+end;
+
+procedure TEditFootage_From.RefreshInputData;
+begin
+     GetTimeAndFootage;
+     GetDataClass;
+end;
+
+procedure TEditFootage_From.RefreshMemoInfo(Memo:TMemo);
+begin
+     Memo.Clear ;
+     Memo.Lines.Add('选择数据类型:'+DrawGzm.GraphClass.DataName);
+     Memo.Lines.Add('已经选择:'+DrawGzm.GraphClass.SupportList);
+end;
+
+
+
+procedure TEditFootage_From.RefreshRockPressStringGrid(Flag: string);
+var
+  MaxDaoshu:Integer;
+begin
+  InitRockDataGrid;
+  if DrawGzm.FGzm.Gzmbh<1 then exit ;
+
+  MaxDaoshu:=DrawGzm.FGzm.ReturnRockPressDataMaxDaoshu;
+   if Flag='50' then  begin
+      DrawGzm.FGzm.ReadFootageDataToRockDataGrid(RockDataGrid ,RockDataRightGrid,RockDataGrid_Edit,
+                        MaxDaoshu-50) ;
+      DrawGzm.FGzm.ReadRockPressDataToStrGrid(RockDataGrid,RockDataRightGrid,RockDataGrid_Edit,
+                        MaxDaoshu-50,DataPress_Unit_Flag,RG_Rock_DataType.ItemIndex);
+   end else if Flag='300' then  begin
+      DrawGzm.FGzm.ReadFootageDataToRockDataGrid(RockDataGrid ,RockDataRightGrid,RockDataGrid_Edit,
+                        MaxDaoshu-300) ;
+      DrawGzm.FGzm.ReadRockPressDataToStrGrid(RockDataGrid,RockDataRightGrid,RockDataGrid_Edit,
+                        MaxDaoshu-300,DataPress_Unit_Flag,RG_Rock_DataType.ItemIndex);
+   end else if Flag='All' then  begin
+      DrawGzm.FGzm.ReadFootageDataToRockDataGrid(RockDataGrid ,RockDataRightGrid,RockDataGrid_Edit,
+                        0) ;
+      DrawGzm.FGzm.ReadRockPressDataToStrGrid(RockDataGrid,RockDataRightGrid,RockDataGrid_Edit,
+                        0,DataPress_Unit_Flag,RG_Rock_DataType.ItemIndex);
+   end;
+
+   self.ScrollBar1.Max:=RockDataGrid.RowCount;
+end;
+
+procedure TEditFootage_From.RefreshSize;
+begin
+    //GB_DW.Height :=Round(TabSheet1.Height/3);
+//    ChartYun.Top :=Round(TabSheet4.Height/6);
+//    ChartYun.Left:=0;
+//    ChartYun.Width:= Round(TabSheet4.Width*5/5);
+//    ChartYun.Height:=Round(TabSheet4.Height*2/3);
+
+end;
+
+
+
+procedure TEditFootage_From.Return_CallEditDateTime(DTS: String);
+begin
+   self.FootageGrid.Cells[1,FootStringGrid_SelectRow]:= DTS;
+end;
+
+procedure TEditFootage_From.Return_CallEditRockPressMemo(DTS: String);
+begin
+  self.RockDataRightGrid.Cells[ RockStringGrid_SelectCol,RockStringGrid_SelectRow]:=DTS;
+end;
+
+procedure TEditFootage_From.RG_JD_BasicClick(Sender: TObject);
+begin
+  if RG_JD_Basic.ItemIndex =0 then begin
+     self.Edit_JD_support.Text:='10';
+  end else if RG_JD_Basic.ItemIndex =1 then begin
+     Edit_JD_support.Text:=intToStr(Public_Basic.StrToInt_lu(self.Edit_SupportNumber.Text) div 2 );
+  end else begin
+     Edit_JD_support.Text:=intToStr(Public_Basic.StrToInt_lu(self.Edit_SupportNumber.Text)-10 );
+  end;
+
+
+end;
+
+procedure TEditFootage_From.RG_Rock_DataTypeClick(Sender: TObject);
+begin
+   RefreshRockPressStringGrid(SelectRockDataRecordNumber);
+end;
+
+
+procedure TEditFootage_From.RG_Yun_MainClick(Sender: TObject);
+begin
+
+//    LoadDataBtn.Enabled :=true;
+
+ // UpdateImageBtn.Enabled:=False;
+end;
+
+procedure TEditFootage_From.RockDataGridDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+Var
+  iRect:TRect;
+begin
+     with RockDataGrid do  begin
+          if ((ACol >=0) and (ACol<=3) ) or (ARow=0) or (ARow=1) then       begin
+            iRect:=ZoomRect(Rect, 1);
+            if ARow=0 then  begin
+                Canvas.Font.Color   :=   clBlue; //字体颜色为红的
+                Canvas.Brush.color:=clYellow; //背景为 美元绿色
+            end else begin
+                Canvas.Font.Color   :=   clBlack; //字体颜色为红的
+                Canvas.Brush.color:=clMoneyGreen; //背景为 美元绿色
+            end;
+
+            Canvas.FillRect(iRect);
+            Canvas.TextOut(Rect.Left+2,Rect.Top+2,Cells[ACol,ARow]);
+         end;
+
+         if (Trim(RockDataRightGrid.Cells[ACol,ARow])<>'' ) and (ACol>3)  then begin
+            iRect:=ZoomRect(Rect, 1);
+                Canvas.Font.Color   :=   clBlack; //字体颜色为红的
+                Canvas.Brush.color:=clFuchsia; //背景为 美元绿色
+            Canvas.FillRect(iRect);
+            Canvas.TextOut(Rect.Left+2,Rect.Top+2,Cells[ACol,ARow]);
+         end;
+
+
+      end;
+end;
+
+procedure TEditFootage_From.RockDataGridMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+ pt:TPoint;
+ col, row: Longint;
+begin
+   RockDataGrid.MouseToCell(X, Y, col, row);
+
+   if Button=mbRight then  begin
+      pt:= RockDataGrid.ClientToScreen(Point(0,0));
+      Mouse_x:=pt.X+x;
+      Mouse_y:=Pt.Y+y;
+      RockStringGrid_SelectCol :=col;
+      RockStringGrid_SelectRow := row;
+      DispRockDataPopMumu(Mouse_x,Mouse_y,RockStringGrid_SelectCol,RockStringGrid_SelectRow);
+
+   end else if Button = mbLeft then  begin
+       if row <> RockStringGrid_SelectRow then  begin
+          RockStringGrid_SelectRow := row;
+          RockDataGrid.Repaint;
+       end;
+       RockDataGrid_edit.Cells[col,Row]:='1';
+   end;
+
+
+
+end;
+
+procedure TEditFootage_From.RockDataGridSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+   RockStringGrid_SelectCol:=ACol;
+   RockStringGrid_SelectRow:=ARow;
+   RockDataRightGrid.Row:= ARow;
+end;
+
+procedure TEditFootage_From.RockDataRightGridDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+Var
+  iRect:TRect;
+begin
+     with RockDataRightGrid do  begin
+          if ((ACol >=0) and (ACol<=1) ) or (ARow=0) or (ARow=1) then       begin
+            iRect:=ZoomRect(Rect, 1);
+             if ARow=0 then  begin
+                Canvas.Font.Color   :=   clBlue; //字体颜色为红的
+                Canvas.Brush.color:=clYellow; //背景为 美元绿色
+            end else begin
+                Canvas.Font.Color   :=   clBlack; //字体颜色为红的
+                Canvas.Brush.color:=clMoneyGreen; //背景为 美元绿色
+            end;
+            Canvas.FillRect(iRect);
+            Canvas.TextOut(Rect.Left+2,Rect.Top+2,Cells[ACol,ARow]);
+         end;
+
+//          if (State = []) and (FootStringGrid_SelectRow = ARow) then  begin
+//             Canvas.Brush.Color := clSkyBlue;
+//             Canvas.FillRect(Rect);
+//             Canvas.TextOut(Rect.left , Rect.top, Cells[ACol, ARow]);
+//          end;
+      end;
+
+end;
+
+
+procedure TEditFootage_From.SaveWorkFaceMemo1Text;
+var
+  StrValue:String;
+  i:integer;
+begin
+   StrValue:='';
+   if DrawGzm.FGzm.Gzmbh <1 then exit;
+      DrawGzm.FGzm.RockPressAnalysis.Oneday_daoshu:=Public_Basic.StrToInt_lu(Trim(ComboFootSteps.Text));
+      DrawGzm.FGzm.RockPressAnalysis.TwoDao_IntervalTime:=Public_Basic.StrToInt_lu(Trim(ComboBoxStepTime.Text));
+      DrawGzm.FGzm.RockPressAnalysis.OneDao_step:=Public_Basic.StrTodouble_lu(Trim(Footsteps_L.Text));
+      DrawGzm.FGzm.RockPressAnalysis.ManulInput_Interval_support:=Public_Basic.StrToInt_lu(Trim(Edit_interVal_support.Text));
+
+    if Public_Basic.StrToInt_lu(self.ComboFootSteps.Text)>0 then
+      StrValue:=Trim(ComboFootSteps.Text) +',';
+    if Public_Basic.StrToInt_lu(self.ComboBoxStepTime.Text)>0 then
+      StrValue:=StrValue+Trim(ComboBoxStepTime.Text) +',';
+    if Public_Basic.StrToDouble_Lu(self.Footsteps_L.Text)>0 then
+      StrValue:=StrValue+Trim(Footsteps_L.Text) +',';
+    if Public_Basic.StrToDouble_Lu(self.Edit_interVal_support.Text)>0 then
+      StrValue:=StrValue+Trim(Edit_interVal_support.Text)+',';
+
+      StrValue:=StrValue+IntToStr(self.RG_JD_Basic.ItemIndex)+',';
+    if Public_Basic.StrToInt_lu(self.Edit_JD_Support.Text)>0 then
+      StrValue:=StrValue+Trim(Edit_JD_Support.Text)+',';
+
+      StrValue:=StrValue+IntToStr(self.RG_JD_Time.ItemIndex);
+
+    // 合成颜色字符串
+   // StringGroupColor:=MakeStringGroupColorToString;
+    StringGroupColor:='';
+    if  length(Trim(StringGroupColor)) >0 then    begin
+        StrValue:=StrValue+'&'+StringGroupColor;
+    end;
+
+    if DrawGzm.FGzm.UpdataFootStepParameters(StrValue,self.Edit_SupportNumber.Text) then
+       OptionTip(0,'数据更新成功!') else   OptionTip(0,'数据更新失败!')
+
+
+
+end;
+
+
+procedure TEditFootage_From.ScrollBar1Change(Sender: TObject);
+begin
+   if ScrollBar1.Position>=2 then  begin
+     RockDataGrid.TopRow :=ScrollBar1.Position ;
+     RockDataRightGrid.TopRow :=ScrollBar1.Position ;
+   end;
+end;
+
+function TEditFootage_From.SetAnalysisSenstive(Index: integer): Boolean;
+var
+  kk:integer;
+begin
+
+end;
+
+
+
+
+
+procedure TEditFootage_From.SplitWorkFaceMemo1Text;
+begin
+   if DrawGzm.FGzm.Gzmbh <1 then exit;
+   // 进尺表的维护
+   DrawGzm.FGzm.InputGzmData(DrawGzm.FGzm.Gzmbh);
+   if not DrawGzm.FGzm.splitFootStepParameters then begin
+       DrawGzm.FGzm.RockPressAnalysis.Oneday_daoshu:=10;
+       DrawGzm.FGzm.RockPressAnalysis.TwoDao_IntervalTime:=90;
+       DrawGzm.FGzm.RockPressAnalysis.OneDao_step:=0.865;
+       DrawGzm.FGzm.RockPressAnalysis.ManulInput_Interval_support:=5;
+       if DrawGzm.FGzm.SupEndNumber < 1 then
+          DrawGzm.FGzm.SupEndNumber:=200;
+       DrawGzm.FGzm.RockPressAnalysis.JinDao_Basic:=1;
+       DrawGzm.FGzm.RockPressAnalysis.JinDao_Support:=100;
+       DrawGzm.FGzm.RockPressAnalysis.JinDao_Time:=0;
+   end;
+   StringGroupColor:='';
+   ComboFootSteps.Text  :=intTostr(DrawGzm.FGzm.RockPressAnalysis.Oneday_daoshu);
+   ComboBoxStepTime.Text :=intTostr(DrawGzm.FGzm.RockPressAnalysis.TwoDao_IntervalTime);
+   Footsteps_L.Text :=FormatFloat('0.000',DrawGzm.FGzm.RockPressAnalysis.OneDao_step);
+   Edit_SupportNumber.Text :=InttoStr(DrawGzm.FGzm.SupEndNumber);
+   Edit_interVal_support.Text:=IntTostr(DrawGzm.FGzm.RockPressAnalysis.ManulInput_Interval_support);
+   StringGroupColor:=DrawGzm.FGzm.RockPressAnalysis.ColorString;
+   RG_JD_Basic.ItemIndex:=DrawGzm.FGzm.RockPressAnalysis.JinDao_Basic;
+   Edit_JD_support.Text:=intTostr(DrawGzm.FGzm.RockPressAnalysis.JinDao_Support);
+   RG_JD_time.ItemIndex:=DrawGzm.FGzm.RockPressAnalysis.JinDao_Time;
+
+end;
+
+
+
+
+
+procedure TEditFootage_From.TreeView1Collapsed(Sender: TObject; Node: TTreeNode);
+begin
+   Node.ImageIndex:=0;
+   Node.SelectedIndex:=0;
+end;
+
+procedure TEditFootage_From.TreeView1Expanding(Sender: TObject; Node: TTreeNode;
+  var AllowExpansion: Boolean);
+begin
+     Node.ImageIndex:=1;
+    Node.SelectedIndex:=1;
+end;
+
+
+
+end.  //end Unit

@@ -1,0 +1,39 @@
+object DataModule1: TDataModule1
+  OldCreateOrder = False
+  Height = 528
+  Width = 622
+  object ADOConnection1: TADOConnection
+    LoginPrompt = False
+    Left = 54
+    Top = 32
+  end
+  object ADODataSet1: TADODataSet
+    Connection = ADOConnection1
+    Parameters = <>
+    Left = 46
+    Top = 112
+  end
+  object ADODataSet2: TADODataSet
+    Connection = ADOConnection1
+    Parameters = <>
+    Left = 38
+    Top = 168
+  end
+  object ADOQuery1: TADOQuery
+    Parameters = <>
+    Left = 222
+    Top = 112
+  end
+  object ADOCommand2: TADOCommand
+    Connection = ADOConnection1
+    Parameters = <>
+    Left = 138
+    Top = 169
+  end
+  object ADOCommand1: TADOCommand
+    Connection = ADOConnection1
+    Parameters = <>
+    Left = 134
+    Top = 104
+  end
+end

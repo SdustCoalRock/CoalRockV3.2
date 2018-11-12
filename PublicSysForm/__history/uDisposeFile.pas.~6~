@@ -1,0 +1,719 @@
+{
+   //公共数据处理类 有uDisPoseData 转换得来
+
+}
+
+unit uDisposeFile;
+
+interface
+uses
+  Windows, SysUtils, Classes, Messages, Forms, StdCtrls, ExtCtrls,
+  ComCtrls ,math,Dialogs,StrUtils,IniFiles;
+
+type
+
+  TIni = class(TObject)
+    fIniReader: TiniFile;
+    fpath: string;
+    fIsOpen: boolean;
+  public
+    //得到Config.ini文件中的配置信息
+    constructor Create(MinPath,FileName: string );
+    procedure iniClose(FileName: string  );
+    function iniIsOpen(FileName: string ): boolean;               //是否Ini 文件被打开
+    function iniGetStr(ID: string; secName: string ): string;
+    function iniGetInt(ID: string; secName: string ): integer;
+    function iniGetFloat(ID: string; secName: string ): Double;
+    function iniSetStr(newValue: string; ID: string; secName: string): boolean;
+  end;
+
+ 
+  TIniObj = class(Tini)
+    DataType: string;
+    SrvIP: string;
+    DataBaseName: string;
+    UserName: String;
+    PassWord: String;
+    FilePath: String;
+    ServerPause: integer;
+    StartTime: String;
+    totalNumber: integer;
+    SupDTV1:Integer;
+    SuPDTV2:integer;
+    SupDTV3:integer;
+    SupDTv4:integer;
+    TimeInterval:integer;
+    DataNeverDisCTime:integer;
+    ThreadNumber:Integer;
+
+  public
+    procedure LoadIni;
+    procedure SaveIni(sDatType,sIP,sDName,sUN,sPw,sFP,sPause,sStart,StolN,
+                      sV1,sV2,Sv3,Sv4,TIV,TDec: string);
+  end;
+
+TDisPoseFile = class (TObject)
+   private
+      FReadIni:TIniObj;
+      inFilePath:string;
+      inFileNmae:string;
+   public
+     // control ini
+      function SaveIniFile(sData, sIp,sUser, SPw,sPath,Port:string):boolean;  // 保存 ini数据
+      function ReadIniProcess(var sttime:TDateTime;Var Paused,totalNumber:integer):Boolean;  //  读取ini过程数据
+      Procedure WriteIniProcess(StTime:TdateTime;Paused:integer); // 写ini过程数据
+      Procedure WriteiniTotalNumber(TotalN:integer); // 写ini过程数据
+      procedure ReadServerinfo(var S1, S2, S3,S4,S5,S6: string);  //读 数据库配置
+       function ReadIniTimeInterval:integer;   // 读ini计算时间间隔
+      procedure WriteIniReadIniTimeInterval(Vaule:Integer); //写ini计算时间间隔
+      function ReadiniDataNeverDisCTime:Integer;  //读 ini时间不间断间隔
+      procedure WriteIniDAtaNeverDisCTime(Value:integer);// 写ini时间不间断间隔
+      function ReadiniThreadNumber:integer;     //   读线程的数量
+      procedure WriteINiThreadNumber(Value:integer); // 写线程的数量
+      function ReadiniTotalNumber:integer; //读记录
+      procedure WriteIniSaveProcesslog(Value:Boolean);// 写是否保存处理记录
+      function ReadiniSaveProcesslog:Boolean;// 读是否保存处理记录
+      procedure WriteSYStemDataBaseName(Value:string);// 写数据库总名称
+      function ReadSYStemDataBaseName:String;// 读数据库总名称
+     //
+
+      function Gzm_ReadiniSV(Gzmbh:String;var V1,V2,V3,V4:Integer):Boolean;
+      procedure Gzm_WriteiniSV(Gzmbh:string;V1,V2,V3,V4:Integer);
+      function ReadiniSV(Setting:string;var V1,V2,V3,V4:Integer):Boolean;  // 读取ini中si四个数据值
+      Procedure WriteiniSV(Setting:string;V1,V2,V3,V4:Integer);//写ini中si四个数据值
+      function CreateIniFile:Boolean;
+      // 2018.1.1
+      function ReadMySqlDataBase(DataTypeString: string;
+                    var IP,UserName,Password,Port,DataBaseName:string):Boolean;
+      function WriteMYSQLDataBase(DataTypeString: string;
+                    IP,UserName,Password,Port,DataBaseName:string):Boolean;
+      function ReadDataBaseType(var DataType:string):Boolean;
+      function WriteDataBaseType(DataType:String):Boolean;
+       //write log
+       procedure WriteLog(const data:Ansistring; FFM : Ansistring='FFQ');
+       function Get_DllPath: WideString;
+
+
+     constructor Create(FilePath,FileName:string);
+     destructor Destroy;override;
+  end;
+
+
+
+implementation
+
+uses DateUtils, Lu_base_function, MainForm;
+
+
+{ TDisposeFile }
+
+
+
+
+function TDisPoseFile.WriteDataBaseType(DataType: String): Boolean;
+begin
+    Result:=true;
+     if  not assigned(fReadini) then
+              fReadini.Create(inFilepath,inFileNmae) ;
+      fReadini.iniSetStr(trim(DataType), 'DataType','DataBase');
+end;
+
+procedure TDisposeFile.WriteIniDAtaNeverDisCTime(Value: integer);
+begin
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+      if  not  assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+
+           fReadini.iniSetStr(trim(IntToStr(Value)), 'DataNeverDisCTime','setting');
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+end;
+
+procedure TDisposeFile.WriteIniProcess(StTime: TdateTime; Paused: integer);
+begin
+   EnterCriticalSection(FSYNCWriteIni);
+  try
+     if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+        if( StTime > 1000)  then
+           fReadini.iniSetStr(FormatDateTime('yyyy-mm-dd hh:nn:ss',StTime),'StartTime','Processing');
+     fReadini.iniSetStr(Trim(IntToStr(Paused)),'ServerPause','Processing');
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+end;
+
+procedure TDisposeFile.WriteIniReadIniTimeInterval(Vaule: Integer);
+begin
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+      if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae);
+       fReadini.iniSetStr(trim(InttoStr(Vaule)), 'TimeInterval','setting');
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+
+end;
+
+procedure TDisposeFile.WriteIniSaveProcesslog(Value: Boolean);
+var
+  KK:integer;
+begin
+  if Value then  KK:=1 else KK:=0;
+
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+      if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+       fReadini.iniSetStr(trim(InttoStr(KK)), 'WriteProcessflag','setting');
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+end;
+
+procedure TDisposeFile.WriteiniSV(Setting:string;V1, V2, V3, V4: Integer);
+begin
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+    if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+    fReadini.iniSetStr(trim(intToStr(V1)), 'SupDTV1',Setting);
+    fReadini.iniSetStr(trim(inttostr(V2)), 'SupDTV2',Setting);
+    fReadini.iniSetStr(trim(inttostr(V3)), 'SupDTV3',Setting);
+    fReadini.iniSetStr(trim(inttostr(V4)), 'SupDTV4',Setting);
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+   
+end;
+
+procedure TDisposeFile.WriteINiThreadNumber(Value: integer);
+begin
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+     if  not  assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+
+           fReadini.iniSetStr(trim(IntToStr(Value)), 'ThreadNumber','setting');
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+      
+
+end;
+
+procedure TDisposeFile.WriteiniTotalNumber(TotalN: integer);
+begin
+    EnterCriticalSection(FSYNCWriteIni);
+  try
+      if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+       fReadini.iniSetStr(Trim(IntToStr(TotalN)),'TotalNumber','Processing');
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+    
+end;
+
+
+procedure TDisposeFile.WriteLog(const data: Ansistring; FFM: Ansistring);
+var
+  fileName,textString:Ansistring;
+  DirName:Ansistring;
+  hFile,logFile:integer;
+begin
+   DirName:=Get_DllPath+'\Err\'+FormatDateTime('yyyy-mm-dd',Now())+'\';
+    if not DirectoryExists(DirName) then begin
+       ForceDirectories(DirName);
+    end;
+   fileName:=Ansistring(FormatDateTime('yyyy-mm-dd',Now())) + FFM +'.txt';
+   fileName:=DirName+fileName;
+   if not(FileExists(fileName)) then begin
+       hFile:=FileCreate(fileName,fmOutput);
+       FileClose(hFile);
+   end;
+   logFile:=FileOpen(filename,fmOpenwrite or fmShareDenyWrite);
+   FileSeek(logfile,0,2);
+   textString:=formatdateTime('hh:mm:ss:zzz',Now())+'  ' +data + #13 +#10 ;
+   fileWrite(logFile,Pchar(textString)^,length(textString));
+   fileclose(logfile);
+end;
+
+function TDisPoseFile.WriteMYSQLDataBase(DataTypeString: string;
+       IP, UserName, Password, Port,DataBaseName: string): Boolean;
+begin
+    Result:=true;
+     if  not assigned(fReadini) then
+              fReadini.Create(inFilepath,inFileNmae) ;
+     fReadini.iniSetStr(trim(IP), 'SrvIP',DataTypeString);
+     fReadini.iniSetStr(trim(UserName), 'UserName',DataTypeString);
+     fReadini.iniSetStr(trim(Password), 'PassWord',DataTypeString);
+     fReadini.iniSetStr(trim(Port), 'Port',DataTypeString);
+     fReadini.iniSetStr(trim(DataBaseName), 'DataBaseName',DataTypeString);
+
+end;
+
+procedure TDisposeFile.WriteSYStemDataBaseName(Value: string);
+begin
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+      if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+       fReadini.iniSetStr(Value, 'DataBaseName','DataBase');
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+end;
+
+
+
+constructor TDisposeFile.Create(Filepath,FileName:String);
+begin
+   inFilePath:=Filepath;
+   if inFilePath='' then
+      inFilePath:=self.Get_DllPath ;
+   inFileNmae:=FileName;
+   FReadIni:=TIniObj.Create(inFilepath,inFileNmae);
+end;
+
+function TDisposeFile.CreateIniFile: Boolean;
+begin
+     Result:=false;
+     self.WriteIniDAtaNeverDisCTime(2);
+     self.WriteINiThreadNumber(10);
+     self.WriteSYStemDataBaseName('RockPress');
+     self.WriteIniSaveProcesslog(false);
+     self.WriteIniReadIniTimeInterval(1);
+     Result:=true;
+end;
+
+destructor TDisposeFile.Destroy;
+begin
+     FreeAndNil(FReadIni) ;
+     inherited Destroy;
+end;
+
+
+
+function TDisposeFile.Get_DllPath: WideString;
+var
+   ModuleName:WideString;
+   i:integer;
+   dllPath:Ansistring;
+begin
+    SetLength(ModuleName, 255);
+    GetModuleFileName(HInstance, PwideChar(ModuleName), Length(ModuleName));
+    dllPath:=Trim(PwideChar(ModuleName)) ;
+    i:=Pos('\',ReverseString(dllPath));
+
+    dllPath:=Copy(dllPath,1,Length(dllPath)-i+1);
+    Result:=dllPath;
+end;
+
+function TDisposeFile.Gzm_ReadiniSV(Gzmbh: String; var V1, V2, V3,
+  V4: Integer): Boolean;
+var
+ Setting:String;
+begin
+  Result:=False;
+   if Trim(Gzmbh)<>'' then  begin
+      Setting:='SupDataType['+Trim(Gzmbh) +']';
+      if not  ReadiniSV(setting,V1,V2,V3,V4) then begin
+          if ReadiniSV('SupDataType[0]',V1,V2,V3,V4) then  Result:=true;
+      end else begin
+         Result:=true;
+      end;
+   end else begin
+      Setting:='SupDataType[0]';
+      if  ReadiniSV(setting,V1,V2,V3,V4)  then  Result:=true;
+   end;
+
+end;
+
+procedure TDisposeFile.Gzm_WriteiniSV(Gzmbh: string; V1, V2, V3, V4: Integer);
+var
+ Setting:String;
+begin
+   if Trim(Gzmbh)<>'' then  begin
+      Setting:='SupDataType['+Trim(Gzmbh) +']';
+   end else begin
+      Setting:='SupDataType[0]';
+   end;
+   WriteiniSV(setting,V1,V2,V3,V4);
+end;
+
+
+function TDisPoseFile.ReadDataBaseType(var DataType: string): Boolean;
+begin
+   EnterCriticalSection(FSYNCWriteIni);
+  try
+     if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+     DataType:=Trim(fReadini.iniGetStr('DataType','DataBase'));
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+end;
+
+function TDisposeFile.ReadiniDataNeverDisCTime: Integer;
+begin
+
+end;
+
+function TDisposeFile.ReadIniProcess(var sttime: TDateTime; var Paused,
+  totalNumber: integer): Boolean;
+var
+   FSetting : TFormatSettings;
+begin
+      {DataType: string;
+    SrvIP: string;
+    DataBaseName: string;
+    UserName: String;
+    PassWord: String;
+    FilePath: String;
+    ServerPause: integer;
+    StartTime: String;
+    totalNumber: integer;}
+    //日期格式转换
+       FSetting.ShortDateFormat:='yyyy-mm-ss' ;
+       FSetting.DateSeparator :='-';
+       FSetting.ShortTimeFormat :='hh:nn:ss';
+       FSetting.TimeSeparator :=':';
+       FSetting.DecimalSeparator :='.';
+    //-----
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+       if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+     sttime:=StrToDateTime(fReadini.iniGetStr('StartTime','Processing'),FSetting);
+     Paused:=fReadini.iniGetInt('ServerPause','Processing');
+     totalNumber:=fReadini.iniGetInt('totalNumber','Processing');
+
+     Result:=true;
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+    
+
+end;
+
+function TDisposeFile.ReadiniSaveProcesslog: Boolean;
+var
+  Value:integer;
+begin
+  Result:=false;
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+       if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+       Value:= fReadini.iniGetint('WriteProcessflag','Setting');
+       if Value =1 then   Result:=true;
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+end;
+
+function TDisposeFile.ReadiniSV(Setting:string;var V1, V2, V3, V4: Integer): Boolean;
+begin
+  Result:=FALSE;
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+      if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+      V1:= fReadini.iniGetint('SupDTV1',Setting);
+      V2:= fReadini.iniGetint('SuPDTV2',Setting);
+      V3:= fReadini.iniGetint('SupDTV3',Setting);
+      V4:= fReadini.iniGetint('SupDTV4',Setting);
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+  if V1+V2+V3+V4 >0  then   Result:=true;
+
+end;
+
+function TDisposeFile.ReadiniThreadNumber: integer;
+begin
+     EnterCriticalSection(FSYNCWriteIni);
+  try
+     if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+      Result:= fReadini.iniGetint('ThreadNumber','Setting');
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+      
+end;
+
+function TDisposeFile.ReadIniTimeInterval: integer;
+begin
+   EnterCriticalSection(FSYNCWriteIni);
+  try
+     if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+      Result:= fReadini.iniGetint('TimeInterval','Setting');
+
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+        
+end;
+
+function TDisposeFile.ReadiniTotalNumber: integer;
+begin
+    EnterCriticalSection(FSYNCWriteIni);
+  try
+       if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+      Result:= fReadini.iniGetint('TotalNumber','Setting');
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+   
+end;
+
+function TDisPoseFile.ReadMySqlDataBase(DataTypeString: string;
+      var IP, UserName, Password,Port,DataBaseName:string): Boolean;
+begin
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+     if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+     Ip:=Trim(fReadini.iniGetStr('SrvIP',DataTypeString));
+     UserName:=Trim(fReadini.iniGetStr('UserName',DataTypeString));
+     Password:=Trim(fReadini.iniGetStr('Port',DataTypeString));
+     Port:=Trim(fReadini.iniGetStr('PassWord',DataTypeString));
+     DataBaseName:=Trim(fReadini.iniGetStr('DataBaseName',DataTypeString));
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+end;
+
+procedure TDisposeFile.ReadServerinfo(var S1, S2, S3, S4, S5,S6: string);
+begin
+     {DataType: string;
+    SrvIP: string;
+    DataBaseName: string;
+    UserName: String;
+    PassWord: String;
+    FilePath: String;
+    ServerPause: integer;
+    StartTime: String;
+    totalNumber: integer;}
+   EnterCriticalSection(FSYNCWriteIni);
+  try
+     if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+     s1:=Trim(fReadini.iniGetStr('DataType','DataBase'));
+     s2:=Trim(fReadini.iniGetStr('SrvIP','DataBase'));
+     s3:=Trim(fReadini.iniGetStr('UserName','DataBase'));
+     s4:=Trim(fReadini.iniGetStr('PassWord','DataBase'));
+     s5:=Trim(fReadini.iniGetStr('FilePath','DataBase'));
+     s6:=Trim(fReadini.iniGetStr('Port','DataBase'));
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+
+end;
+
+function TDisposeFile.ReadSYStemDataBaseName: String;
+begin
+  Result:='';
+  EnterCriticalSection(FSYNCWriteIni);
+  try
+       if  not assigned(fReadini) then
+             fReadini.Create(inFilepath,inFileNmae) ;
+       Result:=Trim(fReadini.iniGetStr('DataBaseName','DataBase'));
+
+  finally
+    leavecriticalsection(FSYNCWriteIni);
+  end;
+end;
+
+
+function TDisposeFile.SaveIniFile(sData, sIp, sUser, SPw, sPath,
+  Port: string): boolean;
+begin
+    Result:=true;
+     if  not assigned(fReadini) then
+              fReadini.Create(inFilepath,inFileNmae) ;
+     fReadini.iniSetStr(trim(sData), 'DataType','DataBase');
+     fReadini.iniSetStr(trim(sIP), 'SrvIP','DataBase');
+     fReadini.iniSetStr(trim(sUser), 'UserName','DataBase');
+     fReadini.iniSetStr(trim(sPw), 'PassWord','DataBase');
+     fReadini.iniSetStr(trim(sPath), 'FilePath','DataBase');
+     fReadini.iniSetStr(trim(Port), 'Port','DataBase');
+
+end;
+
+{ TInRec }
+
+
+
+
+
+
+{ TIniObj }
+
+procedure TIniObj.LoadIni;
+begin
+       try
+  {
+    DataType: string;
+    SrvIP: string;
+    DataBaseName: string;
+    UserName: String;
+    PassWord: String;
+    FilePath: String;
+    ServerPause: integer;
+    StartTime: String;
+    totalNumber: integer;
+    SupDTV1:Integer;
+    SuPDTV2:integer;
+    SupDTV3:integer;
+    SupDTv4:integer;
+    TimeInterval:integer;
+    DataNeverDisCTime:integer;
+    }
+    DataType:= iniGetStr('DataType','Setting');
+    SrvIP:= iniGetStr('SrvIP','Setting');
+    DataBaseName:= iniGetStr('DataBaseName','Setting');
+    UserName:= iniGetStr('UserName','Setting');
+    PassWord:= iniGetStr('PassWord','Setting');
+    FilePath:= iniGetStr('FilePath','Setting');
+    SupDTV1:= iniGetint('SupDTV1','Setting');
+    SuPDTV2:= iniGetint('SuPDTV2','Setting');
+    SupDTV3:= iniGetint('SupDTV3','Setting');
+    SupDTV4:= iniGetint('SupDTV4','Setting');
+    TimeInterval:= iniGetint('TimeInterval','Setting');
+    DataNeverDisCTime:= iniGetint('DataNeverDisCTime','Setting');
+
+    ServerPause:= iniGetint('Port','Processing');
+    StartTime:= iniGetStr('StartTime','Processing');
+    totalNumber:= iniGetint('totalNumber','Processing');
+
+  except
+    on E: exception do
+    begin
+      //
+    end;
+  end;
+end;
+
+procedure TIniObj.SaveIni(sDatType, sIP, sDName, sUN, sPw, sFP, sPause, sStart,
+  StolN, sV1, sV2, Sv3, Sv4, TIV, TDec: string);
+begin
+     try
+   {
+    DataType: string;
+    SrvIP: string;
+    DataBaseName: string;
+    UserName: String;
+    PassWord: String;
+    FilePath: String;
+    ServerPause: integer;
+    StartTime: String;
+    totalNumber: integer;
+    SupDTV1:Integer;
+    SuPDTV2:integer;
+    SupDTV3:integer;
+    SupDTv4:integer;
+    TimeInterval:integer;
+    DataNeverDisCTime:integer;
+    }
+
+    iniSetStr(trim(sDatType), 'DataType','Setting');
+    iniSetStr(trim(sIP), 'SrvIP','Setting');
+    iniSetStr(trim(sDName), 'DataBaseName','Setting');
+    iniSetStr(trim(sUN), 'UserName','Setting');
+    iniSetStr(trim(sPw), 'PassWord','Setting');
+    iniSetStr(trim(sFP), 'FilePath','Setting');
+    iniSetStr(trim(sV1), 'SupDTV1','Setting');
+    iniSetStr(trim(sV2), 'SupDTV2','setting');
+    iniSetStr(trim(sV3), 'SupDTV3','setting');
+    iniSetStr(trim(sV4), 'SupDTV4','setting');
+    iniSetStr(trim(TIV), 'TimeInterval','setting');
+    iniSetStr(trim(TDec), 'DataNeverDisCTime','setting');
+
+
+    iniSetStr(trim(sPause), 'ServerPause','Processing');
+    iniSetStr(trim(sStart), 'StartTime','Processing');
+    iniSetStr(trim(StolN), 'totalNumber','Processing');
+
+  except
+  end;
+end;
+
+
+constructor TIni.Create(MinPath,FileName: string );
+begin
+  try
+    fpath := MinPath;
+    fIniReader := TiniFile.Create(fpath + FileName);
+    fIsOpen := true;
+  except
+    fIsOpen := false;
+  end;
+end;
+
+
+procedure TIni.iniClose(FileName: string );
+begin
+  finiReader.Free;
+  fIsOpen := false;
+end;
+
+function TIni.iniIsOpen(FileName: string ): boolean;
+begin
+  if finiReader.FileName = FileName then
+    Result := fIsOpen
+  else
+    Result := false;
+end;
+
+function TIni.iniGetStr(ID: string; secName: string ): string;
+begin
+  Result := finiReader.ReadString(secName, ID, '0');
+end;
+
+function TIni.iniGetInt(ID: string; secName: string ): integer;
+begin
+  Result := strtoint(finiReader.ReadString(secName, ID, '0'));
+end;
+
+function TIni.iniGetFloat(ID: string; secName: string): Double;
+begin
+  Result := strtoFloat(finiReader.ReadString(secName, ID, '0'));
+end;
+
+function TIni.iniSetStr(newValue: string; ID: string; secName: string ): boolean;
+begin
+  try
+    finiReader.WriteString(secName, ID, NewValue);
+    Result := true;
+  except
+    Result := false;
+  end;
+end;
+end.

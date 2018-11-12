@@ -1,0 +1,46 @@
+library LibPStope;
+
+{ Important note about DLL memory management: ShareMem must be the
+  first unit in your library's USES clause AND your project's (select
+  Project-View Source) USES clause if your DLL exports any procedures or
+  functions that pass strings as parameters or function results. This
+  applies to all strings passed to and from your DLL--even those that
+  are nested in records and classes. ShareMem is the interface unit to
+  the BORLNDMM.DLL shared memory manager, which must be deployed along
+  with your DLL. To avoid using BORLNDMM.DLL, pass string information
+  using PChar or ShortString parameters. }
+
+uses
+  System.SysUtils,
+  System.Classes,
+  UIPStopeGuidUnit in '..\UsedForm\UIPStopeGuidUnit.pas',
+  UPstopeGuideUnit in 'UForm\UPstopeGuideUnit.pas',
+  SQLite3 in '..\PublicSysForm\SQLite3.pas',
+  sqlite3udf in '..\PublicSysForm\sqlite3udf.pas',
+  SQLiteTable3 in '..\PublicSysForm\SQLiteTable3.pas',
+  Main_PStope in 'UForm\Main_PStope.pas',
+  Lu_Public_BasicModual in '..\PublicSysForm\Lu_Public_BasicModual.pas',
+  PStope_WorKFace in '..\PublicSysForm\PStope_WorKFace.pas',
+  PStope_Immediate in '..\PublicSysForm\PStope_Immediate.pas',
+  PStope_SupportClass in 'C:\Users\lulei\Desktop\PStope_SupportClass.pas',
+  Pstope_ShowWindows in 'C:\Users\lulei\Desktop\Pstope_ShowWindows.pas',
+  PStope_DealWith in '..\PublicSysForm\PStope_DealWith.pas',
+  uLuSqliteDealWith in '..\PublicSysForm\uLuSqliteDealWith.pas',
+  uFormFyyd in 'UForm\uFormFyyd.pas' {FormFyyd},
+  UnF_CDFz in 'UForm\UnF_CDFz.pas' {UFormCdmn},
+  ChecKInputForm in 'UForm\ChecKInputForm.pas' {CheckForm},
+  zhijiaCs_D in 'UForm\zhijiaCs_D.pas' {FormZJCS},
+  UFormZhijia in 'UForm\UFormZhijia.pas' {FormZhiJia};
+
+{$R *.res}
+
+function TPstopeGuid:TClassStateMent_PStopeGuid;
+  begin
+      Result:=TPStopeGuideBody;
+  end;
+
+exports
+   TPstopeGuid;
+
+begin
+end.

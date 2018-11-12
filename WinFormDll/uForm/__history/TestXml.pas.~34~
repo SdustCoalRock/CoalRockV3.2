@@ -1,0 +1,218 @@
+unit TestXml;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons,GzmClass;
+
+type
+  TformXml = class(TForm)
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Memo1: TMemo;
+    CreateGzmXml: TBitBtn;
+    ReadGzmXml: TBitBtn;
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    BitBtn3: TBitBtn;
+    BitBtn4: TBitBtn;
+    BitBtn5: TBitBtn;
+    BitBtn6: TBitBtn;
+    BitBtn7: TBitBtn;
+    BitBtn8: TBitBtn;
+    BitBtn9: TBitBtn;
+    BitBtn10: TBitBtn;
+    BitBtn11: TBitBtn;
+    BitBtn12: TBitBtn;
+    BitBtn13: TBitBtn;
+    BitBtn14: TBitBtn;
+    BitBtn15: TBitBtn;
+    BitBtn16: TBitBtn;
+    BitBtn17: TBitBtn;
+    BitBtn18: TBitBtn;
+    BitBtn19: TBitBtn;
+    BitBtn20: TBitBtn;
+    BitBtn21: TBitBtn;
+    BitBtn22: TBitBtn;
+    BitBtn23: TBitBtn;
+    BitBtn24: TBitBtn;
+    BitBtn25: TBitBtn;
+    BitBtn26: TBitBtn;
+    procedure CreateGzmXmlClick(Sender: TObject);
+    procedure ReadGzmXmlClick(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure BitBtn2Click(Sender: TObject);
+    procedure BitBtn3Click(Sender: TObject);
+    procedure BitBtn4Click(Sender: TObject);
+    procedure BitBtn5Click(Sender: TObject);
+    procedure BitBtn6Click(Sender: TObject);
+    procedure BitBtn7Click(Sender: TObject);
+    procedure BitBtn8Click(Sender: TObject);
+    procedure BitBtn9Click(Sender: TObject);
+    procedure BitBtn10Click(Sender: TObject);
+    procedure BitBtn11Click(Sender: TObject);
+    procedure BitBtn12Click(Sender: TObject);
+    procedure BitBtn13Click(Sender: TObject);
+    procedure BitBtn14Click(Sender: TObject);
+    procedure BitBtn15Click(Sender: TObject);
+ private
+    { Private declarations }
+    xmlGzm:TGzm;
+  public
+    { Public declarations }
+  end;
+
+var
+  FormXml: TformXml;
+
+  function CreateFormxml(AHandle:THandle;ACaption:string):integer;stdcall;
+
+implementation
+
+{$R *.dfm}
+
+uses RockPress_MianUnit;
+
+
+
+function CreateFormxml(AHandle:THandle;ACaption:string):integer;stdcall;
+  begin
+
+        Application.Handle:=Ahandle;
+        FormXml:= TformXml.Create(Application);
+        try
+        FormXml.Caption:=ACaption;
+        FormXml.WindowState:= wsNormal;
+        FormXml.ParentWindow:=Ahandle;
+        FormXml.Show;
+        Result:=1;//º¯ÊýÖµ
+        except
+           FormXml.Free;
+        end;
+  end;
+
+
+procedure TformXml.BitBtn10Click(Sender: TObject);
+begin
+    FGzm.ReadSupportInfo(Memo1.Text,'insert');
+end;
+
+procedure TformXml.BitBtn11Click(Sender: TObject);
+begin
+    FGzm.ReadSupportInfo(Memo1.Text,'update');
+end;
+
+procedure TformXml.BitBtn12Click(Sender: TObject);
+var
+  supportName:string;
+begin
+   supportName:='ZY6400/17/31DNew';
+   if FGzm.Deletesupport(supportName )    then
+     ShowMessage('OK')  else     ShowMessage('False')  ;
+end;
+
+procedure TformXml.BitBtn13Click(Sender: TObject);
+begin
+      Memo1.Text:=FGzm.WriteWorkfaceSelectSupport('1309workface_new');
+end;
+
+procedure TformXml.BitBtn14Click(Sender: TObject);
+var
+  WorkFaceName,str:String;
+begin
+    WorkFaceName:='1309workface_new';
+    str:=Fgzm.ReadWorkFaceSelectSupport(workFaceName,Memo1.Text);
+    if str='' then
+       ShowMessage('OK')  else     ShowMessage(str)  ;
+end;
+
+procedure TformXml.BitBtn15Click(Sender: TObject);
+begin
+    Fgzm.setGzmNumber(1309);
+    if Fgzm.ReadData  then
+        Memo1.Text:= FGzm.WriteCoalPillarXml('1309workface')
+end;
+
+procedure TformXml.BitBtn1Click(Sender: TObject);
+begin
+    Fgzm.setGzmNumber(1309);
+    if Fgzm.ReadData  then
+       FGzm.ReadWorkFaceXml(Memo1.Text,'update' )   ;
+end;
+
+procedure TformXml.BitBtn2Click(Sender: TObject);
+begin
+     Fgzm.setGzmNumber(1309);
+       if Fgzm.ReadData  then
+          Memo1.Text := FGzm.WriteDrillxml;
+end;
+
+procedure TformXml.BitBtn3Click(Sender: TObject);
+begin
+        FGzm.ReadDrillInfo(Memo1.Text,'insert');
+end;
+
+procedure TformXml.BitBtn4Click(Sender: TObject);
+begin
+       FGzm.ReadDrillInfo(Memo1.Text,'update');
+end;
+
+procedure TformXml.BitBtn5Click(Sender: TObject);
+Var
+  ZkName:string;
+begin
+   ZkName:='1309×ê¿×New';
+  if  Fgzm.DeleteDrillInfo(ZkName)   then
+     ShowMessage('OK')  else     ShowMessage('False')  ;
+end;
+
+procedure TformXml.BitBtn6Click(Sender: TObject);
+var
+  WorkFaceName:String;
+begin
+    WorkFaceName:='1309workface_new';
+     if Fgzm.DeleteGzmInfo(WorkFaceName) then
+       ShowMessage('OK')  else     ShowMessage('False')  ;
+end;
+
+procedure TformXml.BitBtn7Click(Sender: TObject);
+begin
+     Memo1.Text:=FGzm.WriteWorkfaceSelectDrill('1309workface_new');
+end;
+
+procedure TformXml.BitBtn8Click(Sender: TObject);
+var
+  WorkFaceName,str:String;
+begin
+    WorkFaceName:='1309workface_new';
+    str:=Fgzm.ReadWorkFaceSelectDrill(workFaceName,Memo1.Text);
+    if str='' then
+       ShowMessage('OK')  else     ShowMessage(str)  ;
+end;
+
+procedure TformXml.BitBtn9Click(Sender: TObject);
+begin
+    Fgzm.setGzmNumber(1309);
+    if Fgzm.ReadData  then
+        Memo1.Text:= FGzm.WriteSupportXml;
+end;
+
+procedure TformXml.CreateGzmXmlClick(Sender: TObject);
+begin
+    Fgzm.setGzmNumber(1309);
+    if Fgzm.ReadData  then
+       Memo1.Text:= FGzm.WriteWorkFaceXml;
+
+end;
+
+procedure TformXml.ReadGzmXmlClick(Sender: TObject);
+begin
+
+    Fgzm.setGzmNumber(1309);
+    if Fgzm.ReadData  then
+       FGzm.ReadWorkFaceXml(Memo1.Text,'insert' )   ;
+
+end;
+
+end.

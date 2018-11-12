@@ -1,0 +1,110 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：MainPressureClass.pas                          <<
+//<<      lulei使用的个人Delphi文件                            <<
+//<<      该文件是矿压数据分析dll控件的主文件                    <<
+//<<      创建日期：2016.5.12                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+
+unit MainPressureClass;
+
+
+interface
+
+uses
+  ActiveX, Mtsobj, Mtx, ComObj, RockPressure_TLB, StdVcl,SysUtils,Windows,Messages,math,
+  ComServ,StrUtils,SQLiteTable3 ;
+
+type
+  TPressureClass = class(TMtsAutoObject, IC_PressureClass)
+
+ // protected
+  private
+     MainDBpath: string;       // 公用数据库 所在路径
+
+  protected
+    //外部调用的函数
+    function CreatGzmInfo(AHandle: HResult): WideString; safecall;
+    function GetPath: WideString; safecall;
+    procedure CreateClass; safecall;
+
+  public
+     // public 内部公共使用的函数
+      Maindb: TSQLiteDatabase;  //公用数据库 连接
+      Dll_Path:string;
+    // procedure Create; safecall;
+      destructor  Destroy;
+
+
+  end;
+
+
+ var
+    Rock_main_class:TPressureClass;
+
+
+
+implementation
+
+ uses lu_base_function,Dialogs;
+//---------变量定义
+
+
+{ TPressureClass }
+{
+procedure TPressureClass.Create;
+var
+    ModuleName:WideString;
+begin
+     if Rock_main_class =nil then
+         Rock_main_class:= TPressureClass.create;
+
+     //取得Dll自身路径
+          SetLength(ModuleName, 255);
+          GetModuleFileName(HInstance, PChar(ModuleName), Length(ModuleName));
+          Dll_Path:=Trim(PChar(ModuleName)) ;
+          Dll_Path:=Copy(Dll_Path,1,Length(Dll_Path)-11);
+
+        MainDBPath := 'RockPressure.db';
+
+        Maindb := TSQLiteDatabase.Create(MainDBPath);
+
+
+            if not FileExists(MainDBPath) then begin
+                  MessageDLg('Test.db does not exist. Click Test Sqlite 3 to create it.',mtInformation,[mbOK],0);
+                  exit;
+            end;
+
+end;
+}
+
+destructor TPressureClass.Destroy;
+begin
+    if Rock_main_class <>nil then begin
+        Rock_main_class.Maindb.Destroy;
+        Rock_main_class.Free;
+    end;
+
+end;
+
+function TPressureClass.CreatGzmInfo(AHandle: HResult): WideString;
+begin
+
+end;
+
+function TPressureClass.GetPath: WideString;
+begin
+
+end;
+
+procedure TPressureClass.CreateClass;
+begin
+
+end;
+
+initialization
+  TAutoObjectFactory.Create(ComServer, TPressureClass, Class_PressureClass,
+    ciMultiInstance, tmApartment);
+end.

@@ -1,0 +1,164 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：uRockPressClass.pas                          <<
+//<<      lulei使用的个人Delphi文件                            <<
+//<<      该文件是pressureClass.dll delphi  引用文件           <<
+//<<      该文件与 dll文件一同发布，dll不需要注册使用          <<
+//<<      创建日期：2016.5.12                                   <<
+//<<      2017.11.9  对数据的步距算法做了更改
+//<<      2017.12.4  修改了接口函数的字符类型                  <<
+//<<      更改了RealTimeFootAge 与   Inputdata 的返回值       <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+unit uIRockPress;
+
+interface
+
+uses  Classes;
+
+type
+
+   TDefine_RockPress = class (TObject)
+     protected
+
+     public
+         //  需要的工作， 如果存在数据库，连接数据库；如果不存在数据库，创建数据库，并创建相关数据表，创建完成后，连接数据库，返回
+          function InitService(MySQLAddress : PAnsiChar; MySQLPort : Integer;
+            UserName : PAnsiChar; Password : PAnsiChar) : Wordbool; virtual;abstract;
+
+          //  启动服务 需要启动一个管理线程，来管理相关的数据分析操作
+          procedure StartService; virtual;abstract;
+          //  测试服务是否在运行中 判断数据的线程是否存在
+          function IsServiceRunning : Wordbool; virtual;abstract;
+          //  停止服务 停止线程的服务
+          procedure StopService; virtual;abstract;
+           //inputdata
+           //校订进尺数据 ，数据单位为米  , DownDayFootAge 下顺槽 日进尺 SumDownFootAge   下顺槽累计进尺
+           //  UpperDayFootAge  上顺槽日进尺, SumUpperFootAge  上顺槽合计进尺
+          function RevisedFootage(MineName,WorkFacName:PAnsiChar; tDay: TDateTime; DownDayFootAge,
+                   SumDownFootAge, UpperDayFootAge, SumUpperFootAge: Double): WordBool;   virtual;abstract;
+          //每个支架每次推移千斤顶的移动数据，由此推断工作面的进尺，RealDataValue 的数据单位为毫米
+           //如果返回true 继续插入，如果返回 false 停止插入，数据库中记录太多，请等待1分钟再来
+          function RealTimeFootAge(MineName,WorkFacName:PAnsiChar;supportbh: Integer;
+                                 Generatetime:TdateTime;RealDataValue:integer):Wordbool; virtual;abstract;
+            //input Support data
+            //设置导入压力数据，位移数据的数据格式与最大数据值，超过该数据值，认为数据无效。
+            //该函数需要在Inputdata 函数之前确定，需要 告知 导入数据的类型与上限值
+            { FirstType， SecondType，ThirdType ，FouthType 内码代表的意义
+                0   //内码NullData       代表无数据
+                1   //内码FrontData      代表四立柱前柱压力数据
+                2   //内码BehindData     代表四立柱后柱压力数据
+                3   //内码LeftData       代表两立柱左柱压力数据
+                4   //内码RightData      代表两立柱右柱压力数据
+                5   //内码FrontDisp       代表四立柱前柱缩量数据
+                6   //内码BehindtDisp    代表四立柱后柱缩量数据
+                7   //内码LeftDisp       代表两立柱左柱压力数据
+                8   //内码RightDisp      代表两立柱右柱压力数据
+                9   //内码 TheWallPressData 代表支架护帮千斤顶的数据
+              }
+          function SetSupportDataType(FirstType:integer;FirstDataTopLine :Double;
+                                      SecondType:integer;SecondDataTopline:double;
+                                      ThirdType:integer;ThirdDataTopLine:double;
+                                      FouthType:integer;FourthDataTopLine:double): WordBool;overload;virtual;abstract;
+          function SetSupportDataType(MineName,WorkFacName:PAnsiChar;StartTime:TdateTime;
+                                      FirstType:integer;FirstDataTopLine :Double;
+                                      SecondType:integer;SecondDataTopline:double;
+                                      ThirdType:integer;ThirdDataTopLine:double;
+                                      FouthType:integer;FourthDataTopLine:double): WordBool;overload;virtual;abstract;
+          //如果返回1 继续插入，如果返回-1 停止插入，数据库中记录太多，请等待1分钟再来
+          function Inputdata(MineName,WorkFacName:PAnsiChar;supportbh: Integer; Generatetime: TdateTime; V1, V2, V3,
+                             V4: Double): WordBool; virtual;abstract;
+
+           //  更新钻孔信息
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function RefreshDrillInfo(DrillInfo : PAnsiChar;Var Sout:PAnsiChar) : WordBool;virtual;abstract;
+          //  删除钻孔信息
+          function DeleteDrill(DrillInfo : PAnsiChar) : WordBool; virtual;abstract;
+            //  更新工作面
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function RefreshWorkface(WorkfaceInfo : PAnsiChar;
+                    Var Sout:PAnsiChar) : WordBool;virtual;abstract;
+          //  删除工作面
+          function DeleteWorkface(WorkfaceInfo : PAnsiChar) : Boolean;virtual;abstract;
+           //  支架信息
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function RefreshSupport(SupportInfo : PAnsiChar;
+                    Var Sout:PAnsiChar) : WordBool;virtual;abstract;
+          //  删除支架信息
+          function DeleteSupport(SupportInfo : PAnsiChar) : Boolean;virtual;abstract;
+          //  钻孔与工作面绑定
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function WorkfaceSelectDrill( DrillsInfo : PAnsiChar;
+                     Var Sout:PAnsiChar) : WordBool; virtual;abstract;
+
+          //  支架与工作面绑定
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function WorkfaceSelectSupport( SupportsInfo : PAnsiChar;
+                 Var Sout:PAnsiChar) : WordBool;virtual;abstract;
+
+           //  煤柱
+           //  返回值的约定：执行成功为空，否则为失败的原因
+          function RefreshCoalPillar( CoalPillarInfo : PAnsiChar;
+                    Var Sout:PAnsiChar) : WordBool; virtual;abstract;
+          function DeleteCoalPillar( CoalPillarInfo : PAnsiChar) : Boolean; virtual;abstract;
+
+
+          //  采空区
+
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function RefreshMineOutArea( MineOutAreaInfo : PAnsiChar;
+                    Var Sout:PAnsiChar) : WordBool; virtual;abstract;
+          function DeleteMineOutArea( MineOutAreaInfo : PAnsiChar) : Boolean; virtual;abstract;
+
+
+          //  断层
+           //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function RefreshFault( FaultInfo : PAnsiChar;
+                     Var Sout:PAnsiChar) : WordBool;  virtual;abstract;
+          function DeleteFault( FaultInfo : PAnsiChar) : Boolean;  virtual;abstract;
+          //  备份工作面
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function BackupWorkface(MineName,WorkfaceName : PAnsiChar; ToFolder : PAnsiChar;
+                       Var Sout:PAnsiChar) : WordBool;  virtual;abstract;
+          //  恢复工作面
+          //  返回值的约定：执行成功为真，为失败为假，Sout 返回失败原因
+          function RestoreWorkface(MineName,WorkfaceName : PAnsiChar;FromFolder : PAnsiChar;
+                       Var Sout:PAnsiChar) : WordBool;  virtual;abstract;
+
+
+          //  结果输出
+          //  返回值为xml格式的字符串
+          function GetForcastResult (var pdata: Pansichar; var len:integer) : Boolean;  virtual;abstract;
+          function GetHistoryResult(MineName,WorkfaceName : PansiChar; StartTime : TDateTime;
+                   StopTime : TDateTime;Var pData:PansiChar) : WordBool; overload;virtual;abstract;
+          function GetHistoryResult(MineName,WorkfaceName : PansiChar; StartFootAge : double;
+                   StopFootae : double;Var pData:PansiChar) : WordBool; overload;virtual;abstract;
+          // 返回外部录入压力最后记录的时间
+          function GetInputDataMaxDatetime(MineName,WorkfaceName: PansiChar):TDateTime;virtual;abstract;
+          // 返回支架每个循环信息
+          function GetSupportMoveInfo(MineName,WorkfaceName : PansiChar;
+                   startTime,endTime:TDateTime;Supportbh:integer;Var pData:PansiChar):WordBool; overload;virtual;abstract;
+          function GetSupportMoveInfo(MineName,WorkfaceName : PansiChar;
+                   startfootage,endfootage:double;Supportbh:integer;Var pData:PansiChar):WordBool;overload;virtual;abstract;
+
+           //20180411
+            procedure SetStatuesCaption(Value:PansiChar); virtual;abstract;
+            function CreateBatInputD(AHandle:THandle;Caption:Pansichar;Width,Heigth:integer):THandle; virtual;abstract;
+            function CreateEditFootage_Data(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            function  CreateRockPressGraph(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            function  CreateEditJinDao(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            function  CreateRockLineGraph(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer):THandle;  virtual;abstract;
+            procedure SetPublic_BasicLicending(Value:Boolean;UName:Pansichar);  virtual;abstract;
+            procedure CloseRockPressTool; virtual;abstract;
+         //系统函数
+          constructor Create; virtual;abstract;
+   end;
+
+   TClassStateMent_RockPress = class of TDefine_RockPress;
+
+implementation
+    //no context
+{ TIRockPress }
+
+
+end.

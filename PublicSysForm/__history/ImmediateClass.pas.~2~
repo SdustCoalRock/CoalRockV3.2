@@ -1,0 +1,63 @@
+unit ImmediateClass;
+
+interface
+
+uses
+  Windows, SysUtils, Classes, Messages, Controls, Forms, StdCtrls, ExtCtrls,
+  ComCtrls,math,IniFiles,Jpeg,Graphics,Dialogs,Lu_Public_BasicModual
+  ,WorKFaceClass
+  ;
+
+type
+   //定义直接顶 类
+    TImmediate_roof=class
+      Public
+          Start_No  :integer;   //    直接顶开始 岩层数组下标
+          End_No    :integer;    //   直接顶结束 岩层数组下标
+          Surplus_h :double;     //   分层后的剩余高度
+          Immroof_M  :double;   //    直接顶的累积高度
+          Immroof_C0  :double;   //   直接顶的初次来压步距
+          is_init     :bool;      //  直接顶是否初始化
+          Imm_leibie      :Integer;//  直接顶类别
+          FDm_leibie      :Integer;//顶煤冒放性类别
+
+        function Cal_Immediate_roof(S_gzm: TG_stope; s_zk: TZk_bore;safe_h:double;out sEorr:widestring) :wordbool;
+                //计算直接顶函数：s_gzm工作面对象   s_zk钻孔对象  saft_h计算直接顶的安全余量  s——eorr报错字符串
+        function Cal_beam(S_gzm: TG_stope; s_zk: TZk_bore;out sEorr:widestring):wordbool ;
+                //计算岩梁的属性，把数据填充到钻孔类内。
+
+
+        function init(s_gzm: TG_stope; s_zk: TZk_bore;safe_h:double;out sEorr:widestring):wordbool ;
+        function Get_Parameter(zk:Tzk_bore;Version:widestring):wideString;  stdcall;
+        function Get_YC_Png(zk:Tzk_bore;s_gzm: TG_stope;t_imm:Timmediate_roof;JinChi:double):wideString;  stdcall;
+
+
+
+        end;
+
+  //定义老顶类
+  TOld_roof=class
+      public
+        YL_struc: integer;//标记老顶的结构， 1 为单岩梁，2 为多岩梁
+        YL_start :integer;    //  老顶开始岩层
+        yl_max_End : integer;  //老顶最大结束岩层
+        YL_min_End   :integer;    //  老顶最小结束岩层
+        YL_max_m     :double;     //  老顶最大高度
+        YL_min_m     :double;     //  老顶最小高度
+        YL_First_step     : array[0..2] of double;    //初次来压步距  0 为最大值，1为最小值，2为平均值
+        YL_Zhouqi_step    : array[0..2] of double;    //周期来压步距  0 为最大值，1为最小值，2为平均值
+        is_init      :bool;
+        Old_leibie       :Integer; // 老顶类别
+        diban_leobie     :Integer; //底板类别
+
+       function init(s_gzm: TG_stope; s_zk: TZk_bore;t_imm:Timmediate_roof; out sEorr: WideString):wordbool ;
+       function Get_Parameter(s_gzm: TG_stope;zk:Tzk_bore;t_imm:Timmediate_roof;Version:Widestring):WideString;
+       function Return_C0(zk:Tzk_bore):wideString;  stdcall; //返回岩梁的初次来压步距
+       function Return_ldg(zk:Tzk_bore;s_gzm: TG_stope;t_imm:Timmediate_roof;Gzmjc:double;Version:WideString):wideString;  stdcall; //返回裂断拱的边界
+
+      end;
+
+
+implementation
+
+end.

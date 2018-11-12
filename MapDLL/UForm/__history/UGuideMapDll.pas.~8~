@@ -1,0 +1,90 @@
+unit UGuideMapDll;
+
+interface
+
+uses   ActiveX, Mtsobj, Mtx, ComObj, StdVcl,SysUtils, StrUtils,
+       Windows,Messages,math,Classes,Vcl.Dialogs,
+       UIGuideMapDll;
+
+type
+   TMapDLLBody = class (TDefine_MapDll)
+        private
+          function  CreateClass:Boolean;
+          procedure FreeCreatedClass;
+       protected
+
+           procedure OpenMapWindows(AHandle:THandle;Caption:Pansichar;Width,Heigth:integer);override;
+           procedure SetUsetInformation(UserID,UserName:Pansichar;Admin:Boolean);  override;
+//
+          //ÏµÍ³º¯Êý
+           constructor Create; override;
+           destructor Destroy; override;
+   end; // end TMapDLLBody
+
+
+implementation
+
+{ TMapDLLBody }
+
+uses UGudieMainForm, UMainDataModule, Lu_Public_BasicModual;
+
+constructor TMapDLLBody.Create;
+begin
+  inherited;
+  CreateClass;
+end;
+
+function TMapDLLBody.CreateClass: Boolean;
+begin
+   Result:=true;
+    try
+
+      if not Assigned(Public_Basic) then
+        Public_Basic:=TLu_BasicClass.Create('','ServerInfo.dll');
+
+       if not Assigned(MainDataModule )then    begin
+          MainDataModule:=TDataModule1.Create(nil) ;
+          MainDataModule.ExMainPath :=Public_Basic.Get_MyModulePath ;
+          if not MainDataModule.ConnectSystemDataBase then
+              Result:=False;
+      end;
+    finally
+
+    end;
+end;
+
+destructor TMapDLLBody.Destroy;
+begin
+     FreeCreatedClass;
+     inherited;
+end;
+
+procedure TMapDLLBody.FreeCreatedClass;
+begin
+    if  Assigned(Public_Basic) then
+        FreeAndNil(Public_Basic);
+
+    if  Assigned(MainDataModule )then
+         FreeAndNil(MainDataModule);
+end;
+
+procedure TMapDLLBody.OpenMapWindows(AHandle: THandle; Caption: Pansichar;
+  Width, Heigth: integer);
+var
+  SOut:String;
+begin
+  inherited;
+   SOut:=strPas(Caption);
+   CreateMapMianFrom(AHandle,Sout,Width,Heigth);
+end;
+
+procedure TMapDLLBody.SetUsetInformation(UserID, UserName: Pansichar;
+  Admin: Boolean);
+begin
+  inherited;
+    MainDataModule.ExUserName :=strPas(UserName);
+    MainDataModule.ExUserID:=StrPas(UserID);
+    MainDataModule.ExAdminBool:=Admin;
+end;
+
+end.

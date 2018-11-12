@@ -1,0 +1,56 @@
+unit UGuideMapDll;
+
+interface
+
+uses   ActiveX, Mtsobj, Mtx, ComObj, StdVcl,SysUtils, StrUtils,
+       Windows,Messages,math,Classes,Vcl.Dialogs,
+       UIGuideMapDll;
+
+type
+   TMapDLLBody = class (TDefine_MapDll)
+        private
+
+       protected
+
+           procedure OpenMapWindows(AHandle:THandle;Caption:Pansichar;Width,Heigth:integer);override;
+//           procedure GetDTFZBmp(AHandle:THandle);override;
+//           function  Get_immediate_roof(Version:Pansichar): Pansichar ;override;
+//           function  Get_Old_roof(Version:Pansichar): Pansichar ;override;
+//           function Get_kcjstj(const Version: Pansichar): Pansichar; override;
+//           function  Get_Support_P(Version:Pansichar): Pansichar ;override;
+//           procedure OpenEditPStopindows(AHandle:THandle;Caption:Pansichar;Width,Heigth:integer);override;
+          //ÏµÍ³º¯Êý
+           constructor Create; override;
+           destructor Destroy; override;
+   end; // end TPStopeGuideBody
+
+
+implementation
+
+{ TMapDLLBody }
+
+uses UGudieMainForm;
+
+constructor TMapDLLBody.Create;
+begin
+  inherited;
+
+end;
+
+destructor TMapDLLBody.Destroy;
+begin
+
+  inherited;
+end;
+
+procedure TMapDLLBody.OpenMapWindows(AHandle: THandle; Caption: Pansichar;
+  Width, Heigth: integer);
+var
+  SOut:String;
+begin
+  inherited;
+   SOut:=strPas(Caption);
+   CreateMapMianFrom(AHandle,Sout,Width,Heigth);
+end;
+
+end.

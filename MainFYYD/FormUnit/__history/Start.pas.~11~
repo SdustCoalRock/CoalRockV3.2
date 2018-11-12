@@ -1,0 +1,51 @@
+unit Start;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls;
+
+type
+  TKcover = class(TForm)
+    Image1: TImage;
+    Timer1: TTimer;
+    procedure FormCreate(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+  private
+    { Private declarations }
+    TimeCount:integer;
+  public
+    { Public declarations }
+     ExePath:AnsiString;
+  end;
+
+var
+  Kcover: TKcover;
+
+implementation
+
+{$R *.dfm}
+
+uses MainForm;
+
+procedure TKcover.FormCreate(Sender: TObject);
+
+begin
+   Image1.Picture.LoadFromFile(ExePath+'BJTP/Welcome.Bmp') ;
+   TimeCount:=0;
+   Timer1.Enabled :=true;
+end;
+
+procedure TKcover.Timer1Timer(Sender: TObject);
+begin
+    inc(TimeCount);
+    if TimeCount >10 then  begin
+       Timer1.Enabled :=False;
+
+       //MainCForm.PrevRunWholeForm;
+    end;
+
+end;
+
+end.

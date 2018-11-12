@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{741F1251-34D2-4CED-87B5-97AFEAA04709}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="WinFrame.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\TestDLLForm\TestWinFromProj_P.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="WinFrame">
+        <MSBuild Projects="WinFrame.dproj"/>
+    </Target>
+    <Target Name="WinFrame:Clean">
+        <MSBuild Projects="WinFrame.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WinFrame:Make">
+        <MSBuild Projects="WinFrame.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestWinFromProj_P">
+        <MSBuild Projects="..\TestDLLForm\TestWinFromProj_P.dproj"/>
+    </Target>
+    <Target Name="TestWinFromProj_P:Clean">
+        <MSBuild Projects="..\TestDLLForm\TestWinFromProj_P.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestWinFromProj_P:Make">
+        <MSBuild Projects="..\TestDLLForm\TestWinFromProj_P.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="WinFrame;TestWinFromProj_P"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="WinFrame:Clean;TestWinFromProj_P:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="WinFrame:Make;TestWinFromProj_P:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

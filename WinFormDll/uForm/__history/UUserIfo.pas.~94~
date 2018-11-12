@@ -1,0 +1,389 @@
+unit UUserIfo;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.ImageList, Vcl.ImgList,
+  Vcl.ComCtrls, Vcl.ToolWin, Vcl.StdCtrls, Vcl.ExtCtrls,
+  UMainDataModule;
+
+type
+  TUser_Manager = class(TForm)
+    ToolBar1: TToolBar;
+    AddButton: TToolButton;
+    SaveButton: TToolButton;
+    DeleteButton: TToolButton;
+    ExitButton: TToolButton;
+    ImageList1: TImageList;
+    StatusBar1: TStatusBar;
+    Panel1: TPanel;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Rad_Gener: TRadioButton;
+    Rad_Admin: TRadioButton;
+    Edit_UserName: TEdit;
+    Edit_Password1: TEdit;
+    Edit_Password2: TEdit;
+    Edit_klqr: TEdit;
+    But_TestName: TButton;
+    But_KLQR: TButton;
+    Label4: TLabel;
+    Edit_Old_Password: TEdit;
+    procedure But_KLQRClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure But_TestNameClick(Sender: TObject);
+    procedure SaveButtonClick(Sender: TObject);
+    procedure AddButtonClick(Sender: TObject);
+    procedure DeleteButtonClick(Sender: TObject);
+    procedure Edit_UserNameClick(Sender: TObject);
+    procedure Edit_Old_PasswordClick(Sender: TObject);
+    procedure Edit_Password1Click(Sender: TObject);
+    procedure Edit_Password2Click(Sender: TObject);
+    procedure Edit_klqrClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure Rad_AdminClick(Sender: TObject);
+    procedure ExitButtonClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+  private
+    { Private declarations }
+    FAdoDataSet1:TMyDataSet;
+    FAdoCommand:TMyCommand;
+    UserName1,UserPass1,UserPass2,UserType:String;
+    User_Old_Password:string;
+    Save_lx:string;
+    procedure ClearEdit;
+    procedure SetButEnabled(Value:Boolean);
+    procedure OptionTip(Str:String);
+    function SelectUserInfo(Name:string):Boolean;
+    procedure EditDataInfo(Name:String);
+    Procedure AddDataInfo;
+    function CheckInPutData:Boolean;
+    procedure SetEditEnabled(Value:Boolean);
+
+  public
+    { Public declarations }
+  end;
+
+var
+  User_Manager: TUser_Manager;
+function CreateUserInfo_inn(AHandle:THandle;ACaption,UserName:string;Wid,Hi:integer):integer;stdcall;
+
+implementation
+
+{$R *.dfm}
+
+uses uWinFrameClass,  Lu_Public_BasicModual;
+
+//内部初始化工作面函数
+function CreateUserInfo_inn(AHandle:THandle;ACaption,UserName:string;Wid,Hi:integer):integer;stdcall;
+var
+  ss,dd:String;
+begin
+       if Assigned(User_Manager) then FreeAndNil(User_Manager);
+
+       User_Manager:=TUser_Manager.Create(nil);
+        try
+             with User_Manager do begin
+               Caption:=ACaption;
+               WindowState:= wsNormal;
+               ParentWindow:=Ahandle;
+
+               if Hi >Height then
+                   Top :=Round((Hi-Height)/3)  else   Top :=0;
+               if Wid> Width then
+                   Left:=Round((Wid-Width)/2)  else   Left:=0;
+
+              if UserName <> '' then  begin
+                 EditDataInfo(UserName);
+              end;
+                 Show;
+                 SetFocus;
+                 Result:=1;//函数值
+          end ;
+
+        except
+           FreeAndNil(User_Manager);
+        end;
+end;
+
+{ TForm1 }
+
+procedure TUser_Manager.AddButtonClick(Sender: TObject);
+begin
+   SetEditEnabled(True);
+   AddDataInfo;
+
+end;
+
+procedure TUser_Manager.AddDataInfo;
+begin
+    Save_lx:='insert';
+    ClearEdit;
+    Edit_Old_password.Enabled :=False;
+    Rad_Gener.Checked :=True;
+end;
+
+procedure TUser_Manager.But_KLQRClick(Sender: TObject);
+begin
+   if Trim(Edit_klqr.Text )='songzhenqi' then begin
+      UserType:='1';
+      Rad_Gener.Checked :=False;
+      OptionTip('恭喜你成为系统管理员!');
+   end else begin
+      UserType:='2';
+      Edit_klqr.Text :='';
+      Rad_Gener.Checked :=true;
+      Rad_Admin.Checked:=False;
+      self.SetButEnabled(false);
+
+   end;
+end;
+
+procedure TUser_Manager.But_TestNameClick(Sender: TObject);
+begin
+   if length(Trim(Edit_UserName.Text))>0 then  begin
+       if self.SelectUserInfo(Trim(Edit_UserName.Text)) then  begin
+          messagebox(self.Handle,'此用户存在只能修改其密码！','系统提示',mb_iconerror+mb_ok);
+          Save_lx:='update';
+       end else begin
+          OptionTip('此用户名可以使用!');
+          Edit_Old_Password.Enabled :=False;
+          User_Old_Password:='';
+          Save_lx:='insert';
+       end;
+   end;
+   SaveButton.Enabled:=true;
+end;
+
+function TUser_Manager.CheckInPutData: Boolean;
+begin
+    Result:=False;
+    if  (UserType= '2') and (Rad_Admin.Checked )  then   begin
+       messagebox(self.Handle,'你确定为管理员，请进行口令确认！','系统提示',mb_iconerror+mb_ok);
+          exit;
+    end;
+    if length(Trim(Edit_UserName.Text))<1 then   begin
+       messagebox(self.Handle,'请录入用户名称！','系统提示',mb_iconerror+mb_ok);
+          exit;
+    end else begin
+       UserName1:=Trim(Edit_UserName.Text);
+    end;
+    if UserType='' then  begin
+       messagebox(self.Handle,'请验证用户信息！','系统提示',mb_iconerror+mb_ok);
+          exit;
+    end;
+    if  Save_lx='update' then   begin
+       if Trim(Edit_Old_PassWord.Text)<> User_Old_Password then  begin
+          messagebox(self.Handle,'用户老密码不一致！','系统提示',mb_iconerror+mb_ok);
+          exit;
+       end;
+    end;
+    if length(Trim(Edit_Password1.Text))<1 then   begin
+       messagebox(self.Handle,'请录入新密码！','系统提示',mb_iconerror+mb_ok);
+          exit;
+    end else begin
+        UserPass1:=Trim(Edit_Password1.Text);
+    end;
+     if length(Trim(Edit_Password2.Text))<1 then   begin
+       messagebox(self.Handle,'请录入确认密码！','系统提示',mb_iconerror+mb_ok);
+          exit;
+    end else begin
+      UserPass2:=Trim(Edit_Password2.Text);
+    end;
+    if UserPass1<>UserPass2 then   begin
+         messagebox(self.Handle,'录入新密码不一致！','系统提示',mb_iconerror+mb_ok);
+         exit;
+    end;
+    Result:=true;
+
+end;
+
+procedure TUser_Manager.ClearEdit;
+begin
+     Edit_UserName.Text :='';
+     Edit_Password1.Text :='';
+     Edit_Password2.Text :='';
+     Edit_old_Password.Text :='';
+     Edit_Klqr.Text :='';
+     UserType:='2';
+     UserName1:='';
+     UserPass1:='';
+     UserPass2:='';
+     User_Old_Password:='';
+end;
+
+procedure TUser_Manager.DeleteButtonClick(Sender: TObject);
+begin
+  ClearEdit;
+end;
+
+procedure TUser_Manager.EditDataInfo(Name: String);
+begin
+   Save_lx:='update';
+   ClearEdit;
+   if SelectUserInfo(Name) then begin
+       SetEditEnabled(true);
+
+       Edit_UserName.Text :=Name;
+       Edit_UserName.Enabled :=False;
+
+       AddButton.Enabled :=False;
+       SaveButton.Enabled :=true;
+   end;
+end;
+
+procedure TUser_Manager.Edit_klqrClick(Sender: TObject);
+begin
+    Edit_klqr.SetFocus;
+end;
+
+procedure TUser_Manager.Edit_Old_PasswordClick(Sender: TObject);
+begin
+   Edit_Old_Password.SetFocus ;
+end;
+
+procedure TUser_Manager.Edit_Password1Click(Sender: TObject);
+begin
+   Edit_Password1.SetFocus;
+end;
+
+procedure TUser_Manager.Edit_Password2Click(Sender: TObject);
+begin
+    Edit_Password2.SetFocus;
+end;
+
+procedure TUser_Manager.Edit_UserNameClick(Sender: TObject);
+begin
+    Edit_UserName.SetFocus ;
+end;
+
+procedure TUser_Manager.ExitButtonClick(Sender: TObject);
+begin
+   Close;
+end;
+
+procedure TUser_Manager.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+   if Assigned(User_Manager) then
+         FreeAndNil(User_Manager);
+
+end;
+
+procedure TUser_Manager.FormCreate(Sender: TObject);
+begin
+     FAdoDataSet1:=TMyDataSet.Create(nil);
+     FAdoCommand:=TMyCommand.Create(nil);
+     FAdoDataSet1.MySqlConnection:=MainDataModule.ExConn;
+     FAdoCommand.MySqlConnection:=MainDataModule.ExConn;
+     if True then
+
+end;
+
+procedure TUser_Manager.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FAdoDataSet1);
+  FreeAndNil(FAdoCommand);
+end;
+
+procedure TUser_Manager.FormShow(Sender: TObject);
+begin
+    if UserName1='inn_Admin' then  begin
+        FreeAndNil(User_Manager);
+        exit;
+    end else if UserName1='' then  begin
+        AddDataInfo;
+    end else  begin
+        EditDataInfo(UserName1);
+    end;
+
+   PubLic_Basic.InitStatusBar (self.StatusBar1);
+end;
+
+procedure TUser_Manager.OptionTip(Str: String);
+begin
+  self.StatusBar1.Panels[0].Text :=str;
+end;
+
+procedure TUser_Manager.Rad_AdminClick(Sender: TObject);
+begin
+     if Rad_Admin.Checked  then   begin
+        SetButEnabled(true);
+     end else  begin
+        SetButEnabled(False);
+     end;
+end;
+
+procedure TUser_Manager.SaveButtonClick(Sender: TObject);
+var
+  Sql:string;
+begin
+   if  not CheckInPutData then    exit;
+
+   if Save_lx='insert' then  begin
+      Sql:='insert into UserInfo (UserName,User_Password,User_Type,Used) Values( ''' +
+           UserName1+''','''+UserPass1+''',' +UserType +',1)';
+   end else if  Save_lx='update' then  begin
+      Sql:='update UserInfo  set User_Password = '''+  UserPass1+''','+
+                                 'User_Type = '+ UserType +
+           ' where UserName ='''+  UserName1+''' ';
+   end;
+
+   FAdoCommand.CommandText :=sql;
+   //FAdoCommand.Execute ;
+   FAdoCommand.Execute(MainDataModule.ExUserName) ;
+   OptionTip('数据存储成功!');
+   SetEditEnabled(False);
+   SaveButton.Enabled :=False;
+   AddButton.Enabled :=True;
+
+end;
+
+function TUser_Manager.SelectUserInfo(Name: string): Boolean;
+var
+  sql:string;
+begin
+  Result:=False;
+  User_Old_Password:='';
+  sql:='select * from  userInfo where UserName= '''+UpperCase(Name)+'''';
+ try
+   FAdoDataSet1.Close ;
+   self.FAdoDataSet1.CommandText :=sql;
+   if FAdoDataSet1.Open  then  begin
+      if FAdoDataSet1.RecordCount >0 then begin
+         User_Old_Password:=FAdoDataSet1.FieldByName('User_Password').AsString;
+         Edit_Old_Password.Enabled :=True;
+         if FAdoDataSet1.FieldByName('User_Type').AsInteger=1 then  begin
+            UserType:='1';
+         end else begin
+            UserType:='2';
+         end;
+         Rad_Admin.Checked :=false;
+         Rad_Gener.Checked :=False;
+         UserName1:=Name;
+         Result:=True;
+      end ;
+   end;
+ finally
+   FAdoDataSet1.Close ;
+ end;
+
+end;
+
+procedure TUser_Manager.SetButEnabled(Value: Boolean);
+begin
+   But_Klqr.Enabled :=Value;
+   Edit_Klqr.Enabled :=Value;
+end;
+
+procedure TUser_Manager.SetEditEnabled(Value: Boolean);
+begin
+     Edit_UserName.Enabled:=Value ;
+     Edit_Password1.Enabled:=Value ;
+     Edit_Password2.Enabled:=Value ;
+     Edit_old_Password.Enabled:=Value ;
+end;
+
+end.

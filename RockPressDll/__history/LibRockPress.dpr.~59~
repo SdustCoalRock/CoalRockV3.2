@@ -1,0 +1,66 @@
+library LibRockPress;
+
+{ Important note about DLL memory management: ShareMem must be the
+  first unit in your library's USES clause AND your project's (select
+  Project-View Source) USES clause if your DLL exports any procedures or
+  functions that pass strings as parameters or function results. This
+  applies to all strings passed to and from your DLL--even those that
+  are nested in records and classes. ShareMem is the interface unit to
+  the BORLNDMM.DLL shared memory manager, which must be deployed along
+  with your DLL. To avoid using BORLNDMM.DLL, pass string information
+  using PChar or ShortString parameters. }
+
+uses
+  System.SysUtils,
+  System.Classes,
+  uRockPressClass in 'uRockPressClass.pas',
+  uIRockPress in '..\UsedForm\uIRockPress.pas',
+  SQLite3 in '..\PublicSysForm\SQLite3.pas',
+  sqlite3udf in '..\PublicSysForm\sqlite3udf.pas',
+  SQLiteTable3 in '..\PublicSysForm\SQLiteTable3.pas',
+  uMainFun in 'UClass\uMainFun.pas',
+  Lu_Public_BasicModual in '..\PublicSysForm\Lu_Public_BasicModual.pas',
+  UMainDataModule in '..\PublicSysForm\UMainDataModule.pas' {DataModule1},
+  uLuDataAdo in '..\PublicSysForm\uLuDataAdo.pas',
+  uDisPoseData in 'UClass\uDisPoseData.pas',
+  mysql in '..\PublicSysForm\mysql.pas',
+  uLuSqliteDealWith in '..\PublicSysForm\uLuSqliteDealWith.pas',
+  RockPressBasicClass in '..\PublicSysForm\RockPressBasicClass.pas',
+  uBatInputRockData in 'UForm\uBatInputRockData.pas' {Form_BatInPutData},
+  MakeDataRule in 'UForm\MakeDataRule.pas' {Form_MakeRule},
+  UMakeRuleClass in 'UClass\UMakeRuleClass.pas',
+  PStope_GzmGuidClass in '..\PublicSysForm\PStope_GzmGuidClass.pas',
+  StopWatch in '..\PublicSysForm\StopWatch.pas',
+  UFormEditPressData in 'UForm\UFormEditPressData.pas' {Edit_PressDataForm},
+  uDrawGraphClass in '..\PublicSysForm\uDrawGraphClass.pas',
+  UEditFootageDateTime in 'UForm\UEditFootageDateTime.pas' {uEditFootageDate},
+  UEditRockDataMemo in 'UForm\UEditRockDataMemo.pas' {FormEditRockDataMemo},
+  UFormModifyJinDao in 'UForm\UFormModifyJinDao.pas' {ModifyJinDao_From},
+  UGraphLineClass in 'UClass\UGraphLineClass.pas',
+  RockPresstool in 'UForm\RockPresstool.pas' {FormPressTool},
+  uDrarLineGraph in 'UClass\uDrarLineGraph.pas',
+  UForm_ContourGraph in 'UForm\UForm_ContourGraph.pas' {Form_ContourGraph},
+  UForm_LineGraph in 'UForm\UForm_LineGraph.pas' {Form_LineGraph},
+  UForm_Brand_Bar in 'UForm\UForm_Brand_Bar.pas' {Form_Band_Bar},
+  UForm_StepResult in 'UForm\UForm_StepResult.pas' {Form_StepResult},
+  UICallPstope in '..\UsedForm\UICallPstope.pas',
+  UFormWait in '..\PublicSysForm\UFormWait.pas' {FormWait},
+  RockPressReport in 'UForm\RockPressReport.pas',
+  UIWinFrame in '..\UsedForm\UIWinFrame.pas',
+  UForm_MoveSupportGraph in 'UForm\UForm_MoveSupportGraph.pas' {UForm_MoveSupport},
+  UForm_phaseGraph_Tongji in 'UForm\UForm_phaseGraph_Tongji.pas' {Form_TongJIGraph},
+  UForm_ThreeDimGraph in 'UForm\UForm_ThreeDimGraph.pas' {Form_ThreeGraph},
+  unWord_Lu in '..\PublicSysForm\unWord_Lu.pas',
+  UPressureGraph in '..\WinFormDll\uForm\UPressureGraph.pas' {DrawBmp_From};
+
+{$R *.res}
+function TCallRockPress:TClassStateMent_RockPress;
+  begin
+      Result:=TBodyClass_RockPress;
+  end;
+
+exports
+   TCallRockPress;
+
+begin
+end.

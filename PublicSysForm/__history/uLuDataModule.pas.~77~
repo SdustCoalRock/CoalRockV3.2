@@ -1,0 +1,885 @@
+unit uLuDataModule;
+
+interface
+
+uses
+  Windows, SysUtils, Classes, Messages, Forms, StdCtrls, ExtCtrls,Vcl.Graphics,
+  ComCtrls ,math,MySQLDataSet,COMobj,SQLiteTable3,ActiveX,Dialogs,StrUtils;
+
+type
+
+
+  TPublicDataModule =class (TObject)
+  private
+    //变量
+
+        SQLiteName:string ;//
+        EXDataType:string;//外部数据库类型
+         //全局数据库表名
+        MYSQLDataBaseName:String;
+        inMainPath:string;
+  protected
+        function getpath :string;
+        procedure SetDataBaseName(Value:string);
+        function GetDataBaseName:string;
+        function GetMainPath:String;
+        procedure SetMainPath(Value:string);
+  public
+      //组件
+        EXDataIP,ExUser,EXPassword,Port:String;
+        Connected:Boolean; //判断数据库连接是否成功
+     // 外部数据库连接
+        ExConn: TMySqlConnection;
+
+        //SQL数据库连接
+        Maindb: TSQLiteDatabase;
+        MainDBpath: string;
+        UseFormName,i_kid:string;  // Mc Form use
+
+        Connstring:string;
+        StatUsBarRightStr:String;
+
+        // 函数与方法
+        constructor Create;
+        destructor Destroy; override;
+        function initsqliteData:Boolean;  // 初始化sqllit 数据库
+        procedure SetSqliteName(Value:string);
+        function SetLinkDatabase(MinPath,DName: string):Boolean; // connected sqlite
+        procedure SetExDataType(Value:string);
+        function SetExDBaseInfo(sIP,sUser,sPass:string):Boolean;
+        function GetExDataType:String;
+        procedure SetMySqlPort(Value:string);
+        function isExsitMySql(DataBaseName:string):Boolean;
+        function isExsitSQlServer(DataBaseName:string):Boolean;
+        function isExsitAccess(Path,DataBaseName:string):Boolean;
+        //创建数据库
+        function TestMySql(uDType:string):Boolean;
+        function TestServer(uDType:string):Boolean;
+        function CreateDatabase(uDType,IP,User,Pass,Path:string):Boolean;
+        function ConnectedData(uDType,Name:string):Boolean;
+        function GetSqlServerLocalPath:string;
+        //创建数据表
+        function CreateMySqlTable(xl,gzmName,bh:string):Boolean; //xl=1 代表插入基本表，xl=2 代表插入工作面的再生表   xl=3 插入带编号的数据表
+        function CreateServerTable(xl,gzmName,bh:string):Boolean; //xl=1 代表插入基本表，xl=2 代表插入工作面的再生表  xl=3 插入带编号的数据表
+        function CreateAccessTable(xl,gzmName,bh:string):Boolean;
+        function AccessTableisExsit(tableNme:string):Boolean;
+        //转字符串
+        //从数据库读取Unicode的中文编码，解码：
+        function DecodeUtf8Str(const S:UTF8String): WideString; var lenSrc,lenDst  : Integer;
+
+        //判断数据表的存在
+        function JudgeTableIsExists(TableName:string):boolean;
+        procedure InsertProcessLog(GTime:Tdatetime;ProcessType,gzmName:string;Supbh,DNumber:integer;
+                  Etime:string;Succeed:Boolean;safteyIn:integer;Safteybh:integer);
+        //
+        function SplitString(const source, ch: string): TStringList;    //2016-5-30   截取字符串
+        procedure ComboList(Combo:TComboBox;sql,str1,str2,str3:AnsiString);//2016-5-31 sqllite读取数据
+        // 界面控制函数
+        procedure InitStatusBar(StatusBar: TStatusBar);
+
+        property DataBaseName:String read GetDataBaseName write SetDataBaseName;
+        property ExMainPath:String  read GetMainPath write SetMainPath;
+       // 存入与读取图片文件，存入SQLIT 数据库中  ImageStore数据表
+        function GetBMPToSQlite(FileName,DataType:string;BMap:TBitMap):Boolean;
+        function SaveBmpToSqlite(FileName:string;DataType:String;FS: TFileStream):Boolean;
+  end;
+
+implementation
+
+
+
+{ TPublicDataModule }
+
+uses pngimage;
+
+
+
+function TPublicDataModule.AccessTableisExsit(tableNme: string): Boolean;
+var
+ sql:string;
+ MyAdoData:TMyDAtaSet;
+begin
+  try
+     Result:=false;
+     MyAdoData:=TMyDataSet.Create(nil);
+     MyAdoData.MySqlConnection :=Exconn;
+     sql:= 'SELECT MSysObjects.Name FROM MSysObjects WHERE Name= '''+tableNme+''' ';
+     MyAdoData.CommandText :=sql;
+     if MyAdoData.Open  then
+        if MyAdoData.RecordCount >0 then  result:=true ;
+     MyAdoData.Close ;
+  finally
+    MyAdoData.Free ;
+  end;
+end;
+
+procedure TPublicDataModule.ComboList(Combo: TComboBox; sql, str1, str2,
+  str3: AnsiString);
+var
+     t_s1,t_s2,t_s3,S_tmp:AnsiString;
+     sltb1,sltb2: TSQLIteTable;
+     CTsql,wStr:string;
+     TableName:string;
+begin
+    Combo.Clear ;
+
+     sltb1:= Maindb.GetTable(UTF8Encode(sql));
+     while not sltb1.eof do
+       begin
+           s_tmp:='';
+           if str1<>'' then
+             begin
+               t_s1:=Trim(utf8decode(sltb1.FieldByName[str1]));
+               s_tmp:=t_s1;
+
+             end;
+           if str2<>'' then
+            begin
+               t_s2:=Trim(utf8decode(sltb1.FieldByName[str2]));
+
+               s_tmp:=s_tmp+'_'+t_s2;
+            end;
+           if str3<>'' then
+             begin
+               t_s3:=Trim(utf8decode(sltb1.FieldByName[str3])) ;
+
+               s_tmp:=s_tmp+'_'+t_s3;
+
+             end;
+
+           combo.Items.Add(s_tmp);
+           sltb1.Next ;
+       end;
+    sltb1.Free ;
+    if combo.Items.Count >0 then
+       combo.ItemIndex :=0;
+end;
+
+function TPublicDataModule.ConnectedData(uDtype, Name: string): Boolean;
+var
+   sConn:string;
+begin
+      if Port='' then  Port:='3307';
+
+      if EXConn.ServerConnected then  EXConn.Close ;
+      uDtype:=UpperCase(uDtype);
+      Result:=false; Connected:=false;
+     // if ExConn.Connected then  ExConn.Close;
+      if (uDtype= 'SQLSERVER') or(uDtype= 'SQL SERVER') then  begin
+          EXConn.SetDataBaseType(uDtype);
+          sConn    := 'Provider=SQLOLEDB.1;Persist Security Info=True;Connect   Timeout=30 '
+                    + ';Data Source='+ExDataIP
+                    + ';Initial Catalog='+Name
+                    + ';User ID =' +ExUser
+                    + ';Password='+ ExPassword
+                    + ';Packet Size='+InttoStr(4096)   //一个Integer值，一般是4096
+                    + ';';
+      end else if (uDtype= 'MYSQL') or (uDtype= 'MY SQL') then  begin
+           EXConn.SetDataBaseType('MYSQL');
+           sConn   :='DRIVER={MySQL ODBC 3.51 Driver}'
+                    + ';SERVER='+ExDataIP
+                    + ';PORT='+Port
+                    + ';DATABASE='+Name
+                    + ';USER='+ExUser
+                    + ';PASSWORD='+ExPassword
+                    + ';OPTION=3'
+                    + ';' ;
+      end else if (uDtype= 'ACCESS') then  begin
+           EXConn.SetDataBaseType('ACCESS');
+           sConn   :='Provider=Microsoft.Jet.OLEDB.4.0'
+                    + ';User ID=Admin'
+                    + ';Password='
+                    + ';Data Source='+inMainPath+'Data\'+DataBaseName+'.mdb'
+                    + ';Mode=Share Deny None '
+                    + ';Extended Properties = ""'
+                    + ';';
+      end;
+
+
+      try
+         Connstring:=sConn;
+         EXConn.ConnectStr:= sConn;
+        if  EXConn.Open(ExDataIP,port,ExUser,ExPassword,Name) then  begin
+            Result:=true; Connected:=true;
+        end;
+
+      except
+         Result:=False; Connected:=False;
+      end;
+       // 2016
+
+end;
+
+
+constructor TPublicDataModule.Create;
+begin
+  inherited;
+       SQLiteName:='';
+       ExConn:= TMySqlConnection.Create(nil);
+       Connected:=false;
+       //
+       inMainPath:=getpath;
+       StatUsBarRightStr:='山东科技大学宋振骐院士团队研发 CopyRight (2016-2020)';
+end;
+
+
+function TPublicDataModule.CreateAccessTable(xl, gzmName, bh: string): Boolean;
+var
+  sltb1,sltb2: TSQLIteTable;
+  CTsql,wStr:string;
+  TableName:string;
+  ExCommand1:TMYCommand ;
+begin
+    Result:=false;
+    ExCommand1:=TMyCommand.Create(nil);
+    ExCommand1.MySqlConnection :=ExConn;
+
+try
+     sltb1:=Maindb.GetTable('select * from createtable where ' +
+                            '  used =1 and  creatleg='+xl);
+     while not sltb1.EOF  do  begin
+          //
+           if xl='1' then  begin
+              TableName:=DecodeUtf8Str(sltb1.FieldByName['CreateTableName']) ;
+           end else if  xl='2' then  begin
+              TableName:='D_'+gzmname+'_'+UPPerCase(DecodeUtf8Str(sltb1.FieldByName['CreateTableName'])) ;
+           end else if xl='3' then begin
+              TableName:='D_'+gzmname+'_'+bh+'_'+UPPerCase(DecodeUtf8Str(sltb1.FieldByName['CreateTableName'])) ;
+           end;
+
+          if self.AccessTableisExsit(TableName)  then   begin
+
+              ExCommand1.CommandText:=' DROP TABLE '+TableName ;
+              ExCommand1.Execute ;
+          end;
+          CTsql:='' ;
+          CTsql:=CTsql+ '  create table '+ TableName  +' ( ';
+
+         sltb2:= Maindb.GetTable('select * from createfields '
+             + ' where CreateTableid= '+sltb1.FieldByName['tableid']+ ' and fieldleg=1 ');
+
+
+            while not sltb2.eof do  begin
+                CTsql:=CTsql+ sltb2.FieldByName['fieldname']  +'  ';
+
+                if  (upperCase(sltb2.FieldByName['fieldtype'])='INTEGER' )  and
+                    (sltb2.FieldByName['primarykey']='1' )then  begin
+                      CTsql:=CTsql+ 'Counter primary Key ' ;
+                end else begin
+                     CTsql:=CTsql+  '  '+ sltb2.FieldByName['fieldtype'] ;
+                end;
+                if  upperCase(sltb2.FieldByName['fieldtype'])='VARCHAR' then
+                      CTsql:=CTsql+'(' +sltb2.FieldByName['length']+')';
+                if sltb2.FieldByName['isNull']='1' then    CTsql:=CTsql+ ' not null  ';
+
+                CTsql:=CTsql+',';
+                sltb2.Next ;
+            end;
+            CTsql:=LeftStr(CTsql,length(CTsql)-1);
+
+            CTsql:=CTsql+')' ;
+            sltb2.Free ;
+
+             ExCommand1.CommandText:=CTsql;
+             ExCommand1.Execute ;
+        sltb1.Next ;
+     end;
+        sltb1.Free;
+
+  finally
+    Result:=true;
+    ExCommand1.Free ;
+  end;
+
+end;
+
+function TPublicDataModule.CreateDatabase(uDType, IP, User, Pass,
+  Path: string): Boolean;
+var
+  sql:string;
+  ExCommand1:TMYCommand ;
+  SFile,TFile:wideString;
+begin
+    Result:=false;
+    ExCommand1:=TMyCommand.Create(nil);
+    ExCommand1.MySqlConnection :=ExConn;
+      try
+        if (uDtype= 'SQLSERVER') or(uDtype= 'SQL SERVER') then  begin
+              ConnectedData(uDType,'master');
+              sql:='if exists(select * from sysdatabases where name='''+MYSQLDataBaseName +''') drop database '+MYSQLDataBaseName;
+              ExCommand1.CommandText:=sql;
+              ExCommand1.Execute ;
+
+
+              sql:= 'if not exists(select * from sysdatabases where name='''+MYSQLDataBaseName +''')'
+                   + ' create database '+ MYSQLDataBaseName
+                   +' on (  name=''' +MYSQLDataBaseName+'_Data'','  // -- 主数据文件的逻辑名称
+                   +' filename= '''+path+MYSQLDataBaseName +'_data.mdf'','  // -- 主数据文件的物理名称
+                   +' size=10,FileGrowth=15%)'
+                   +' log on (name='''+MYSQLDataBaseName+'_log'','
+                   +' filename= '''+path+MYSQLDataBaseName +'_log.ldf'','  // -- 主数据文件的物理名称
+                   +' size=10,FileGrowth=15%)';
+               ExCommand1.CommandText:=sql;
+               ExCommand1.Execute ;
+
+        end else if (uDtype= 'MYSQL') or (uDtype= 'MYSQL') then  begin
+            ConnectedData(uDType,'mysql');
+            sql:='drop database  if exists  '+MYSQLDataBaseName ;
+               ExCommand1.CommandText:=sql;
+               ExCommand1.Execute ;
+
+             sql:=' Create database  '+MYSQLDataBaseName   ;
+               ExCommand1.CommandText:=sql;
+               ExCommand1.Execute ;
+
+        end else  if (uDtype= 'ACCESS')  then  begin
+             TFile:=DataBaseName +'.mdb';
+             TFile:=Path+'\Data\'+TFile;
+             if (FileExists(TFile)) then  deleteFile( TFile);
+             //强制重建
+             SFile:='RockPress.mdb';
+             SFile:= Path+''+SFile;
+             CopyFile(PWideChar(SFile),PwideChar(TFile),True);
+        end;
+      finally
+         Result:=true;
+         ExCommand1.Free;
+      end;
+end;
+
+//  创建 MYSql 数据表  1 代表插入基本表，2 代表插入工作面的再生表
+function TPublicDataModule.CreateMySQlTable(xl,gzmName,bh:string): Boolean;
+var
+  sltb1,sltb2: TSQLIteTable;
+  CTsql,wStr,indexStr:string;
+  TableName:string;
+  ExCommand1:TMYCommand ;
+begin
+    Result:=false;
+    ExCommand1:=TMyCommand.Create(nil);
+    ExCommand1.MySqlConnection :=ExConn;
+   // wStr:='确定要创建新数据表么？老数据表中数据将完全被覆盖！'+#13#13+'建议备份后再进行创建！';
+    //if xl <>'3' then
+   //     if MessageBox(0, Pchar(wstr),'提示',MB_YESNO + MB_DEFBUTTON2+ MB_ICONQUESTION) = IDNO then exit;
+    // click Yes  continue
+     ExCommand1.MySqlConnection.BeginTrans;
+  try
+     sltb1:=Maindb.GetTable('select * from createtable where ' +
+                            '  used =1 and  creatleg='+xl+' order by tableid ');
+     while not sltb1.EOF  do  begin
+          //
+           if xl='1' then  begin
+              TableName:=UPPerCase(DecodeUtf8Str(sltb1.FieldByName['CreateTableName'])) ;
+           end else if  xl='2' then  begin
+              TableName:='D_'+gzmname+'_'+UPPerCase(DecodeUtf8Str(sltb1.FieldByName['CreateTableName'])) ;
+           end else if xl='3' then begin
+              TableName:='D_'+gzmname+'_'+bh+'_'+UPPerCase(DecodeUtf8Str(sltb1.FieldByName['CreateTableName'])) ;
+           end;
+
+         ExCommand1.CommandText:='drop table  if  exists '+ TableName;
+         ExCommand1.Execute ;
+         CTsql:='create table '+ TableName  +' ( ';
+
+         sltb2:= Maindb.GetTable('select * from createfields '
+             + ' where CreateTableid= '+sltb1.FieldByName['tableid']+ ' and fieldleg=1  order by id ');
+
+        // if EXDataType='' then
+         indexStr:='';
+           
+            while not sltb2.eof do  begin
+                CTsql:=CTsql+ sltb2.FieldByName['fieldname']
+                      +'  '+ sltb2.FieldByName['fieldtype'] ;
+
+                if  upperCase(sltb2.FieldByName['fieldtype'])='VARCHAR' then
+                      CTsql:=CTsql+'(' +sltb2.FieldByName['length']+')';
+                if sltb2.FieldByName['isNull']='1' then    CTsql:=CTsql+ ' not null  ';
+                if sltb2.FieldByName['primarykey']='1' then CTsql:=CTsql+ ' primary key Auto_increment ';
+                if sltb2.FieldByName['indexStr']='1' then indexStr:=indexStr+ ' index ('+sltb2.FieldByName['fieldname']+') ,';
+                CTsql:=CTsql+',';
+                sltb2.Next ;
+            end;
+            CTsql:=CTsql+indexStr;
+            CTsql:=LeftStr(CTsql,length(CTsql)-1);  
+            CTsql:=CTsql+')' ;
+            sltb2.Free ;
+
+            CTsql:=CTsql+' CHARACTER SET utf8 COLLATE utf8_general_ci   ';
+            ExCommand1.CommandText:=CTsql;
+            ExCommand1.Execute ;
+        sltb1.Next ;
+     end;
+        sltb1.Free;
+  except
+      ExCommand1.MySqlConnection.RollbackTrans;
+      exit;
+  end;
+      ExCommand1.MySqlConnection.CommitTrans;
+      ExCommand1.Free;
+      Result:=true;
+end;
+
+//创建 Server 数据表  1 代表插入基本表，2 代表插入工作面的再生表
+function TPublicDataModule.CreateServerTable(xl,gzmName,bh:string): Boolean;
+var
+  sltb1,sltb2: TSQLIteTable;
+  CTsql,wStr:string;
+  TableName:string;
+  SprimaryKey:string;
+  ExCommand1:TMYCommand ;
+begin
+    Result:=false;
+    ExCommand1:=TMyCommand.Create(nil);
+    ExCommand1.MySqlConnection :=ExConn;
+
+try
+     SprimaryKey:='';
+     sltb1:=Maindb.GetTable('select * from createtable where ' +
+                            '  used =1 and  creatleg='+xl);
+     while not sltb1.EOF  do  begin
+          //
+           if xl='1' then  begin
+              TableName:=DecodeUtf8Str(sltb1.FieldByName['CreateTableName']) ;
+           end else if  xl='2' then  begin
+              TableName:='D_'+gzmname+'_'+UPPerCase(DecodeUtf8Str(sltb1.FieldByName['CreateTableName'])) ;
+           end else if xl='3' then begin
+              TableName:='D_'+gzmname+'_'+bh+'_'+UPPerCase(DecodeUtf8Str(sltb1.FieldByName['CreateTableName'])) ;
+           end;
+
+          // WHERE   TABLE_NAME = '[table_name]') DROP TABLE  [table_name]
+           ExCommand1.CommandText:=' IF EXISTS ( SELECT  TABLE_NAME FROM INFORMATION_SCHEMA.TABLES '+
+                                   ' WHERE   TABLE_NAME ='''+TableName+''' ) DROP TABLE '+TableName ;
+           //ShowMessage(ExCommand1.CommandText);
+           ExCommand1.Execute ;
+
+          CTsql:=' use ' + DataBaseName  ;
+          CTsql:=CTsql+ '  create table '+ TableName  +' ( ';
+
+         sltb2:= Maindb.GetTable('select * from createfields '
+             + ' where CreateTableid= '+sltb1.FieldByName['tableid']+ ' and fieldleg=1 ');
+
+
+            while not sltb2.eof do  begin
+                CTsql:=CTsql+ sltb2.FieldByName['fieldname']
+                      +'  '+ sltb2.FieldByName['Server_fieldtype'] ;
+
+                if  upperCase(sltb2.FieldByName['Server_fieldtype'])='VARCHAR' then
+                      CTsql:=CTsql+'(' +sltb2.FieldByName['length']+')';
+                if  upperCase(sltb2.FieldByName['Server_fieldtype'])='DECIMAL' then
+                      CTsql:=CTsql+'(20,6)';
+                if sltb2.FieldByName['isNull']='1' then    CTsql:=CTsql+ ' not null  ';
+                if sltb2.FieldByName['primarykey']='1' then  begin
+                    CTsql:=CTsql+ ' IDENTITY (1,1) ';
+                    SprimaryKey:= ' primary Key ('  +sltb2.FieldByName['fieldname']+')';
+                end;
+
+
+                CTsql:=CTsql+',';
+                sltb2.Next ;
+            end;
+            CTsql:=LeftStr(CTsql,length(CTsql)-1);
+            if SprimaryKey <>'' then CTsql :=CTsql+ SprimaryKey;
+
+            CTsql:=CTsql+')' ;
+            sltb2.Free ;
+
+             ExCommand1.CommandText:=CTsql;
+             ExCommand1.Execute ;
+        sltb1.Next ;
+     end;
+        sltb1.Free;
+
+  finally
+    Result:=true;
+    ExCommand1.Free ;
+  end;
+end;
+
+
+function TPublicDataModule.DecodeUtf8Str(const S: UTF8String): WideString;
+var
+    lenSrc,lenDst  : Integer;
+begin
+      lenSrc  := Length(S);
+      if(lenSrc=0)then Exit;
+      lenDst  := MultiByteToWideChar(CP_UTF8, 0, Pointer(S),lenSrc, nil, 0);
+      SetLength(Result, lenDst);
+      MultiByteToWideChar(CP_UTF8, 0, Pointer(S),lenSrc, Pointer(Result), lenDst);
+end;
+
+destructor TPublicDataModule.Destroy;
+begin
+
+     FreeAndNil(Maindb) ;
+//     FreeAndNil(ExCommand1);
+//     FreeAndNil(ExCommand2);
+//     FreeAndNil(ExDataSet1);
+//     FreeAndNil(ExDataSet2);
+     FreeAndNil(ExConn);
+     FreeAndNil(ExConn);
+     inherited Destroy;
+end;
+
+function TPublicDataModule.GetBMPToSQlite(FileName,DataType:string;BMap:TBitMap):Boolean;
+Var
+    SQL,ExtName:String;
+    sltb1: TSQLIteTable;
+    ms:TMemoryStream;
+    Png:TPngObject;
+begin
+    Result:=True;
+    ExtName:=UpperCase(Extractfileext(FileName));
+    sql:= ' SELECT * from ImageStore where imageFileName = '''+Trim(FileName)+'''' +
+          ' and DataType= '+ DataType;
+    try
+         sltb1:=Maindb.GetTable(sql);
+         ms := sltb1.FieldAsBlob(sltb1.FieldIndex['imageBlob']);
+         ms.Position := 0;
+         if ExtName='.PNG' then begin
+           Png:=TPngObject.Create;
+           png.LoadFromStream(ms);
+           Bmap.Assign(PNG);
+           Png.Free ;
+         end else if ExtName='.BMP' then begin
+           Bmap.LoadFromStream(ms);
+         end;
+    finally
+       Result:=True;
+       sltb1.Free;
+    end;
+
+end;
+
+function TPublicDataModule.GetDataBaseName: string;
+begin
+   Result:=MYSQLDataBaseName;
+end;
+
+function TPublicDataModule.GetExDataType: String;
+begin
+      Result:=ExDataType;
+end;
+
+function TPublicDataModule.GetMainPath: String;
+begin
+    Result:=inMainPath;
+end;
+
+function TPublicDataModule.getpath: string;
+var
+   ModuleName,dllpath:WideString;
+   i:integer;
+begin
+          SetLength(ModuleName, 255);
+          GetModuleFileName(HInstance, PChar(ModuleName), Length(ModuleName));
+          dllPath:=Trim(PChar(ModuleName)) ;
+          i:=Pos('\',ReverseString(dllPath));
+
+          dllPath:=Copy(dllPath,1,Length(dllPath)-i+1);
+          Result:=dllPath;
+end;
+
+function TPublicDataModule.GetSqlServerLocalPath: string;
+var
+  sql,sOut:string;
+  ExDataSet1:TMyDataSet;
+  i:integer;
+begin
+    Result:='';
+    ExDataSet1:=TMYDataSet.Create(nil);
+    ExDataSet1.MySqlConnection :=ExConn;
+    sql:=' select database_id,name,physical_name AS CurrentLocation,state_desc,size from sys.master_files '+
+          ' where database_id=db_id(N''master'')';
+    ExDataSet1.Close ;
+     try
+          ExDataSet1.CommandText :=sql;
+          if ExDataSet1.Open  then   begin
+             sOut:= ExDataSet1.FieldByName('CurrentLocation').AsString;
+          end;
+     finally
+        ExDataSet1.Close ;
+        ExDataSet1.Free;
+     end;
+    if sOut<>'' then   begin
+       i:=Pos('\',ReverseString(sOut));
+       sOut:=Copy(sOut,1,Length(sOut)-i+1);
+       Result:=sOut;
+    end;
+
+end;
+
+// end function
+
+function TPublicDataModule.initsqliteData: Boolean;
+begin
+       //判断数据库文件
+         Result:=true;
+          if SqliteName='' then  SqliteName := 'RockPressure.db';
+          if not SetLinkDatabase(inMainPath,SqliteName) then  begin
+             Result:=false;
+          end;
+end;
+
+
+
+procedure TPublicDataModule.InitStatusBar(StatusBar: TStatusBar);
+var
+  S_left:integer;
+begin
+    S_left:=Round(StatusBar.Width/3);
+
+    StatusBar.Panels[0].Width := S_left;
+    StatusBar.Panels[1].Width := round(S_left*3/5);
+   // StatusBar.Panels[2].Width := S_left;
+    StatusBar.Panels[0].Alignment :=taLeftJustify;
+    StatusBar.Panels[2].Alignment :=taRightJustify;
+
+    StatusBar.Panels[2].Text:=  StatUsBarRightStr  ;
+end;
+
+procedure TPublicDataModule.InsertProcessLog(GTime: Tdatetime; ProcessType,GzmName: string;
+  Supbh,DNumber: integer; Etime: string; Succeed:Boolean;safteyIn, Safteybh: integer);
+var
+   sql:string;
+   Suc:string;
+   Excommand1:TMyCommand;
+begin
+       Excommand1:=TMYCommand.Create(nil);
+       Excommand1.MySqlConnection :=self.ExConn;
+     try
+       if Succeed then suc:='1' else suc:='0';
+
+       sql:='insert into processlog (generatetime,Processtype,GzmName,supportbh,datanumber,elapsedtime,succeed,safetyinfo,safetybh )' +
+            ' values ('''+ FormatDateTime( 'yyyy-mm-dd hh:nn:ss',GTime)+''',''' +
+            ProcessType+ ''','''+GzmName+''',' + IntToStr(Supbh)+',' +
+            IntToStr(DNumber) +',' +Etime +','+Suc+',' +
+            intTostr(safteyIn )+','+ intToStr(Safteybh) +')' ;
+       Excommand1.CommandText :=sql;
+       ExCommand1.Execute ;
+     finally
+       Excommand1.Free ;
+     end;
+end;
+
+
+
+function TPublicDataModule.isExsitAccess(Path, DataBaseName: string): Boolean;
+var
+  fileName,DirName :Ansistring;
+  hFile:integer;
+begin
+    DirName:=path+'\Data\';
+    if not DirectoryExists(DirName) then begin
+       ForceDirectories(DirName);
+    end;
+   fileName:=Ansistring(DataBaseName) +'.mdb';
+   fileName:=DirName+fileName;
+   if (FileExists(fileName)) then  Result:=true
+      else   Result:=False;
+
+
+end;
+
+function TPublicDataModule.isExsitMySql(DataBaseName: string): Boolean;
+var
+  sql:string;
+  ExDataSet1:TMyDataSet;
+begin
+    Result:=False;
+    ExDataSet1:=TMYDataSet.Create(nil);
+    ExDataSet1.MySqlConnection :=ExConn;
+     sql:='select *  from information_schema.schemata where schema_name='''+DataBaseName+'''';
+     ExDataSet1.Close ;
+     try
+          ExDataSet1.CommandText :=sql;
+          if ExDataSet1.Open  then
+            if ExDataSet1.RecordCount >0 then
+                 Result:=true;
+
+     finally
+          ExDataSet1.Close ;
+          ExDataSet1.Free ;
+     end;
+end;
+
+function TPublicDataModule.isExsitSQlServer(DataBaseName: string): Boolean;
+var
+  sql,StrData:string;
+  ExDataSet1:TMyDataSet;
+begin
+    Result:=False;
+    ExDataSet1:=TMYDataSet.Create(nil);
+    ExDataSet1.MySqlConnection :=ExConn;
+    sql:='select name From master.dbo.sysdatabases';
+     ExDataSet1.Close ;
+     try
+          ExDataSet1.CommandText :=sql;
+          if ExDataSet1.Open  then
+           while not ExDataSet1.Eof do    begin
+              if Uppercase(ExDataSet1.FieldByName('Name').AsString )<>'MASTER' then
+              if Uppercase(ExDataSet1.FieldByName('Name').AsString )<>'TEMPDB' then
+                  if Uppercase(ExDataSet1.FieldByName('Name').AsString )<>'MODEL' then
+                     if Uppercase(ExDataSet1.FieldByName('Name').AsString )<>'MSDB' then
+                        if Uppercase(ExDataSet1.FieldByName('Name').AsString )=Uppercase(DataBaseName) then begin
+                           Result:=true;
+                           break;
+                        end;
+              ExDataSet1.Next;
+
+           end;
+
+     finally
+          ExDataSet1.Close ;
+          FreeAndNil(ExDataSet1);
+     end;
+
+end;
+
+function TPublicDataModule.JudgeTableIsExists(TableName: string): boolean;
+ var
+   sql:string;
+begin
+//       if (ExDatatype= 'MYSQL') or (ExDatatype= 'MY SQL')   then  begin
+//           sql:='SELECT  id from  '+TableName +'  limit 1';
+//       end  else if (ExDatatype= 'SQLSERVER') or (ExDatatype= 'SQL SERVER')   then  begin
+//           sql:='Select Name from sysobjects where xtype=''u'' and name ='''+TableName +'''';
+//       end;
+//       try
+//          ExDataSet2.Close;
+//          ExDataSet2.CommandText :=sql;
+//          ExDataSet2.Open ;
+//          if ExDataSet2.RecordCount>0 then   Result:=true
+//           else  Result:=false;
+//           ExDataSet2.Close;
+//       except
+//          result:=false;
+//          ExDataSet2.Close;
+//          exit;
+//       end;
+
+      Result:=true;
+end;
+
+
+
+function TPublicDataModule.SaveBmpToSqlite(FileName, DataType: String;
+         FS: TFileStream): Boolean;
+Var
+    SQL:String;
+    sltb1: TSQLIteTable;
+    bmap:TBitMap;
+
+    id:string;
+begin
+   Result:=true;
+  try
+   try
+       sql:= ' insert into ImageStore (imageFileName,DataType,imageFileSizeBytes) values('''+
+                FileName+''','+DataType+','+intToStr(FS.Size)+')';
+        Maindb.ExecSQL(sql);
+        sql:= ' SELECT image_id from ImageStore where imageFileName = '''+FileName+'''' +
+              ' and DataType=' + DataType;
+        sltb1:=Maindb.GetTable(sql);
+        id:=sltb1.FieldByName['Image_id'];
+        Maindb.UpdateBlob('UPDATE ImageStore set imageBlob = ? WHERE image_id = '+id,FS);
+   except
+     Result:=False;
+   end;
+  finally
+     sltb1.Free ;
+  end;
+end;
+
+procedure TPublicDataModule.SetDataBaseName(Value: string);
+begin
+     MYSQLDataBaseName:=Value;
+end;
+
+procedure TPublicDataModule.SetExDataType(Value: string);
+begin
+     ExDataType:=Value;
+end;
+
+function TPublicDataModule.SetExDBaseInfo(sIP, sUser, sPass: string): Boolean;
+begin
+     EXDataIP:=sIP;
+     ExUser:=sUser;
+     EXPassword:=sPass;
+end;
+
+function TPublicDataModule.SetLinkDatabase(MinPath,DName: string): Boolean;
+var
+   i:integer;
+   dPath:String;
+begin
+         Result:=true;
+         i:=pos('.', DName);
+         if i>0  then begin
+               MainDBPath :=MinPath +DName;
+         end else begin
+               MainDBPath :=MinPath +DName+ '.db';
+         end;
+        // ShowMessage(MainDBPath);
+         if not FileExists(MainDBPath) then begin
+                Result:=false;
+                exit;
+          end;
+        Maindb := TSQLiteDatabase.Create(MainDBPath);
+
+end;
+
+
+procedure TPublicDataModule.SetMainPath(Value: string);
+begin
+    inMainPath:=Value;
+end;
+
+procedure TPublicDataModule.SetMySqlPort(Value: string);
+begin
+    Port:=Value;
+end;
+
+procedure TPublicDataModule.SetSqliteName(Value: string);
+begin
+    SQLiteName:=Value;
+end;
+
+function TPublicDataModule.SplitString(const source, ch: string): TStringList;
+var
+  temp, t2: string;
+  i: integer;
+begin
+  result := TStringList.Create;
+  temp := source;
+  i := pos(ch, source);
+  while i <> 0 do
+  begin
+    t2 := copy(temp, 0, i - 1);
+    if (t2 <> '') then
+      result.Add(t2);
+    delete(temp, 1, i - 1 + Length(ch));
+    i := pos(ch, temp);
+  end;
+  result.Add(temp);
+end;
+
+function TPublicDataModule.TestMySql(uDType: string): Boolean;
+begin
+     Result:=false;
+     if ConnectedData(uDType,'MySql') then Result:=true;
+
+end;
+
+function TPublicDataModule.TestServer(uDType: string): Boolean;
+begin
+      Result:=false;
+     if ConnectedData(uDType,'Master') then Result:=true;
+end;
+
+//
+
+
+/////////////////
+// 创建Ini配置对象
+
+
+end.  // end unit

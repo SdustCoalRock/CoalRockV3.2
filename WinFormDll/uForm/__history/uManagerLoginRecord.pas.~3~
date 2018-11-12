@@ -1,0 +1,103 @@
+unit uManagerLoginRecord;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.ImageList, Vcl.ImgList,
+  Vcl.ComCtrls, Vcl.ToolWin, Vcl.Grids, Vcl.StdCtrls,UMainDataModule;
+
+type
+  TForm_ManagerLogin = class(TForm)
+    ToolBar1: TToolBar;
+    AddButton: TToolButton;
+    EditButton: TToolButton;
+    SaveButton: TToolButton;
+    DeleteButton: TToolButton;
+    ExitButton: TToolButton;
+    ImageList1: TImageList;
+    GroupBox1: TGroupBox;
+    TreeView_User: TTreeView;
+    StringGrid_Login: TStringGrid;
+    StatusBar1: TStatusBar;
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+  private
+    { Private declarations }
+     FAdoDataSet1:TMyDataSet;
+     FAdoCommand:TMyCommand;
+    procedure OptionTip(Str:String);
+    procedure SetCellHead; //设置Cell表头
+    procedure FillCell(id:integer); //填充表格
+  public
+    { Public declarations }
+  end;
+
+var
+  Form_ManagerLogin: TForm_ManagerLogin;
+
+implementation
+
+{$R *.dfm}
+
+uses Lu_Public_BasicModual;
+
+procedure TForm_ManagerLogin.FillCell(id: integer);
+var
+   i:integer;
+begin
+      // 清空单元格
+      for i := 1 to  StringGrid_Login.RowCount - 1 do
+          StringGrid_Login.Rows[i].Clear ;
+     self.StringGrid_Login.ColCount :=3;
+     self.StringGrid_Login.RowCount :=6;
+     self.StringGrid_Login.Cells [0,0]:='序号';
+     self.StringGrid_Login.Cells [1,0]:='操作时间';
+     self.StringGrid_Login.Cells [2,0]:='操作命令';
+
+     self.StringGrid_Login.ColWidths[0]:=100;
+     self.StringGrid_Login.ColWidths[1]:=200;
+     self.StringGrid_Login.ColWidths[2]:=StringGrid_Login.Width-300;
+
+end;
+
+procedure TForm_ManagerLogin.FormCreate(Sender: TObject);
+begin
+      FAdoDataSet1:=TMyDataSet.Create(nil);
+
+     FAdoCommand:=TMyCommand.Create(nil);
+     FAdoDataSet1.MySqlConnection:=MainDataModule.ExConn;
+
+     FAdoCommand.MySqlConnection:=MainDataModule.ExConn;
+end;
+
+procedure TForm_ManagerLogin.FormDestroy(Sender: TObject);
+begin
+     {只有发出Free 主类的命令时， 才调用Destory}
+   FreeAndNil(FAdoDataSet1);
+   FreeAndNil( FAdoCommand);
+end;
+
+procedure TForm_ManagerLogin.FormResize(Sender: TObject);
+begin
+    self.StringGrid_Login.ColWidths[2]:=StringGrid_Login.Width-300;
+end;
+
+procedure TForm_ManagerLogin.FormShow(Sender: TObject);
+begin
+   PubLic_Basic.InitStatusBar (self.StatusBar1);
+end;
+
+procedure TForm_ManagerLogin.OptionTip(Str: String);
+begin
+   self.StatusBar1.Panels[0].Text :=str;
+end;
+
+procedure TForm_ManagerLogin.SetCellHead;
+begin
+
+end;
+
+end.

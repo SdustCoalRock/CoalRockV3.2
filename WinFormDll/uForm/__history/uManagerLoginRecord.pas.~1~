@@ -1,0 +1,32 @@
+unit uManagerLoginRecord;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.ImageList, Vcl.ImgList,
+  Vcl.ComCtrls, Vcl.ToolWin;
+
+type
+  TForm2 = class(TForm)
+    ToolBar1: TToolBar;
+    AddButton: TToolButton;
+    EditButton: TToolButton;
+    SaveButton: TToolButton;
+    DeleteButton: TToolButton;
+    ExitButton: TToolButton;
+    ImageList1: TImageList;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form2: TForm2;
+
+implementation
+
+{$R *.dfm}
+
+end.

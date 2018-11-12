@@ -1,0 +1,591 @@
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//<<      文件名：Main_PStope.pas
+//<<      卢国志使用的个人Delphi文件                            <<
+//<<      该文件主要记录了个人函数                   <<
+//<<      创建日期：2018.1.12                                   <<
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+unit Main_PStope;
+
+
+interface
+uses
+  Winapi.Windows, SysUtils, Classes, Messages, Controls, Forms, StdCtrls, ExtCtrls,
+  ComCtrls ,math,Grids,WordXP,COMobj,SQLiteTable3,StrUtils,Vcl.Dialogs, Activex
+  ,PStope_WorKFace,PStope_Immediate,PStope_SupportClass ,PStope_DealWith
+  ,Pstope_ShowWindows, uLuSqliteDealWith
+    ;
+type
+  TEXPstopeClass =class
+  private
+      Create_Public:Boolean;
+      MainPath:WideString;
+      Init_Enabled:Boolean;
+       // 函数
+      function ConfirmReg: WordBool; stdcall;
+      function CreateMainClass:Boolean;
+      procedure FreeMainClass;
+      function  GetMinaPath:widestring;
+
+  public
+      //主要类
+       Ex_Gzm:TG_Stope;     //工作面
+       Ex_zk:Tzk_bore;     //钻孔
+       Ex_imm_r:TImmediate_roof; //直接顶
+       Ex_old:Told_roof;    //老顶
+       Ex_ZhiJia:TZJ_Class;  //支架
+       Ex_Cal_show:TCal_Show; //计算界面
+       MySqliteTable:TSqliteADOData;
+       My_DealWith:TPStope_DealWith;
+
+       SystemLabel:WideString;
+      function  Ex_InitModel(const Gzm, zk,zhijia: WideString;Var Sout:Widestring): Boolean; safecall;
+      function  Init_ZhiJia(const ZJ: WideString): WideString; safecall;
+      function  Get_immediate_roof(Version:string): string ;
+      function  Get_Old_roof(Version:string): string;
+      function  Get_kcjstj(const Version: WideString): WideString; safecall;
+      function  Get_Support_P(Version:string): string ;
+      function  Get_yklh_ctcs(const Version: WideString; width, Hd_wideth,
+                            Hd_heigth: Single): WideString; safecall;
+      function  Get_yklh_fzzh(const Version: WideString): WideString; safecall;
+      function  Get_yklh_JJxy(const Version: WideString;  M_dj, Mzhu_w, T_cong_sj,
+                     N_Speed,YK_Speed,HD_Wh_P,HD_JN_P,Coal_ZH_P: Single): WideString; safecall;
+      function  Get_Zcyl(const Version: WideString; JinChi: Double): WideString;  safecall;
+      function  GetLicensingState(Var UseUnitName:string):Boolean;
+      function  GetZoom(JinChi:double; var X_move_Pix:double):Double;
+
+      property DLLPath:widestring read GetMinaPath ;
+      //系统函数
+      constructor Create;
+      destructor Destroy;
+  end;
+
+
+ var
+  ExPstopeClass:TEXPstopeClass;
+implementation
+
+
+{ TMainForm }
+
+uses Lu_Public_BasicModual, VerFityDataComm;
+
+function TEXPstopeClass.ConfirmReg: WordBool;
+begin
+    { TODO 1 -oluleisoft -c优化修改 : ConfirmReg 函数没有写函数体 }
+   Result:=true;
+end;
+
+constructor TEXPstopeClass.Create;
+begin
+   inherited create;
+   Create_Public:=FALSE;
+    MainPath:=Public_Basic.Get_MyModulePath;
+    SystemLabel:='中国科学院宋振骐院士团队';
+    // 关于全局变量的创建问题
+    if not Assigned(Public_Basic) then begin
+        Public_Basic:=TLu_BasicClass.Create('','serverinfo.dll');
+        Create_Public:=true;
+    end;
+
+
+    {创建主类}
+    CreateMainClass;
+end;
+
+function TEXPstopeClass.CreateMainClass: Boolean;
+{
+  里面涉及的 都是局部变量
+}
+
+begin
+  Result:=True;
+  try
+     if not Assigned(Ex_Gzm) then
+          Ex_Gzm:=TG_Stope.Create ;     //工作面
+     if not Assigned(Ex_zk) then
+          Ex_zk:=Tzk_bore.Create;     //钻孔
+     if not Assigned(Ex_imm_r) then
+          Ex_imm_r:=TImmediate_roof.Create; //直接顶
+     if not Assigned(Ex_old) then
+          Ex_old:=Told_roof.Create;    //老顶
+     if not Assigned(Ex_ZhiJia) then
+          Ex_ZhiJia:=TZJ_Class.Create;  //支架
+     if not Assigned(Ex_Cal_show) then
+          Ex_Cal_show:=TCal_Show.Create; //显示界面面
+     if not Assigned(MySqliteTable) then
+          MySqliteTable:=TSqliteADOData.Create('CoalBasicDataBase.db');
+      if not Assigned(MY_DealWith) then
+          MY_DealWith:=TPStope_DealWith.Create ;     //计算数据类
+  except
+     Result:=False;
+  end;
+end;
+
+destructor TEXPstopeClass.Destroy;
+begin
+    FreeMainClass;
+
+    if Create_Public then  begin
+      if  Assigned(Public_Basic) then
+            FreeAndNil(Public_Basic);
+    end;
+    inherited Destroy;
+end;
+
+function TEXPstopeClass.Ex_InitModel(const Gzm, zk,zhijia: WideString;Var Sout:Widestring): Boolean;
+var
+  sEorr:Widestring;
+begin
+     sEorr:='';
+     Result:=False;
+     Init_Enabled:=False;
+     if not ConfirmReg then  begin
+         Sout:='控件有新版本,请更新！';  exit;
+     end;
+    //取得Dll自身路径
+
+     if  not Ex_Gzm.Init(gzm,sEorr) then   begin
+         Sout:='工作面初始化失败:'+sEorr;  exit;
+     end;
+
+     if not EX_zk.Init(zk,sEorr) then    begin
+         Sout:='钻孔初始化失败:'+sEorr;     exit;
+     end;
+     if not Ex_imm_r.init(Ex_gzm,Ex_zk,0.5,sEorr) then   begin
+         Sout:='直接顶计算失败:'+sEorr; exit;
+     end;
+
+     if not Ex_old.init(EX_Gzm,Ex_zk,EX_imm_r,sEorr) then   begin
+         Sout:='老顶计算失败'+sEorr; exit;
+     end ;
+     //初始化支架
+     Init_Enabled:=true;
+     //开始了
+     self.Init_ZhiJia(zhijia);
+    //计算支承压力分布
+     My_DealWith.Cal_Zcyl(Ex_zk,Ex_imm_r,Ex_gzm,Ex_old,sEorr);
+     //计算裂断带高度
+     MY_DealWith.Cal_Ldg(Ex_zk,Ex_gzm,Ex_imm_r,Ex_old,Ex_gzm.S_L_qx*1.5,sEorr);
+     //初始化计算类
+     Ex_Cal_show.Zomm_D:=1.0;
+     //初始化进尺  P_Stope.gzm_jC:=7;
+     Result:=true;
+
+end;
+
+procedure TEXPstopeClass.FreeMainClass;
+begin
+    if  Assigned(Ex_Gzm) then
+          FreeAndNil(Ex_Gzm);     //工作面
+     if  Assigned(Ex_zk) then
+          FreeAndNil(Ex_zk);     //钻孔
+     if  Assigned(Ex_imm_r) then
+          FreeAndNil(Ex_imm_r);   //直接顶
+     if  Assigned(Ex_old) then
+          FreeAndNil(Ex_old);     //老顶
+     if  Assigned(Ex_ZhiJia) then
+          FreeAndNil(Ex_ZhiJia);   //支架
+     if  Assigned(Ex_Cal_show) then
+          FreeAndNil(Ex_Cal_show);  //显示界面面
+     if  Assigned(MY_DealWith) then
+          FreeAndNil(MY_DealWith);       //计算数据类
+
+     if not Assigned(MySqliteTable) then
+          FreeAndNil(MySqliteTable);
+end;
+
+function TEXPstopeClass.GetLicensingState(var UseUnitName: string): Boolean;
+var
+  UtName,Pss:string;
+  VFQ:TMyVerFity;
+begin
+   Result:=False;
+   Public_Basic.GetVifFityInfo(UtName,Pss) ;
+   VFQ:=TMyVerFity.Create;
+
+      if VFQ.VerFityPassword( UtName,Pss) then  begin
+         Result:=true;
+         Public_Basic.Licensing :=true;
+      end else begin
+         UtName:='山东科技大学宋振骐技术团队';
+         Public_Basic.Licensing :=False;
+      end;
+      Public_Basic.UseUnitName:=UtName;
+      UseUnitName:=UtName;
+    VFQ.Free ;
+end;
+
+function TEXPstopeClass.GetMinaPath: widestring;
+begin
+   Result:=MainPath;
+end;
+
+function TEXPstopeClass.GetZoom(JinChi: double;var X_move_Pix:double): Double;
+var
+   i,start_yc:integer;
+   name_count:integer;
+   Y_tu_H,tem_Zoom:double;
+begin
+      name_count:=0;  Y_tu_H:=0;
+       if Ex_old.yl_max_End-2 >0  then  begin
+          start_yc:=Ex_old.yl_max_End-2;
+       end else begin
+          start_yc:=0;
+       end;
+
+      for I:=EX_zk.main_coal downto start_yc do  begin
+            name_count:=name_count+1;
+            if I=EX_zk.main_coal then  begin
+                 Y_tu_H:=Y_tu_H+EX_zk.Yc_Rock[i].R_h*Ex_gzm.Mc_FdBs;
+            end else begin
+                 if i<Ex_old.yl_max_End -2 then    begin
+                    Y_tu_H:=Y_tu_H+Ex_ZK.Yc_Rock[i].R_h;
+                 end else begin
+                    Y_tu_H:=Y_tu_H+Ex_ZK.Yc_Rock[i].R_h;
+                 end;
+            end;
+      end; //end for i
+
+
+    if JinChi>0 then begin
+       tem_Zoom:= Y_tu_H*2/JinChi ;
+       Result:= tem_Zoom/3;
+    end else begin
+       Result:=1;
+    end;
+end;
+
+function TEXPstopeClass.Get_immediate_roof(Version: string): string;
+begin
+   Result:=Ex_imm_r.Get_Parameter(Ex_zk,Version);
+
+end;
+
+function TEXPstopeClass.Get_kcjstj(const Version: WideString): WideString;
+var
+  s_out,temp:widestring;
+  lei_tem:widestring;
+
+begin
+   Result:='';
+   if not Init_Enabled then  exit;
+
+   if Version='1.0' then   begin  //大采高支架信息的字符串
+
+        s_out:='';
+        s_out:=IntToStr(Ex_imm_r.Imm_leibie)+','; //  直接顶
+        s_out:=s_out+IntToStr(Ex_old.Old_leibie)+',' ;// 基本顶
+        s_out:=s_out+IntToStr(Ex_old.diban_leobie)+',' ;// 底板
+        // 判断工作阻力
+        if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 2400 then   begin
+            lei_tem:='1';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 3000 then   begin
+            lei_tem:='2';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 3800 then   begin
+            lei_tem:='3';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 4800 then   begin
+            lei_tem:='4';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 6200 then   begin
+            lei_tem:='5';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 8000 then   begin
+            lei_tem:='6';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 10000 then   begin
+            lei_tem:='7';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 15000 then   begin
+            lei_tem:='8';
+        end else if Ex_ZhiJia.Zj_JiSuan_Ci_F[0]<= 20000 then   begin
+            lei_tem:='9';
+        end else begin
+            lei_tem:='10';
+        end;
+
+        s_out:=s_out+lei_tem+',' ;//  工作阻力
+        // 判断采高
+        if Ex_Gzm.S_Cg_h<=2.5 then   begin
+            lei_tem:='1';
+        end else if Ex_Gzm.S_Cg_h<=3.0then   begin
+            lei_tem:='2';
+        end else if Ex_Gzm.S_Cg_h<=3.5 then   begin
+            lei_tem:='3';
+        end else if Ex_Gzm.S_Cg_h<=4.0 then   begin
+            lei_tem:='4';
+        end else if Ex_Gzm.S_Cg_h<=4.5 then   begin
+            lei_tem:='5';
+        end else if Ex_Gzm.S_Cg_h<=6  then   begin
+            lei_tem:='6';
+        end else if Ex_Gzm.S_Cg_h<=8  then   begin
+            lei_tem:='7';
+        end else begin
+            lei_tem:='8';
+        end;
+        s_out:=s_out+lei_tem+',' ;//  采高
+         // 判断瓦斯
+        if Ex_Gzm.Dz_WSFC=1 then   begin
+            lei_tem:='3';
+        end else if Ex_Gzm.Dz_WSFC=2 then   begin
+            lei_tem:='2';
+        end else  begin
+            lei_tem:='1';
+        end;
+        s_out:=s_out+lei_tem+',' ;//  瓦斯
+        s_out:=s_out+ IntToStr(Ex_imm_r.FDm_leibie)+',' ;//  冒放性
+        // 判断煤层倾角
+        if Ex_Gzm.S_qj<8 then   begin
+            lei_tem:='1';
+        end else if Ex_Gzm.S_qj<25 then   begin
+            lei_tem:='2';
+        end else if Ex_Gzm.S_qj<45 then   begin
+            lei_tem:='3';
+        end else begin
+            lei_tem:='4';
+        end;
+        s_out:=s_out+lei_tem+',' ;//  煤层倾角
+        Result:=S_out;
+   end else if Version='2.0' then   begin   //沿空留巷的判断字符串
+          s_out:=''; //temp:='   实施高效巷旁充填的可行性分析：'+#13+#10;
+          temp:='';
+          if  Ex_imm_r.Imm_leibie<=2  then  begin
+              Ex_Gzm.yklh :=0;
+              temp:=temp+'   该工作面所处巷道顶板围岩较弱，不适合采用高效沿空留巷的方法。';
+          end else if Ex_old.diban_leobie <=2 then begin
+              Ex_Gzm.yklh:=0;
+              temp:=temp+'   该工作面所处巷道底板围岩较弱，不适合采用高效沿空留巷的方法。';
+          end else if Ex_Gzm.S_qj >=35 then begin
+              Ex_Gzm.yklh:=0;
+              temp:=temp+'   该工作面煤层倾角较大，不适合采用高效沿空留巷的方法。';
+          end else if (Ex_old.Old_leibie>=4) and (Ex_Gzm.S_Cg_h<=3.0)  then begin
+              Ex_Gzm.yklh:=2;
+              temp:=temp+'   该工作面可以实施高效沿空留巷的方法，';
+              temp:=temp+'但顶板比较坚硬，可以使用高效沿空留巷。但为了保护巷旁充填体,';
+              temp:=temp+'需要强制处理顶板，建议对巷道外侧顶板进行切顶处理。';
+          end else if (Ex_Gzm.S_Cg_h<=3.5)  then begin
+              Ex_Gzm.yklh:=1;
+              temp:=temp+'   该工作面可以实施高效沿空留巷的方法，';
+              temp:=temp+'但需要加强墙体宽度与高度的验证，填充墙体的施工尽量在两个周期来压范围之内完成,';
+              temp:=temp+'顶板在剧烈运动稳定前，需要对填充体加强辅助支护。';
+          end else if (Ex_Gzm.S_Cg_h>3.5)  then begin
+              Ex_Gzm.yklh:=1;
+              temp:=temp+'   该工作面可以实施高效沿空留巷的方法，';
+              temp:=temp+'需要对于沿空留巷侧的顶煤需要进行保护处理，可以适当加快填充体的施工速度，';
+              temp:=temp+'迫使填充体尽快起到支撑的作用，减缓巷道变形的速度与幅度。';
+          end else if Ex_old.diban_leobie <3 then begin
+              Ex_Gzm.yklh:=3;
+              temp:=temp+'   该工作面可以实施高效沿空留巷的方法，';
+              temp:='但是由于底板相对较弱，要对底板比压与抗压强度进行组合验证，';
+              temp:=temp+'为保持巷道完整性，必要时，需要对顶板进行强制处理。';
+          end;
+
+          if Ex_Gzm.yklh>=1 then begin
+              temp:=temp+#13+#10+ '   超前支护：为提高工作面的推进速度以及维持巷道的完整性，需要对沿空留巷侧巷道进行';
+              temp:=temp+ '超前支护，超前支护的距离要超过塑性区'+FormatFloat('0.00',Ex_Gzm.ZCYL_s1[0]*2 )+'米以上。';
+
+          end;
+
+        s_out:=temp;
+        Result:=S_out;
+   end;
+
+end;
+
+function TEXPstopeClass.Get_Old_roof(Version: string): string;
+begin
+    Result:= Ex_old.Get_Parameter(Ex_Gzm,Ex_Zk,Ex_imm_r,Version);
+end;
+
+function TEXPstopeClass.Get_Support_P(Version: string): string;
+begin
+    Result:= Ex_Zhijia.Return_zj_Para(Version);
+end;
+
+function TEXPstopeClass.Get_yklh_ctcs(const Version: WideString; width,
+  Hd_wideth, Hd_heigth: Single): WideString;
+  {沿空留巷 返回 充填墙体主要参数，width, 充填体宽度   Hd_wideth 巷道宽度, Hd_heigth: 巷道高度 }
+var
+   imm_P,imm_f,total_wideth:double;
+   s_out:widestring;
+   jianyi_hd_wide:double;
+begin
+    s_out:='';
+    if width=0 then width:=2;
+    if Hd_wideth=0 then Hd_wideth:=3;
+    if Hd_heigth=0 then Hd_heigth:=3;
+
+
+    Ex_Gzm.yklh_hpct_h:= Hd_heigth;
+    Ex_Gzm.yklh_tc_lu_w:= width;
+
+    if (Version='1.0') and (Ex_Gzm.yklh >0) then   begin
+
+      if width<(hd_heigth*0.5) then begin
+         s_out:=s_out+'   填充体宽度较小，建议增加到'+FormatFloat('0.00',hd_heigth*0.5)+'米以上。';
+      end else if  width >(hd_heigth*1.2) then begin
+         s_out:=s_out+'   填充体宽度较大，建议减少到'+FormatFloat('0.00',hd_heigth*1.2)+'米以内。';
+      end else begin
+          s_out:=s_out+'   填充体宽度适中，';
+      end;
+       // 计算 建议墙的 宽度
+      if (Ex_old.Old_leibie>4) then begin
+          jianyi_hd_wide:=0.4 *hd_heigth;
+      end else  if (Ex_old.Old_leibie=4) then begin
+          jianyi_hd_wide:=0.6 *hd_heigth;
+      end else  if (Ex_old.Old_leibie=3) then begin
+          jianyi_hd_wide:=0.8*hd_heigth;
+      end else  if (Ex_old.Old_leibie<3) then begin
+          jianyi_hd_wide:=1 *hd_heigth;
+      end;
+      //
+      Ex_Gzm.yklh_tc_js_w:= jianyi_hd_wide;
+
+      s_out:=s_out+'建议巷旁充填体的宽度为：'+FormatFloat('0.00',jianyi_hd_wide)+'米。';
+
+      //预设巷旁充填宽度的计算
+       total_wideth:= width+Hd_wideth;
+               //  直接顶的压强   KPa
+      Imm_F:= total_wideth * 1 *Ex_ZhiJia.Zj_imm_p ;   //  直接顶的力
+      imm_P:=Imm_F/width;    //直接顶的压强 Mpa
+
+      s_out:=s_out+'当巷旁充填按照预设宽度 '+FormatFloat('0.00',width)+' 米进行施工，填充体的初始支撑强度需达到'
+                   +FormatFloat('0.00',imm_P*1.2)+'MPa,填充体的最终支撑强度需达到'
+                   +FormatFloat('0.00',Ex_Gzm.S_mcsd_h*25/1000*2)+'MPa。' ;  // 2 为压力系数
+
+      //计算巷旁充填宽度的计算
+       total_wideth:= jianyi_hd_wide+Hd_wideth;
+       Imm_F:= total_wideth * 1 *Ex_ZhiJia.Zj_imm_p ;   //  直接顶的力
+       imm_P:=Imm_F/jianyi_hd_wide;     //直接顶的压强 Mpa
+
+      s_out:=s_out+'当巷旁充填按照计算宽度 '+FormatFloat('0.00',jianyi_hd_wide)+' 米进行施工，填充体的初始支撑强度需达到'
+                   +FormatFloat('0.00',imm_P*1.5)+'MPa,填充体的最终支撑强度需达到'
+                   +FormatFloat('0.00',Ex_Gzm.S_mcsd_h*25/1000*2)+'MPa。' ; // 2 为压力系数
+
+    end else begin  //end   if Version='1.0' then   begin
+
+         s_out:='该巷道不适合进行高效沿空留巷。';
+    end;
+
+    Result:= s_out;
+end;
+
+function TEXPstopeClass.Get_yklh_fzzh(const Version: WideString): WideString;
+{沿空留巷 返回辅助支护参数}
+var
+  s_out:widestring;
+begin
+    s_out:='';
+    if (Version='1.0') and (Ex_Gzm.yklh >0) then   begin
+       if Ex_Gzm.Dz_HangDaoSup=2  then  begin
+          s_out:='   该巷道整体比较完整，建议在巷道内用锚杆与锚索加强一下支护。';
+       end else if Ex_Gzm.Dz_HangDaoSup=3  then  begin
+          s_out:='   该巷道整完整性尚可，建议在原有锚索支护的基础上，间隔加强一个锚索。';
+       end else begin
+          s_out:='   该巷道整完整性较差，建议开展相关巷道支护的课题研究。';
+       end;
+
+    end else begin  //end   if Version='1.0' then   begin
+
+         s_out:='   该巷道不适合进行高效沿空留巷。';
+    end;
+
+    Result:= s_out;
+
+end;
+
+function TEXPstopeClass.Get_yklh_JJxy(const Version: WideString;  M_dj, Mzhu_w, T_cong_sj,
+                     N_Speed,YK_Speed,HD_Wh_P,HD_JN_P,Coal_ZH_P: Single): WideString;
+  {沿空留巷 返回经济效益
+     M_dj  煤的单价, Mzhu_w  煤柱宽度, T_cong_sj 充填成本
+      N_Speed  不留巷推进速度 ,YK_Speed   留巷推进速度,
+      HD_Wh_P  巷道维护成本,HD_JN_P  巷道掘进成本,Coal_ZH_P 采煤综合成本
+     }
+var
+    s_out:widestring;
+    M_lifang,ganshi_lifang_lu,ganshi_lifang_js,hd_h:double;
+    xiaoyi_lu,xiaoyi_js:double;
+begin
+    s_out:='';
+    if M_dj=0 then  M_dj:=500;
+    if Mzhu_w=0 then Mzhu_w:=15;
+    if T_cong_sj=0 then  T_cong_sj:=130;
+
+    if Ex_Gzm.yklh_hpct_h=0 then  begin
+       Ex_Gzm.yklh_hpct_h:=3.0;
+    end;
+
+    if (Version='1.0') and (Ex_Gzm.yklh >0) then   begin
+        M_lifang:=Ex_Gzm.S_Sx_zx*Mzhu_w*Ex_Gzm.S_Cg_h;
+        ganshi_lifang_lu:= Ex_Gzm.S_Sx_zx*Ex_Gzm.yklh_tc_lu_w*Ex_Gzm.yklh_hpct_h;
+        ganshi_lifang_js:= Ex_Gzm.S_Sx_zx*Ex_Gzm.yklh_tc_js_w*Ex_Gzm.yklh_hpct_h;
+        xiaoyi_lu:= (M_lifang*1.5* M_dj- ganshi_lifang_lu*T_cong_sj)/10000;
+        xiaoyi_js:= (M_lifang*1.5* M_dj- ganshi_lifang_js*T_cong_sj)/10000;
+        s_out:='    该工作面实施沿空留巷，可以多采煤炭 '+FormatFloat('0.00',M_lifang*1.5/10000)+' 万吨，'
+              +'按照录入填充体的宽度计算可节约： ' +FormatFloat('0.00',xiaoyi_lu)+' 万元;'
+              +'按照软件模拟计算填充体的宽度计算可节约：' +FormatFloat('0.00',xiaoyi_js)+' 万元。' ;
+    end else begin  //end   if Version='1.0' then   begin
+         s_out:='    该巷道不适合进行高效沿空留巷。';
+    end;
+
+    Result:= s_out;
+
+end;
+
+function TEXPstopeClass.Get_Zcyl(const Version: WideString;
+  JinChi: Double): WideString;
+var
+  s_out:string;
+  hr,ci,l0:double;
+begin
+    s_out:='';
+
+     if (Version='1.0') or (Version='2.0') then begin
+        s_out:=Ex_gzm.Return_Zcyl(Version,JinChi,Ex_zk);
+     end else if (Version='3.0') then  begin
+        hr:=(Ex_Gzm.S_mcsd_h*25 )/1000;
+        ci:=Ex_old.YL_First_step[2]*0.4;
+        l0:= Ex_Gzm.S_L_qx;
+        if 0.5*l0>3*ci then  begin
+            s_out:=FormatFloat('0.00',hr*0.2) +',' +
+                   FormatFloat('0.00',hr*0.8) +',' +
+                   FormatFloat('0.00',hr*1) +',' +
+                   FormatFloat('0.00',hr*1.2) +',' +
+                   FormatFloat('0.00',hr*1.5) ;
+        end else if 0.5*l0>2*ci then  begin
+            s_out:=FormatFloat('0.00',hr*0.2) +',' +
+                   FormatFloat('0.00',hr*0.9) +',' +
+                   FormatFloat('0.00',hr*1.3) +',' +
+                   FormatFloat('0.00',hr*1.5) +',' +
+                   FormatFloat('0.00',hr*1.5) ;
+        end else if 0.5*l0>ci then  begin
+            s_out:=FormatFloat('0.00',hr*0.5) +',' +
+                   FormatFloat('0.00',hr*1) +',' +
+                   FormatFloat('0.00',hr*1.2) +',' +
+                   FormatFloat('0.00',hr*1.2) +',' +
+                   FormatFloat('0.00',hr*1.2) ;
+        end else begin
+            s_out:=FormatFloat('0.00',hr*0.8) +',' +
+                   FormatFloat('0.00',hr*1) +',' +
+                   FormatFloat('0.00',hr*1.1) +',' +
+                   FormatFloat('0.00',hr*1.1) +',' +
+                   FormatFloat('0.00',hr*1.1) ;
+        end;
+     end else if (Version='4.0') then  begin
+         s_out:=Ex_gzm.Return_Zcyl(Version,JinChi,Ex_zk);
+     end;
+      Result:= s_out;
+end;
+
+function TEXPstopeClass.Init_ZhiJia(const ZJ: WideString): WideString;
+var
+    sR:widestring;
+    ModuleName:WideString;
+begin
+     Result:='False';
+     if not InIt_enabled   then exit;
+
+     Ex_zhijia.OcxPath :=MainPath;
+     EX_zhijia.Init(ZJ,sR);
+     Ex_zhijia.Cal_Sup_Para(Ex_gzm,Ex_zk,Ex_imm_r,Ex_old);
+
+     Result:=sR;
+end;
+
+end.

@@ -1,0 +1,176 @@
+unit UGraphLineClass;
+
+interface
+uses
+  Winapi.Windows, SysUtils, Classes, Messages, Controls, Forms, StdCtrls, ExtCtrls,
+  ComCtrls ,math,Grids,WordXP,COMobj,SQLiteTable3,StrUtils,Vcl.Dialogs,
+  PStope_GzmGuidClass , UMainDataModule,System.TypInfo ,UMakeRuleClass,
+  VCLTee.Series,VCLTee.TeeTools
+
+  ;
+
+type
+  TDrawGraphClass =Class(TObject)
+     private
+        WorkFace_id:integer;
+        SupportBh:Integer;
+        SaveedMaxDateTime:TdateTime;
+
+
+        MySqlDataSet1:TMyDataSet;
+        MySqlDataSet2:TMyDataSet;
+        MyCommand1:TMyCommand;
+     Public
+
+        Count:Integer;
+        DataItems :Array of TFirstData;
+
+       procedure  SetWorkface_id(Value:integer);
+       procedure  SetSupportBh(Value:integer);
+       procedure  SetMaxJinDaoTime(Value:TdateTime);
+       function   GetMaxJinDaoTime:TdateTime ;
+       procedure  ClearItems;
+       procedure  AddItem(tm:TFirstData);
+       //
+       procedure  DrawGraphLine(Series:TLineSeries;CB:TColorBandTool);
+       //
+       constructor Create(ExConn: TMySqlConnection);
+       destructor Destroy;override;
+  End;
+
+implementation
+
+{ TDrawGraphClass }
+
+uses Lu_Public_BasicModual;
+
+procedure TDrawGraphClass.AddItem(tm: TFirstData);
+begin
+   inc(Count);
+   Setlength(DataItems,Count);
+   DataItems[Count-1]:= tm;
+end;
+
+procedure TDrawGraphClass.ClearItems;
+begin
+   Count:=0;
+   Setlength(DataItems,0);
+end;
+
+constructor TDrawGraphClass.Create(ExConn: TMySqlConnection);
+begin
+    MySqlDataSet1:=TMyDataSet.Create(nil);
+    MySqlDataSet1.MySqlConnection :=ExConn;
+    MySqlDataSet2:=TMyDataSet.Create(nil);
+    MySqlDataSet2.MySqlConnection :=ExConn;
+    MyCommand1:=TMyCommand.Create (nil);
+    MyCommand1.MySqlConnection :=ExConn;
+
+    ClearItems;
+    SaveedMaxDateTime:=-1;
+    WorkFace_id:=-1;
+end;
+
+destructor TDrawGraphClass.Destroy;
+begin
+  ClearItems;
+
+  FreeAndNil(MySqlDataSet1);
+  FreeAndNil(MySqlDataSet2);
+  FreeAndNil(MyCommand1);
+
+  inherited;
+end;
+
+procedure TDrawGraphClass.DrawGraphLine(Series: TLineSeries;CB:TColorBandTool);
+var
+  Lins:TStringList;
+  arquivo: TextFile;
+  I,C1:integer;
+  s_Ln:String;
+  tmp:TInputData;
+
+  Lin_s:Str_DT_array;
+  fileName,textString:Ansistring;
+  DirName:Ansistring;
+  Dll_Path:AnsiString;
+  tmp_Data:TdateTime;
+begin
+    if WorkFace_id <0 then exit;
+    if SupportBh<0 then   exit;
+
+   Dll_Path:=Public_Basic.Get_MyModulePath;
+   DirName:=DLL_path+'\InputData\WorkDace_'+IntTostr(WorkFace_id)+'\';
+
+   fileName:=IntToStr(SupportBh) +'.Out';
+   fileName:=DirName+fileName;
+   if not(FileExists(fileName)) then exit;
+
+   Lins:=TStringList.Create ;
+   AssignFile(arquivo,FileName);//frmAnalise.dialogAbrir.FileName);
+   Reset(arquivo);
+     while not Eof(arquivo) do  begin
+      Readln(arquivo,s_Ln);
+      Lins.Add(s_Ln);
+    end;
+
+   CloseFile(arquivo);
+    CB.StartValue :=-1;
+    for I := 0 to Lins.Count -1 do  begin
+        Lin_s:=Public_Basic.split(Lins[i],',',C1);
+        if C1>1 then  begin
+          tmp_Data:= StrToDateTime( Lin_s[0],Public_Basic.FSetting );
+          if tmp_Data< self.SaveedMaxDateTime then  continue;
+          if Public_Basic.StrToDouble_Lu(Lin_s[2])< 0 then   begin
+             Series.AddXY( tmp_Data, 0 );
+
+          end else begin
+             Series.AddXY( tmp_Data,Public_Basic.StrToDouble_Lu(Lin_s[1]) );
+
+          end;
+          if CB.StartValue< 0 then begin
+             CB.StartValue:=tmp_Data;
+             CB.EndValue := CB.StartValue+0.5;
+          end;
+
+        end;
+    end;
+//    // 追加本次循环的其他信息
+//    for i := 0 to Count-1 do   begin
+//        Series.AddXY( DataItems[i].dStartTime,DataItems[i].dStartValue);
+//        Series.AddXY( DataItems[i].dEndTime,DataItems[i].dEndValue);
+//        Series.AddXY( DataItems[i].dMaxValuetime,DataItems[i].dMaxValue);
+//        Series.AddXY( DataItems[i].dMinValuetime,DataItems[i].dMinValue);
+//        Series.AddXY( DataItems[i].dzhuyeEndTime,DataItems[i].dStartPressure);
+//        Series.AddXY( DataItems[i].dBeforeLastValueTime,DataItems[i].dBeforeLastValue);
+//        Series.AddXY( DataItems[i].dBeforeLastMaxValueTime,DataItems[i].dbeforeLastMaxValue);
+//    end;
+
+
+
+
+end;
+
+function TDrawGraphClass.GetMaxJinDaoTime: TdateTime;
+begin
+   Result:=SaveedMaxDateTime;
+end;
+
+
+
+procedure TDrawGraphClass.SetMaxJinDaoTime(Value: TdateTime);
+begin
+   SaveedMaxDateTime:=Value;
+end;
+
+procedure TDrawGraphClass.SetSupportBh(Value: integer);
+begin
+   SupportBh:=Value;
+end;
+
+procedure TDrawGraphClass.SetWorkface_id(Value: integer);
+begin
+   WorkFace_id:=Value;
+end;
+
+end.
