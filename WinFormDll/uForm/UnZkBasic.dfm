@@ -41,7 +41,7 @@ object ZkBasicForm: TZkBasicForm
         Control = ToolBar1
         ImageIndex = -1
         MinHeight = 35
-        Width = 843
+        Width = 838
       end>
     object ToolBar1: TToolBar
       Left = 11
@@ -88,8 +88,16 @@ object ZkBasicForm: TZkBasicForm
         ImageIndex = 6
         OnClick = DeleteButtonClick
       end
-      object ExitButton: TToolButton
+      object But_AddYc: TToolButton
         Left = 340
+        Top = 0
+        Caption = #23721#23618#20449#24687
+        Enabled = False
+        ImageIndex = 1
+        OnClick = But_AddYcClick
+      end
+      object ExitButton: TToolButton
+        Left = 425
         Top = 0
         Caption = #36864#20986
         ImageIndex = 7
@@ -226,6 +234,8 @@ object ZkBasicForm: TZkBasicForm
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect]
       TabOrder = 0
       OnSelectCell = StringGrid1SelectCell
+      ExplicitLeft = 2
+      ExplicitTop = -4
       ColWidths = (
         64
         64
@@ -262,7 +272,7 @@ object ZkBasicForm: TZkBasicForm
     Left = 512
     Top = 8
     Bitmap = {
-      494C010109000E00940010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010109000E00980010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000F2F2F200959595005C5C5C003434340034343400616161009A9A9A00F0F0

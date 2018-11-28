@@ -186,7 +186,7 @@ function TPStope_DealWith.Cal_Zcyl(zk: Tzk_bore; imm: TImmediate_roof;
          Result:=False;
          Exit;
        end;
-     mbcsnl_l:=2*zk.Yc_Rock[zk.main_coal].R_kyqd*1000/(gzm.S_mcsd_h *zk.Yc_Rock[imm.Start_No].R_r);
+      mbcsnl_l:=2*zk.Yc_Rock[zk.main_coal].R_kyqd*1000/(gzm.S_mcsd_h *zk.Yc_Rock[imm.Start_No].R_r);
       if imm.Immroof_M=0 then    begin
            mbcsnl_l:=mbcsnl_l/gzm.S_Cg_h;
       end else begin
@@ -198,7 +198,7 @@ function TPStope_DealWith.Cal_Zcyl(zk: Tzk_bore; imm: TImmediate_roof;
      gzm.mbcsnl_l:=mbcsnl_l;
      //0  值 赋值
      if gzm.S_M_mcj=0 then    gzm.S_M_mcj:=25;
-     if gzm.S_M_njl=0 then    gzm.S_M_njl:=4000;
+     if gzm.S_M_njl=0 then    gzm.S_M_njl:=4;
      if gzm.S_mcsd_h=0 then   gzm.S_mcsd_h:=500;
      if gzm.S_K_zcfz=0  then  gzm.S_K_zcfz:=2.5;
 
@@ -210,52 +210,52 @@ function TPStope_DealWith.Cal_Zcyl(zk: Tzk_bore; imm: TImmediate_roof;
 
 
      //判断赋值  20140103
+     //通过煤层厚度修订参数
+      if  zcyl_s1<3 then   begin
+          if gzm.S_Cg_h>3 then begin
+             gzm.ZCYL_s1[2]:=zcyl_s1*3;    //通过煤层厚度修订参数
+          end else begin
+             gzm.ZCYL_s1[2]:=zcyl_s1*gzm.S_Cg_h;
+          end;
+      end else begin
+             gzm.ZCYL_s1[2]:=zcyl_s1;
+      end;
 
-                     //通过煤层厚度修订参数
-                if  zcyl_s1<3 then   begin
-                    if gzm.S_Cg_h>3 then begin
-                       gzm.ZCYL_s1[2]:=zcyl_s1*3;    //通过煤层厚度修订参数
-                    end else begin
-                       gzm.ZCYL_s1[2]:=zcyl_s1*gzm.S_Cg_h;
-                    end;
-                end else begin
-                       gzm.ZCYL_s1[2]:=zcyl_s1;
-                end;
-              if zcyl_s0>gzm.ZCYL_s1[2] then  zcyl_s0:= gzm.ZCYL_s1[2]*0.4;
+    if zcyl_s0>gzm.ZCYL_s1[2] then  zcyl_s0:= gzm.ZCYL_s1[2]*0.4;
 
-              if  ZCYL_s0<1 then  begin
-                     if gzm.S_Cg_h>3 then begin
-                       gzm.ZCYL_s0 := zcyl_s0*3;    //通过煤层厚度修订参数
-                    end else begin
-                       gzm.ZCYL_s0 := zcyl_s0*gzm.S_Cg_h;
-                    end;
-                end else begin
-                    gzm.ZCYL_s0 := zcyl_s0;
-                end;
+    if  ZCYL_s0<1 then  begin
+           if gzm.S_Cg_h>3 then begin
+             gzm.ZCYL_s0 := zcyl_s0*3;    //通过煤层厚度修订参数
+          end else begin
+             gzm.ZCYL_s0 := zcyl_s0*gzm.S_Cg_h;
+          end;
+      end else begin
+          gzm.ZCYL_s0 := zcyl_s0;
+      end;
 
 
      if zcyl_s1<1.5 then  zcyl_s1:=1.5;//强制最小值
      if zcyl_s0<1 then  zcyl_s0:=1; //强制最小值
      if zcyl_s1<zcyl_s0 then  zcyl_s1:=2*zcyl_s0; //  //强制最小值
 
-          gzm.ZCYL_s1[0]:=gzm.ZCYL_s1[2]*1.2;
+          gzm.ZCYL_s1[0]:=gzm.ZCYL_s1[2]*1.1;
           gzm.ZCYL_s1[1]:=gzm.ZCYL_s1[2]*(1+sin(gzm.S_qj/180*3.14159));
           gzm.ZCYL_s1[2]:=gzm.ZCYL_s1[2];
           gzm.ZCYL_s1[3]:=gzm.ZCYL_s1[2]*(1-sin(gzm.S_qj/180*3.14159));
 
          if gzm.S_f_PS <2  then
             begin
-                gzm.ZCYL_sx[0]:= gzm.ZCYL_s1[0]*5;
-                gzm.ZCYL_sx[1]:= gzm.ZCYL_s1[1]*5;
-                gzm.ZCYL_sx[2]:= gzm.ZCYL_s1[2]*5;
-                gzm.ZCYL_sx[3]:= gzm.ZCYL_s1[3]*5;
-            end
-          else
-            begin
                 gzm.ZCYL_sx[0]:= gzm.ZCYL_s1[0]*4;
                 gzm.ZCYL_sx[1]:= gzm.ZCYL_s1[1]*4;
                 gzm.ZCYL_sx[2]:= gzm.ZCYL_s1[2]*4;
                 gzm.ZCYL_sx[3]:= gzm.ZCYL_s1[3]*4;
+            end
+          else
+            begin
+                gzm.ZCYL_sx[0]:= gzm.ZCYL_s1[0]*3;
+                gzm.ZCYL_sx[1]:= gzm.ZCYL_s1[1]*3;
+                gzm.ZCYL_sx[2]:= gzm.ZCYL_s1[2]*3;
+                gzm.ZCYL_sx[3]:= gzm.ZCYL_s1[3]*3;
             end;
 
 

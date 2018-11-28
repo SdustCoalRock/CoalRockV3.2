@@ -72,28 +72,28 @@ object MainCForm: TMainCForm
           Control = ToolBar_Basic
           ImageIndex = -1
           MinHeight = 35
-          Width = 310
+          Width = 316
         end
         item
           Break = False
           Control = ToolBar_Fyyd
           ImageIndex = -1
           MinHeight = 35
-          Width = 255
+          Width = 265
         end
         item
           Break = False
           Control = ToolBar_KY
           ImageIndex = -1
           MinHeight = 35
-          Width = 372
+          Width = 382
         end
         item
           Break = False
           Control = ToolBar_ZJ
           ImageIndex = -1
           MinHeight = 35
-          Width = 376
+          Width = 350
         end
         item
           Break = False
@@ -105,7 +105,7 @@ object MainCForm: TMainCForm
       object ToolBar_Basic: TToolBar
         Left = 11
         Top = 0
-        Width = 297
+        Width = 303
         Height = 35
         ButtonHeight = 36
         ButtonWidth = 55
@@ -151,9 +151,9 @@ object MainCForm: TMainCForm
         end
       end
       object ToolBar_Fyyd: TToolBar
-        Left = 325
+        Left = 331
         Top = 0
-        Width = 242
+        Width = 252
         Height = 35
         ButtonHeight = 36
         ButtonWidth = 55
@@ -185,9 +185,9 @@ object MainCForm: TMainCForm
         end
       end
       object ToolBar_KY: TToolBar
-        Left = 584
+        Left = 600
         Top = 0
-        Width = 359
+        Width = 369
         Height = 35
         ButtonHeight = 36
         ButtonWidth = 55
@@ -235,9 +235,9 @@ object MainCForm: TMainCForm
         end
       end
       object ToolBar_ZJ: TToolBar
-        Left = 960
+        Left = 986
         Top = 0
-        Width = 363
+        Width = 337
         Height = 35
         ButtonHeight = 36
         ButtonWidth = 55
@@ -578,7 +578,7 @@ object MainCForm: TMainCForm
     Left = 580
     Top = 64
     Bitmap = {
-      494C01017E005403B80310001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
+      494C01017E005403C80310001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000000002000001002000000000000000
       0200000000000000000000000000000000000000000000000000000000000000
       000300000030000000A3000000D4000000E5000000EA000000E0000000C50000

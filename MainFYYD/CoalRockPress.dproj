@@ -91,10 +91,12 @@
         <VerInfo_Release>1</VerInfo_Release>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.4;InternalName=;LegalCopyright=32位系统;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <Manifest_File>.\PerMonitorDpiAwareness.manifest</Manifest_File>
-        <VerInfo_Build>4</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.21;InternalName=;LegalCopyright=32位系统;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <Manifest_File>PerMonitorDpiAwareness.manifest</Manifest_File>
+        <VerInfo_Build>21</VerInfo_Build>
         <Icon_MainIcon>CoalRockPress_Icon1.ico</Icon_MainIcon>
+        <UWP_DelphiLogo44>..\..\System32\BJTP\login.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>..\..\System32\BJTP\login.png</UWP_DelphiLogo150>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -141,6 +143,10 @@
         <DCCReference Include="..\UsedForm\uIRockPress.pas"/>
         <DCCReference Include="..\UsedForm\UIWinFrame.pas"/>
         <DCCReference Include="..\PublicSysForm\VerFityDataComm.pas"/>
+        <DCCReference Include="FormUnit\RockGuidFrom.pas">
+            <Form>RockGuid</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -167,6 +173,13 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
+                <DeployFile LocalName="..\..\System32\BJTP\login.png" Configuration="Debug" Class="UWP_DelphiLogo44">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets\</RemoteDir>
+                        <RemoteName>Logo44x44.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\system32\CoalRockPress.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>CoalRockPress.exe</RemoteName>

@@ -9,15 +9,48 @@
     <Transaction>2018/11/11 17:31:09.000.504,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\Start.pas</Transaction>
     <Transaction>2018/11/11 17:31:09.000.424,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\MainForm.pas</Transaction>
     <Transaction>2018/11/11 17:31:09.000.074,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\FormMonitor.pas</Transaction>
-    <Transaction>2018/11/11 17:31:09.000.168,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\Login.pas</Transaction>
     <Transaction>2018/11/11 17:31:09.000.457,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\ShowOtherForm.pas</Transaction>
+    <Transaction>2018/11/11 17:31:09.000.168,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\Login.pas</Transaction>
     <Transaction>2018/11/11 17:31:15.000.132,D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\temp.pas=</Transaction>
     <Transaction>2018/11/11 17:32:54.000.789,=D:\work_lulei\CoalPressProject\V3.2\GitSource\PublicSysForm\Lu_Public_BasicModual.pas</Transaction>
     <Transaction>2018/11/11 17:33:06.000.868,=D:\work_lulei\CoalPressProject\V3.2\GitSource\UsedForm\UICallPstope.pas</Transaction>
-    <Transaction>2018/11/11 17:33:06.000.874,=D:\work_lulei\CoalPressProject\V3.2\GitSource\UsedForm\UIGuideMapDll.pas</Transaction>
-    <Transaction>2018/11/11 17:33:06.000.887,=D:\work_lulei\CoalPressProject\V3.2\GitSource\UsedForm\uIRockPress.pas</Transaction>
     <Transaction>2018/11/11 17:33:06.000.894,=D:\work_lulei\CoalPressProject\V3.2\GitSource\UsedForm\UIWinFrame.pas</Transaction>
+    <Transaction>2018/11/11 17:33:06.000.887,=D:\work_lulei\CoalPressProject\V3.2\GitSource\UsedForm\uIRockPress.pas</Transaction>
+    <Transaction>2018/11/11 17:33:06.000.874,=D:\work_lulei\CoalPressProject\V3.2\GitSource\UsedForm\UIGuideMapDll.pas</Transaction>
     <Transaction>2018/11/11 17:33:06.000.880,=D:\work_lulei\CoalPressProject\V3.2\GitSource\UsedForm\UIPStopeGuidUnit.pas</Transaction>
     <Transaction>2018/11/11 17:33:55.000.044,=D:\work_lulei\CoalPressProject\V3.2\GitSource\PublicSysForm\VerFityDataComm.pas</Transaction>
+    <Transaction>2018/11/13 09:38:48.000.620,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\Unit3.pas</Transaction>
+    <Transaction>2018/11/13 09:39:14.000.073,D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\Unit3.dfm=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\RockGuidFrom.dfm</Transaction>
+    <Transaction>2018/11/13 09:39:14.000.073,D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\Unit3.pas=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\FormUnit\RockGuidFrom.pas</Transaction>
+    <Transaction>2018/11/16 17:22:21.000.992,=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\Unit1.pas</Transaction>
+    <Transaction>2018/11/16 17:23:30.000.297,D:\work_lulei\CoalPressProject\V3.2\GitSource\PublicSysForm\ColorButton.pas=D:\work_lulei\CoalPressProject\V3.2\GitSource\MainFYYD\Unit1.pas</Transaction>
+    <Transaction>2018/11/17 11:32:24.000.266,D:\work_lulei\CoalPressProject\V3.2\GitSource\PublicSysForm\ColorButton.pas=</Transaction>
   </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="..\..\GitSource"/>
+    <File Path="..\PublicSysForm"/>
+    <File Path="..\PublicSysForm\Lu_Public_BasicModual.pas"/>
+    <File Path="..\PublicSysForm\VerFityDataComm.pas"/>
+    <File Path="..\UsedForm"/>
+    <File Path="..\UsedForm\UICallPstope.pas"/>
+    <File Path="..\UsedForm\UIGuideMapDll.pas"/>
+    <File Path="..\UsedForm\UIPStopeGuidUnit.pas"/>
+    <File Path="..\UsedForm\uIRockPress.pas"/>
+    <File Path="..\UsedForm\UIWinFrame.pas"/>
+    <File Path="FormUnit"/>
+    <File Path="FormUnit\BanBen_Wf.pas"/>
+    <File Path="FormUnit\BanBen_Wf.dfm"/>
+    <File Path="FormUnit\FormMonitor.pas"/>
+    <File Path="FormUnit\FormMonitor.dfm"/>
+    <File Path="FormUnit\Login.pas"/>
+    <File Path="FormUnit\Login.dfm"/>
+    <File Path="FormUnit\MainForm.pas"/>
+    <File Path="FormUnit\MainForm.dfm"/>
+    <File Path="FormUnit\RockGuidFrom.pas"/>
+    <File Path="FormUnit\RockGuidFrom.dfm"/>
+    <File Path="FormUnit\ShowOtherForm.pas"/>
+    <File Path="FormUnit\ShowOtherForm.dfm"/>
+    <File Path="FormUnit\Start.pas"/>
+    <File Path="FormUnit\Start.dfm"/>
+  </ProjectSortOrder>
 </BorlandProject>

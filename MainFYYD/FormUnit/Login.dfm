@@ -67,13 +67,13 @@ object loginForm: TloginForm
     end
     object Label_Version: TLabel
       Left = 248
-      Top = 279
+      Top = 281
       Width = 151
       Height = 24
-      Caption = #29256#26412#32534#21495#65306'V3.1'
-      Color = clTeal
+      Caption = #29256#26412#32534#21495#65306'V3.2'
+      Color = clGradientActiveCaption
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clGray
+      Font.Color = clGreen
       Font.Height = -20
       Font.Name = 'Tahoma'
       Font.Style = [fsBold]
@@ -94,7 +94,7 @@ object loginForm: TloginForm
     end
     object Button1: TButton
       Left = 264
-      Top = 215
+      Top = 222
       Width = 162
       Height = 25
       Caption = #30331#24405
@@ -103,7 +103,7 @@ object loginForm: TloginForm
     end
     object Button2: TButton
       Left = 432
-      Top = 215
+      Top = 222
       Width = 116
       Height = 25
       Caption = #36864#20986
@@ -127,7 +127,7 @@ object loginForm: TloginForm
     end
     object Button3: TButton
       Left = 432
-      Top = 277
+      Top = 285
       Width = 121
       Height = 26
       Caption = #27880#20876#26032#29992#25143
@@ -146,7 +146,7 @@ object loginForm: TloginForm
     end
     object BitBtn1: TBitBtn
       Left = 26
-      Top = 277
+      Top = 285
       Width = 127
       Height = 25
       Caption = #36828#31243#25968#25454#24211#37197#32622'...'
@@ -157,13 +157,26 @@ object loginForm: TloginForm
       Left = 26
       Top = 54
       Width = 150
-      Height = 178
+      Height = 124
       Caption = #30417#25511#30028#38754#26174#31034#36873#25321
       Items.Strings = (
         #19981#26174#31034#20219#20309#30417#25511#30028#38754
         #39318#26174#31034#20840#22269#30417#25511#30028#38754
         #39318#26174#31034#29028#30719#30417#25511#30028#38754)
       TabOrder = 7
+      OnClick = Monotor_RGClick
+    end
+    object RockPress_RG: TRadioGroup
+      Left = 26
+      Top = 184
+      Width = 150
+      Height = 81
+      Caption = #29028#30719#30719#21387#30417#25511#23548#33322#36873#25321
+      ItemIndex = 1
+      Items.Strings = (
+        #30719#21387#20998#26512#22810#39029#38754#23548#33322
+        #30719#21387#20998#26512#27969#31243#22270#23548#33322)
+      TabOrder = 8
       OnClick = Monotor_RGClick
     end
   end

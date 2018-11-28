@@ -3,7 +3,7 @@ object ZkCoalName: TZkCoalName
   Top = 0
   BorderStyle = bsSingle
   Caption = #30719#20117#20449#24687
-  ClientHeight = 736
+  ClientHeight = 625
   ClientWidth = 921
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
@@ -161,7 +161,7 @@ object ZkCoalName: TZkCoalName
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 717
+    Top = 606
     Width = 921
     Height = 19
     Panels = <
@@ -179,7 +179,7 @@ object ZkCoalName: TZkCoalName
     Left = 0
     Top = 138
     Width = 921
-    Height = 579
+    Height = 468
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 4
@@ -191,7 +191,7 @@ object ZkCoalName: TZkCoalName
         Left = 0
         Top = 0
         Width = 913
-        Height = 553
+        Height = 442
         Align = alClient
         DefaultColWidth = 60
         DefaultRowHeight = 20
@@ -217,15 +217,11 @@ object ZkCoalName: TZkCoalName
     object TabSheet3: TTabSheet
       Caption = #29028#30719#20351#29992#22270#29255
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Image1: TImage
         Left = 0
         Top = 39
         Width = 800
-        Height = 514
+        Height = 403
         Align = alClient
         Stretch = True
         ExplicitLeft = 58
@@ -243,10 +239,11 @@ object ZkCoalName: TZkCoalName
         object Label4: TLabel
           Left = 1
           Top = 1
-          Width = 96
+          Width = 911
           Height = 12
           Align = alTop
           Caption = #35831#36873#20013#23548#20837#30340#25991#20214
+          ExplicitWidth = 96
         end
         object Edit1: TEdit
           Left = 1
@@ -272,7 +269,7 @@ object ZkCoalName: TZkCoalName
         Left = 800
         Top = 39
         Width = 113
-        Height = 514
+        Height = 403
         Align = alRight
         BevelOuter = bvLowered
         TabOrder = 1
@@ -318,7 +315,7 @@ object ZkCoalName: TZkCoalName
     Left = 456
     Top = 8
     Bitmap = {
-      494C01010900DC00F00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010900DC00040110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000F2F2F200959595005C5C5C003434340034343400616161009A9A9A00F0F0

@@ -84,7 +84,7 @@ var
   ss,dd:String;
 begin
        if Assigned(User_Manager) then FreeAndNil(User_Manager);
-       Application.Handle :=AHandle;
+//       Application.Handle :=AHandle;
        User_Manager:=TUser_Manager.Create(nil);
         try
              with User_Manager do begin

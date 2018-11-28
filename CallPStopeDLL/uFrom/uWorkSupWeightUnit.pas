@@ -46,6 +46,7 @@ type
     MyStringGrid:TStringGrid;
     RG_Work:Array of TRadioGroup;
     RG_Sup: array of TRadioGroup;
+    ShowScreen:integer;
     procedure CreatePublic;
     procedure InitPanel_RG_Sup;
     procedure InitPanel_RG_Work;
@@ -70,12 +71,13 @@ type
 
   public
     { Public declarations }
+     procedure SetFromWidthAndHeigth(flag:integer);
   end;
 
 var
   FormSupWeight: TFormSupWeight;
-  function ShowSupportWeight(AHandle:THandle;ACaption:string;Wid,Hi:integer):integer;stdcall;
-  function Show_DCE_Result(AHandle:THandle;ACaption:string;Wid,Hi:integer):integer;stdcall;
+  function ShowSupportWeight(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):integer;stdcall;
+  function Show_DCE_Result(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):integer;stdcall;
 implementation
 
 {$R *.dfm}
@@ -83,7 +85,7 @@ implementation
 uses SupportWeightClass, Lu_Public_BasicModual, MainCallUnit, UMainDataModule;
 
 { TForm2 }
-function ShowSupportWeight(AHandle:THandle;ACaption:string;Wid,Hi:integer):integer;stdcall;
+function ShowSupportWeight(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):integer;stdcall;
 
 begin
     if Assigned(FormSupWeight) then   FreeAndNil(FormSupWeight);
@@ -91,7 +93,6 @@ begin
     try
        with FormSupWeight do begin
             Caption:=ACaption;
-            WindowState:= wsNormal;
             ParentWindow:=Ahandle;
             if Hi >Height then
               Top :=Round((Hi-Height)/3)
@@ -100,7 +101,8 @@ begin
                 Left:=Round((Wid-Width)/2)
             else  Left:=0;
             //---------------
-             OpenInputDataWindows;
+            SetFromWidthAndHeigth(Flag);
+            OpenInputDataWindows;
             Show;
        end;
         Result:=1;//函数值
@@ -108,7 +110,7 @@ begin
           FreeAndNil(FormSupWeight);
      end;
 end;
- function Show_DCE_Result(AHandle:THandle;ACaption:string;Wid,Hi:integer):integer;stdcall;
+ function Show_DCE_Result(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):integer;stdcall;
 begin
     Application.Handle := AHandle;
     if Assigned(FormSupWeight) then   FreeAndNil(FormSupWeight);
@@ -116,7 +118,6 @@ begin
     try
        with FormSupWeight  do  begin
             Caption:=ACaption;
-            WindowState:= wsMaximized;
             ParentWindow:=Ahandle;
             if Hi >Height then
               Top :=Round((Hi-Height)/3)
@@ -125,8 +126,8 @@ begin
                 Left:=Round((Wid-Width)/2)
             else  Left:=0;
             //---------------
+            SetFromWidthAndHeigth(Flag);
             DispComprehensiveEvaluationResult;
-
             Show;
        end;
         Result:=1;//函数值
@@ -234,8 +235,6 @@ end;
 procedure TFormSupWeight.CreatePublic;
 
 begin
-    Panel_GzmInfo.Caption :=MainDataModule.Coal_Name+'煤矿【'+MainDataModule.WorkFace_Name+
-                  '】工作面开采技术条件与支架结构件专家建议清单 ' ;
     MyStringGrid:=TStringGrid.Create(nil) ;
     InitStringGrod;
     FillStringGrid;
@@ -267,6 +266,10 @@ begin
 end;
 
 procedure TFormSupWeight.DispComprehensiveEvaluationResult;
+{
+ ShowScreen=2  开采技术条件
+ ShowScreen=3  十大结构件 选择
+}
 begin
     Panel_Result.Visible :=true;
     Panel_Result.Align :=alClient;
@@ -275,6 +278,23 @@ begin
     self.UpdataAutoData.Enabled :=true;
     Self.EtractDataFromData.Enabled :=False;
     self.SaveDataIntoData.Enabled :=False;
+
+    if ShowScreen=2 then  begin
+       ToolBar1.Visible :=False;
+        Panel_GzmInfo.Caption :=MainDataModule.Coal_Name+'煤矿【'+MainDataModule.WorkFace_Name+
+                  '】工作面开采技术条件智能判定结果 ' ;
+       PageControl1.Pages[0].TabVisible :=true;
+       PageControl1.Pages[1].TabVisible :=False;
+    end else  if ShowScreen=3 then  begin
+       Panel_GzmInfo.Caption :=MainDataModule.Coal_Name+'煤矿【'+MainDataModule.WorkFace_Name+
+                  '】液压支架十大结构件优化结果 ' ;
+       ToolBar1.Visible :=False;
+       PageControl1.Pages[1].TabVisible :=true;
+       PageControl1.Pages[0].TabVisible :=False;
+    end else begin
+       Panel_GzmInfo.Caption :=MainDataModule.Coal_Name+'煤矿【'+MainDataModule.WorkFace_Name+
+                  '】工作面开采技术条件与支架结构件专家建议清单 ' ;
+    end;
 
 end;
 
@@ -561,6 +581,21 @@ begin
         end;
 
     end;
+end;
+
+procedure TFormSupWeight.SetFromWidthAndHeigth(flag: integer);
+begin
+   if Flag=1  then  begin
+      BorderStyle:=BsSizeable;
+      StatusBar1.Visible :=False;
+      WindowState:=wsMaximized;
+   end else   begin
+      BorderStyle:=BsSizeable;
+      StatusBar1.Visible :=true;
+      WindowState:= wsNormal;
+   end;
+   ShowScreen:=flag;
+
 end;
 
 procedure TFormSupWeight.SetRowHead;

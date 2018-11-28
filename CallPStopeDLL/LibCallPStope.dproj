@@ -106,11 +106,12 @@
         <Manifest_File>(None)</Manifest_File>
         <DCC_UnitSearchPath>C:\delcom\NativeXml409\general;C:\delcom\NativeXml409\nativexml;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_MinorVer>2</VerInfo_MinorVer>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.0;InternalName=;LegalCopyright=32位系统;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.2.1.0;Comments=</VerInfo_Keys>
-        <Debugger_HostApplication>E:\work_lulei\CoalPressProject\V3.1\System32\CoalRockPress.exe</Debugger_HostApplication>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.14;InternalName=;LegalCopyright=32位系统;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.2.1.0;Comments=</VerInfo_Keys>
+        <Debugger_HostApplication>..\..\System32\CoalRockPress.exe</Debugger_HostApplication>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_Release>1</VerInfo_Release>
+        <VerInfo_Build>14</VerInfo_Build>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <DCC_UnitSearchPath>C:\delcom\NativeXml409\nativexml;C:\delcom\NativeXml409\general;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>

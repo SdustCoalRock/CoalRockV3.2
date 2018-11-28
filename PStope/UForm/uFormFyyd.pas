@@ -218,7 +218,6 @@ begin
     FormFyyd:=TFormFyyd.Create(nil);
     try
         FormFyyd.Caption:=ACaption;
-        FormFyyd.WindowState:= wsNormal;
         FormFyyd.ParentWindow:=Ahandle;
         if Heigth >FormFyyd.Height then
            FormFyyd.Top :=Round((Heigth-FormFyyd.Height)/2)
@@ -2048,13 +2047,17 @@ end;
 
 procedure TFormFyyd.SetFromWidthAndHeigth(flag: integer);
 begin
-   if Flag=1  then  begin
-       ShowScreen:=1;
-       Show;
+   if Flag=2  then  begin
+      WindowState:= wsNormal;
+      Leixing:=1;
+   end else if Flag=3  then  begin
+      Leixing:=2;
    end else begin
-       ShowScreen:=0;
-       Show;
+      WindowState:= wsNormal;
+      Leixing:=3;
    end;
+   ShowScreen:=flag;
+   Show;
 end;
 
 procedure TFormFyyd.TransportCallAddDress;

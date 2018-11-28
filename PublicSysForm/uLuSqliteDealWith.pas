@@ -286,8 +286,8 @@ begin
   try
    try
        FileName:=LowerCase(FileName);
-        sql:= ' delete from  ImageStore  where DataType ='+DataType+'  and  Bianma= ' +
-                  BianMa ;
+        sql:= ' delete from  ImageStore  where DataType ='+DataType+'  and  imageFileName= ''' +
+                  FileName +'''' ;
         Maindb.ExecSQL(sql);
         sql:= ' insert into ImageStore (imageFileName,DataType,imageFileSizeBytes,BianMa,Memo) values('''+
                 FileName+''','+DataType+','+intToStr(FS.Size)+','+BianMa+','''+Memo+''')';

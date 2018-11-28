@@ -33,6 +33,7 @@ uses MainForm;
 procedure TKcover.FormCreate(Sender: TObject);
 
 begin
+   ExePath:=ExtractFilePath(Application.Exename);
    Image1.Picture.LoadFromFile(ExePath+'BJTP/Welcome.Bmp') ;
    TimeCount:=0;
    Timer1.Enabled :=true;

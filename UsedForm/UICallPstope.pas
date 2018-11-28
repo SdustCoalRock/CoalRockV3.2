@@ -10,7 +10,7 @@ unit UICallPstope;
 
 interface
 
-uses  Classes;
+uses  Classes, Vcl.Grids,Vcl.ExtCtrls;
 
 type
 
@@ -34,9 +34,9 @@ type
          procedure GetReportYKlh(AHandle:THandle);virtual;abstract;
 
          function  SetFyyd_Bmp(AHandle:THandle):PansiChar;virtual;abstract;
-         procedure OpenSupportWeigth(AHandle:THandle;Caption:Pansichar;Width,Heigth:integer);virtual;abstract;
-         procedure DispCalEavResult(AHandle:THandle;Caption:Pansichar;Width,Heigth:integer);virtual;abstract;
-         procedure OpenSupportSubject(AHandle:THandle;Caption:Pansichar;Width,Heigth:integer);virtual;abstract;
+         procedure OpenSupportWeigth(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer);virtual;abstract;
+         procedure DispCalEavResult(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer);virtual;abstract;
+         procedure OpenSupportSubject(AHandle:THandle;Caption:Pansichar;Width,Heigth,Flag:integer);virtual;abstract;
         
         
          function  Get_Zcyl(const Version: Pansichar; JinChi: Double): Pansichar;virtual;abstract;
@@ -55,7 +55,10 @@ type
           function GetWinFormIsExsit(WinName:Pansichar):Boolean;Virtual;abstract;
           procedure CloseActiveForm(FormStr:Pansichar); Virtual;abstract;
 
-
+          // 给外部的 数据调用
+          function GetWorkFaceInfo(Grid1:TStringGrid): Boolean;  Virtual;abstract;
+          function GetZkYcInfo(Grid1:TStringGrid):Boolean;Virtual;abstract;
+           function GetYcZKT(Image:TImage):Boolean;Virtual;abstract;
          //系统函数
         constructor Create; virtual;abstract;
    end;

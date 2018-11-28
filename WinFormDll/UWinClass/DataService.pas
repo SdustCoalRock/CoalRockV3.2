@@ -111,8 +111,8 @@ begin
        while not MyDataSet.eof do    begin
          ImisF:='0';
          Mkid:=MyDataSet.FieldByName('id').AsInteger;
-         Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\DataBase_'+IntToStr(Mkid)+'.BMP';
-         if (not FileExists(Pic_Path))  or (UpdateCoal) then   begin
+         Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\' +MyDataSet.FieldByName('Meikuangming').AsString+'.BMP';
+         if (UpdateCoal) and (Uppercase(MainDataModule.DataType)<> 'ACCESS' ) then   begin
             if GetImageFromDataBase('KuangJingXinXiBiao','MemoBMP','ImageFileName','id',Mkid,Bitmap) then begin
                Bitmap.SaveToFile(Pic_Path);
                ImisF:='1';

@@ -154,8 +154,8 @@ begin
 
      FAdoCommand.MySqlConnection:=MainDataModule.ExConn;
 
-     self.FillCell(0) ;
-    
+     FillCell(0) ;
+     PageControl1.ActivePageIndex :=0;
 
 end;
 
@@ -199,10 +199,12 @@ begin
 end;
 
 procedure TZkCoalName.PageControl1Change(Sender: TObject);
+var
+  guid:integer;
 begin
     // 控制页面显示
   if PageControl1.ActivePage=TabSheet2 then begin
-    if Public_Basic.ReadDisplayWholeScreen>0 then
+    if Public_Basic.ReadDisplayWholeScreen(guid)>0 then
        SetMapInfomation( true ) else SetMapInfomation( False );
   end;
 end;
@@ -286,22 +288,24 @@ var
   Pic_Path:String;
 begin
    if  (i_Kuang_id>0) and (Edit1.Text<>'')  then
-     if(SaveFileIntoDAtaBase(Edit1.Text,i_Kuang_id)) then begin
-          OptionTip('数据存储成功');
-         SaveFileButton.Enabled :=false;
-         if MainDataModule.DataType='ACCESS'  then  begin
-            Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\CoalBmp_'+IntToStr(i_Kuang_id)+'.JPG';
-            if  FileExists(Pic_Path)  then   DeleteFile(Pic_Path);
-            Image1.Picture.SaveToFile(Pic_Path);
-         end else begin
-            Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\DataBase_'+IntToStr(i_Kuang_id)+'.JPG';
-            if  FileExists(Pic_Path)  then   DeleteFile(Pic_Path) ;
-         end;
-         public_Basic.WriteUpdateCoalBmp(true);
-     end else begin
-         messagebox(self.Handle,'数据存储失败！','系统提示',MB_ICONINFORMATION+mb_ok);
-     end;
+    if MainDataModule.DataType='ACCESS'  then  begin
+        Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\'+Mk_Name+'.BMP';
+        if  FileExists(Pic_Path)  then   DeleteFile(Pic_Path);
+        Image1.Picture.SaveToFile(Pic_Path);
+    end else begin
+        Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\'+Mk_Name+'.BMP';
+        if  FileExists(Pic_Path)  then   DeleteFile(Pic_Path) ;
+        public_Basic.WriteUpdateCoalBmp(true);
 
+        if  not (SaveFileIntoDAtaBase(Edit1.Text,i_Kuang_id)) then begin
+            messagebox(self.Handle,'数据存储失败！','系统提示',MB_ICONINFORMATION+mb_ok);
+            exit;
+        end;
+    end;
+
+   
+     OptionTip('数据存储成功');
+     SaveFileButton.Enabled :=false;
 
 end;
 
@@ -333,7 +337,7 @@ begin
    try
     if not Assigned(My_DataService) then
        if MainDataModule.DataType = 'ACCESS'  then  begin
-            Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\CoalBmp_'+IntToStr(i_Kuang_id)+'.JPG';
+            Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\'+Mk_Name+'.BMP';
             Image1.Picture.LoadFromFile(Pic_Path);
        end else begin
             MY_DataService:=TDataService.Create ;
@@ -552,8 +556,11 @@ begin
      KARow:=AROW;
      Edit_Jituan.Text :=Trim(StringGrid1.Cells[2,ARow]);
      Edit_MeiKuang.Text :=Trim(StringGrid1.Cells[3,ARow]);
-     if (length(Trim(StringGrid1.Cells[1,ARow]))>0) and (ARow>0) then
+     if (length(Trim(StringGrid1.Cells[1,ARow]))>0) and (ARow>0) then  begin
          i_Kuang_id:=StrToInt(Trim(StringGrid1.Cells[1,ARow]));
+         Mk_Name:=Trim(StringGrid1.Cells[3,ARow]);
+     end;
+
      if (length(Trim(StringGrid1.Cells[4,ARow]))>0) and (ARow>0) then
          i_Jituan_id:=StrToInt(Trim(StringGrid1.Cells[4,ARow]));
      //控制按钮

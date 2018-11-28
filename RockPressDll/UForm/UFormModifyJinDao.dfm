@@ -160,6 +160,7 @@ object ModifyJinDao_From: TModifyJinDao_From
         Width = 144
         Height = 13
         Caption = #26356#25442#37319#38598#36827#20992#20449#24687#25903#26550#32534#21495
+        Visible = False
       end
       object Label39: TLabel
         Left = 181
@@ -167,6 +168,7 @@ object ModifyJinDao_From: TModifyJinDao_From
         Width = 36
         Height = 13
         Caption = #21495#25903#26550
+        Visible = False
       end
       object ComboFootSteps: TComboBox
         Left = 95
@@ -265,6 +267,7 @@ object ModifyJinDao_From: TModifyJinDao_From
         Width = 119
         Height = 21
         TabOrder = 6
+        Visible = False
       end
     end
   end
@@ -433,7 +436,7 @@ object ModifyJinDao_From: TModifyJinDao_From
         object TAnnotationTool
           Shape.Alignment = taCenter
           Shape.CustomPosition = True
-          Shape.Left = -1908938
+          Shape.Left = -1910962
           Shape.Shadow.Visible = False
           Shape.Text = '1900-01-01 23:55:49'
           Shape.TextAlignment = taCenter
@@ -450,7 +453,7 @@ object ModifyJinDao_From: TModifyJinDao_From
         AxisID = 0
         object TColorLineTool
           DragRepaint = True
-          Value = 43388.000000000000000000
+          Value = 43434.000000000000000000
           AxisID = 0
           object TAnnotationTool
             Shape.Alignment = taCenter
@@ -464,7 +467,7 @@ object ModifyJinDao_From: TModifyJinDao_From
         end
         object TColorLineTool
           DragRepaint = True
-          Value = 43388.000000000000000000
+          Value = 43434.000000000000000000
           AxisID = 0
           object TAnnotationTool
             Shape.Alignment = taCenter
@@ -602,7 +605,7 @@ object ModifyJinDao_From: TModifyJinDao_From
     Left = 644
     Top = 48
     Bitmap = {
-      494C01014600E0032C0410001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
+      494C01014600E003300410001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002001000001002000000000000020
       0100000000000000000000000000000000000A588E9F1090E9FF1090E9FF1090
       E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090

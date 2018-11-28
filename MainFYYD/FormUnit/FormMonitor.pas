@@ -79,6 +79,7 @@ type
 
   TUserRec=record
       WholeScreenOrOneCol:integer;// 是全局界面还是一个煤矿的界面    1 全局界面  2 具体煤矿的界面
+      RockGuidid:integer;// 如果具体到某一个矿的数据， 0   不需要 导航 1 多页面 导航  2 流程图 导航
       CoalInforLoaded:Boolean;// 所有煤矿信息是否加载
       MeiKuang_id:integer;
       MeiKuang_Name:string;
@@ -154,6 +155,7 @@ type
     //
     MapClass,NextClass: TCoalRec;
     pop_left_clickid:integer;// 鼠标右键点击数字
+    ExHandle:THandle;
 
 
     function  ReturnPanel(id:integer):TPanel;
@@ -171,6 +173,7 @@ type
                                        id:integer;path1,path2:string;jd,wd:double);
     //
     procedure DisLpayWholeCoalScreenGuld(Mkid,Classid:integer); // 显示的 总引导
+    procedure DisplayOneCoalRock(Mkid,Classid:integer);  // 点击到具体的煤矿 进行 界面导引
     procedure DispLayScreen(Startid:integer);
     procedure ScreenCap(LeftPos,TopPos,RightPos,BottomPos:integer;pic_path:string);
     procedure SaveMapToBmp;
@@ -207,7 +210,7 @@ implementation
 
 {$R *.dfm}
 
-uses MainForm, Lu_Public_BasicModual,JPeg,shellapi;
+uses MainForm, Lu_Public_BasicModual,JPeg,shellapi, RockGuidFrom;
 
 //---------------------
 procedure MakeThreadToOpenConToursForm;
@@ -229,17 +232,14 @@ end;
 begin
         if Assigned(MonitorForm) then  FreeAndNil(MonitorForm);
         Application.Handle :=AHandle;
+
         MonitorForm:=TMonitorForm.Create(Application);
 
          try
            with MonitorForm do begin
                Caption:=ACaption;
-               //WindowState:=wsMaximized;
+               ExHandle:=AHandle;
                ParentWindow:=Ahandle;
-
-               Height:=Hi;
-               Width:=Wid;
-               Show;
                MakeWindowsSingle(Single);
 
                Result:=MonitorForm.Handle ;//函数值
@@ -318,7 +318,7 @@ begin
        3003: //  '采场支承压力分布范围计算'
            begin
                MainCForm.CallPStope.OpenZCYL(Handle,
-                  '采场支承压力分布范围计算',Width,Height,1);
+                  '采场支承压力分布范围三维展示',Width,Height,2);
                JudgeSelectCoal.Enabled :=true;
            end;
        
@@ -368,7 +368,7 @@ begin
               MainCForm.UserWin.CreateOpenWordFrom(Handle,
                                '打开矿压观测报告页面',Width,Height,1);
               MainCForm.UserWin.GetMinAndMaxJinDao(MinD,MaxD);
-              public_Basic.WriteMakeWordPercent(true,1);
+              public_Basic.WriteMakeWordPercent(False,0);
               MakeWorkTimer.Enabled :=true;
               JudgeSelectCoal.Enabled :=true;
          end;
@@ -448,7 +448,28 @@ begin
         DispLayScreen(0);
         MakeWorkTimer.Enabled :=False;
      end else if SelectData.WholeScreenOrOneCol=2 then begin  // 点击到具体煤矿
-        ReadPublicUsedMkInfoFromFile(0);
+        if SelectData.RockGuidid =0 then  begin
+           DisplayOneCoalRock(Mkid,Classid);
+           if Assigned(RockGuid) then  FreeAndNil(RockGuid);
+        end else begin
+           if not Assigned(RockGuid) then
+            CreateRockGuidForm(MainCForm.MainWindows.Handle,
+                '矿压导航界面',MainCForm.BackImage.Width,MainCForm.BackImage.Height,1);
+
+        end;
+
+     end;
+
+
+end;
+
+procedure TMonitorForm.DisplayOneCoalRock(Mkid, Classid: integer);
+var
+  i:integer;
+  State:Boolean;
+  Percent:integer;
+begin
+    ReadPublicUsedMkInfoFromFile(0);
         if Mkid <> SelectData.MeiKuang_id then  begin // 如果不是当前的记录的煤矿
            {不是当前的煤矿 去当前煤矿中 查找 第一个能够使用的煤矿}
             if GetWorkFaceFisrtid(SelectData.MeiKuang_id) then begin
@@ -478,9 +499,6 @@ begin
          end else begin
             MakeWorkTimer.Enabled :=False;
          end;
-     end;
-
-
 end;
 
 procedure TMonitorForm.DispLayScreen(Startid:integer);
@@ -556,6 +574,7 @@ begin
        MainCForm. M_Basic_WholeScreen.Caption:='启用监控全屏显示';
        MainCForm.WholeScreen :=0;
        if Assigned(MonitorForm) then  FreeAndNil(MonitorForm);
+
    finally
 
    end;
@@ -780,7 +799,7 @@ end;
 
 procedure TMonitorForm.LoadCoalInformation;
 var
-  Re_str,Pic_Path,BaPath:string;
+  Re_str,Pic_Path,BaPath,CoalName:string;
   s1,s2:Str_DT_array;
   C1,C2,i,MKid,CoalCount,MkTotalC:integer;
   DataType:string;
@@ -794,13 +813,14 @@ begin
          S2:=Public_Basic.split(s1[i],',',C2);
          if (C2>4) and (s2[0]<> '') then begin
             MKid:=Public_Basic.StrToInt_lu(s2[0]);
+            CoalName:=Trim(s2[2]);
             if DataType='ACCESS' then   begin
                Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\CoalBmp_'+IntToStr(Mkid)+'.BMP';
                if not  FileExists(Pic_Path)  then
-                  Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\DataBase_'+IntToStr(Mkid)+'.BMP';
+                  Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\'+CoalName+'.BMP';
             end else begin
                 if s2[6]='1' then
-                   Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\DataBase_'+IntToStr(Mkid)+'.BMP';
+                   Pic_Path:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\'+CoalName+'.BMP';
             end;
 
             BaPath:=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\CoalBmp_0.BMP';
@@ -855,7 +875,7 @@ begin
        end;
    end;
 
-  SelectData.WholeScreenOrOneCol:=Public_Basic.ReadDisplayWholeScreen;
+  SelectData.WholeScreenOrOneCol:=Public_Basic.ReadDisplayWholeScreen(SelectData.RockGuidid);
 
 end;
 
@@ -870,6 +890,7 @@ begin
          self.StatusBar1.Visible :=False;
          WindowState:=wsMaximized;
      end;
+     Show;
 end;
 
 procedure TMonitorForm.MakeWorkTimerTimer(Sender: TObject);

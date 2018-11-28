@@ -97,9 +97,9 @@
         <VerInfo_MinorVer>2</VerInfo_MinorVer>
         <VerInfo_Release>1</VerInfo_Release>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.2498;InternalName=;LegalCopyright=32位程序;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.2.1.0;Comments=</VerInfo_Keys>
-        <VerInfo_Build>2498</VerInfo_Build>
-        <Debugger_HostApplication>E:\work_lulei\CoalPressProject\V3.1\System32\CoalRockPress.exe</Debugger_HostApplication>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.2508;InternalName=;LegalCopyright=32位程序;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.2.1.0;Comments=</VerInfo_Keys>
+        <VerInfo_Build>2508</VerInfo_Build>
+        <Debugger_HostApplication>..\..\System32\CoalRockPress.exe</Debugger_HostApplication>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">

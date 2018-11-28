@@ -103,14 +103,15 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MinorVer>2</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.0;InternalName=;LegalCopyright=32位系统;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.2.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.1.11;InternalName=;LegalCopyright=32位系统;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.2.0.0;Comments=</VerInfo_Keys>
         <Manifest_File>PerMonitorDpiAwareness.manifest</Manifest_File>
         <DCC_ExeOutput>..\..\system32</DCC_ExeOutput>
         <DCC_UnitSearchPath>C:\delcom\NativeXml409\general;C:\delcom\NativeXml409\nativexml;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <Debugger_HostApplication>..\System32\CoalRockPress.exe</Debugger_HostApplication>
+        <Debugger_HostApplication>..\..\System32\CoalRockPress.exe</Debugger_HostApplication>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_Release>1</VerInfo_Release>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
+        <VerInfo_Build>11</VerInfo_Build>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -166,6 +167,11 @@
             <Form>Form_ThreeZCyl</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="UForm\EX_Grid_Serice.pas">
+            <Form>EX_Grid_From</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\PublicSysForm\uHintWin.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -198,14 +204,14 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\system32\LibPStope.dll" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>LibPStope.dll</RemoteName>
+                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32">
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="OSX32">
+                <DeployFile LocalName="..\..\system32\LibPStope.dll" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>LibPStope.dll</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

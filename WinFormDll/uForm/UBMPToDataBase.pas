@@ -54,6 +54,7 @@ type
     procedure ComboBox1Change(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure Memo1Click(Sender: TObject);
   private
     { Private declarations }
     FileName,ExtName:String;
@@ -197,30 +198,34 @@ begin
     if ComboBox1.ItemIndex <0 then  begin
          messagebox(self.Handle,'ÇëÑ¡ÔñÍ¼Æ¬Àà±ð£¡ ','ÏµÍ³ÌáÊ¾',mb_iconerror+mb_ok);
          exit;
-    end;
-    if (ComboBox1.ItemIndex=0)  then begin    //¼òµ¥Í¼Àý
+    end else   if (ComboBox1.ItemIndex=0)  then begin    //¼òµ¥Í¼Àý
          s_temp:=Public_Basic.split(ComboBox2.Text,'_',C1);
          if s_temp[0]='' then exit;
          pBmp.lx :=1;
          pBmp.Bianma :=s_temp[0];
          pBmp.Memo :=s_temp[1];
-    end;
-
-    if (ComboBox1.ItemIndex=1)  then begin   //·ÂÕæÍ¼Àý
+    end else    if (ComboBox1.ItemIndex=1)  then begin   //·ÂÕæÍ¼Àý
          s_temp:=Public_Basic.split(ComboBox2.Text,'_',C1);
          if s_temp[0]='' then exit;
          pBmp.lx :=2;
          pBmp.Bianma :=s_temp[0];
          pBmp.Memo :=s_temp[1];
-    end;
-
-    if (ComboBox1.ItemIndex=2)  then begin   //Ö§¼ÜÍ¼Àý
+    end else   if (ComboBox1.ItemIndex=2)  then begin   //Ö§¼ÜÍ¼Àý
          s_temp:=Public_Basic.split(ComboBox3.Text,'_',C1);
          if s_temp[0]='' then exit;
          pBmp.lx :=3;
          pBmp.Bianma :=s_temp[0];
          pBmp.Memo :=s_temp[1];
+    end else if  (ComboBox1.ItemIndex=3)  then begin   //±³¾°Í¼Àý
+         pBmp.lx :=4;
+         pBmp.Bianma :='0';
+         pBmp.Memo :=ExtractFileName(Edit1.Text);
+    end else if  (ComboBox1.ItemIndex=4)  then begin   //ÆäËûÍ¼Àý
+         pBmp.lx :=5;
+         pBmp.Bianma :='0';
+         pBmp.Memo :=ExtractFileName(Edit1.Text);
     end;
+
 
    if Trim(Memo1.Text )<>'' then
        pBmp.Memo:=Memo1.Text;
@@ -332,6 +337,11 @@ begin
     end;
 
 
+end;
+
+procedure TFormBmpDataBase.Memo1Click(Sender: TObject);
+begin
+    Memo1.SetFocus ;
 end;
 
 procedure TFormBmpDataBase.OptionTip(Str: String);

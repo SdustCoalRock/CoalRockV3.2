@@ -89,7 +89,7 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <Debugger_HostApplication>E:\work_lulei\CoalPressProject\V3.1\System32\CoalRockPress.exe</Debugger_HostApplication>
+        <Debugger_HostApplication>..\..\System32\CoalRockPress.exe</Debugger_HostApplication>
         <DCC_ExeOutput>..\..\system32</DCC_ExeOutput>
         <Manifest_File>..\..\System32\PerMonitorDpiAwareness.manifest</Manifest_File>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -97,10 +97,10 @@
         <DCC_UnitSearchPath>C:\delcom\NativeXml409\general;C:\delcom\NativeXml409\nativexml;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <VerInfo_MinorVer>2</VerInfo_MinorVer>
-        <VerInfo_Keys>CompanyName=;FileVersion=3.2.1.3279;InternalName=;LegalCopyright=32位程序;LegalTrademarks=;OriginalFilename=;ProductVersion=3.2.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileVersion=3.2.1.3294;InternalName=;LegalCopyright=32位程序;LegalTrademarks=;OriginalFilename=;ProductVersion=3.2.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <BRCC_IncludePath>E:\work_lulei\CoalPressProject\PublicSysForm</BRCC_IncludePath>
-        <VerInfo_Build>3279</VerInfo_Build>
+        <VerInfo_Build>3294</VerInfo_Build>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_Release>1</VerInfo_Release>
     </PropertyGroup>

@@ -23,6 +23,7 @@ type
     Timer1: TTimer;
     Label_Version: TLabel;
     Monotor_RG: TRadioGroup;
+    RockPress_RG: TRadioGroup;
     procedure Button2Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -42,7 +43,8 @@ type
   private
     { Private declarations }
     CallWinFormString:String;
-    WholeScreen:integer;//是否显示监控界面    0 不显示 1 全国 2 具体矿
+    WholeScreen,RockGuid:integer;//是否显示监控界面    0 不显示 1 全国 2 具体矿
+    RockGuidid:integer;//是否显示监控界面    0 多页面界面   1 流程导航界面
 
     procedure  InitLogiFrom;
     procedure  SelectCombox2Index;
@@ -191,14 +193,17 @@ end;
 Procedure TloginForm.InitLogiFrom;
 
 begin
-   WholeScreen:=public_Basic.ReadDisplayWholeScreen;
+   WholeScreen:=public_Basic.ReadDisplayWholeScreen(RockGuidid);
    if WholeScreen>2 then  WholeScreen:=0;
    Monotor_RG.ItemIndex := WholeScreen;
+   if RockGuidid >1 then  RockGuidid:=0;
+   RockPress_RG.ItemIndex:= RockGuidid;
+
 end;
 
 procedure TloginForm.Monotor_RGClick(Sender: TObject);
 begin
-   public_Basic.WriteDisplayWholeScreen(Monotor_RG.ItemIndex);
+   public_Basic.WriteDisplayWholeScreen(Monotor_RG.ItemIndex,RockPress_RG.ItemIndex );
 end;
 
 procedure TloginForm.ReadInfoFromFile;

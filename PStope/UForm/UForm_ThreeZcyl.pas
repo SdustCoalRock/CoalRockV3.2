@@ -114,6 +114,7 @@ type
     procedure SecondJinchiChange(Sender: TObject);
     procedure ToolButton2Click(Sender: TObject);
     procedure TB_TiGaoClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
      MySupportMove_count:integer;
      MySupportMove:Array of TsupportMoveRec;
@@ -186,7 +187,7 @@ type
     { Public declarations }
   end;
 
- function ShowZCYL_inn(AHandle:THandle;ACaption:string;Width,Heigth,Flag:integer):integer;stdcall;
+ function ShowZCYL_inn(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):integer;stdcall;
  procedure save_ZCYL_tu_inn(AHandle:THandle);
 
 var
@@ -204,12 +205,9 @@ var
   FileName:string;
 begin
 
-     if Assigned(Form_ThreeZCyl) then
-        FreeAndNil(Form_ThreeZCyl);
-
+     if Assigned(Form_ThreeZCyl) then    FreeAndNil(Form_ThreeZCyl);
      Form_ThreeZCyl:=TForm_ThreeZCyl.Create(nil);
      try
-
         Form_ThreeZCyl.WindowState:= wsNormal;
         Form_ThreeZCyl.ParentWindow:=Ahandle;
         FileName:=public_Basic.Get_MyModulePath +'SaveBmp\FYYD\ZCYL.BMP' ;
@@ -224,30 +222,30 @@ begin
 
 end;
 //-------------------
-function ShowZCYL_inn(AHandle:THandle;ACaption:string;Width,Heigth,Flag:integer):integer;stdcall;
+function ShowZCYL_inn(AHandle:THandle;ACaption:string;Wid,Hi,Flag:integer):integer;stdcall;
 {
 
   Single 0 正常页面  1 全屏页面
 }
 begin
     if Assigned(Form_ThreeZCyl) then   FreeAndNil(Form_ThreeZCyl);
-
     Form_ThreeZCyl:=TForm_ThreeZCyl.Create(nil);
     try
-        Form_ThreeZCyl.Caption:=ACaption;
-        Form_ThreeZCyl.WindowState:= wsNormal;
-        Form_ThreeZCyl.ParentWindow:=Ahandle;
-        if Heigth >Form_ThreeZCyl.Height then
-           Form_ThreeZCyl.Top :=Round((Heigth-Form_ThreeZCyl.Height)/2)
-        else   Form_ThreeZCyl.Top :=0;
-        if Width> Form_ThreeZCyl.Width then
-            Form_ThreeZCyl.Left:=Round((Width-Form_ThreeZCyl.Width)/2)
-        else  Form_ThreeZCyl.Left:=0;
+        with Form_ThreeZCyl do begin
+            Caption:=ACaption;
+            ParentWindow:=Ahandle;
+            if Hi >Form_ThreeZCyl.Height then
+               Top :=Round((Hi-Height)/2)
+            else   Top :=0;
+            if Wid> Width then
+                Left:=Round((Wid-Width)/2)
+            else  Left:=0;
 
-        Form_ThreeZCyl.SetFromWidthAndHeigth(Flag);
-        Result:=1;//函数值
+            SetFromWidthAndHeigth(Flag);
+            Result:=1;//函数值
+        end;
     except
-         FreeAndNil(Form_ThreeZCyl);
+        FreeAndNil(Form_ThreeZCyl);
     end;
 
 end;
@@ -346,7 +344,7 @@ begin
    for I := 0 to high(ZCYL_ThreeDim) do
        setlength(ZCYL_ThreeDim[i],0) ;
   setlength(ZCYL_ThreeDim,0) ;
-
+  GraphChart.ClearChart ;
 end;
 
 procedure TForm_ThreeZCyl.CreateZcyl_ThreeDim(X, Y: integer);
@@ -568,6 +566,8 @@ begin
     // 外应力场边界处
     yi:=Y0+UpperOrDown * round(Zcyl.SX/2);
     if yi>Graph_Z*5 then  yi:=Graph_Z*5;
+    if yi<0 then  exit;
+
 
     Xi1:=X10-round(Zcyl.SX/2);
     xi2:=X20+round(Zcyl.SX/2);
@@ -888,6 +888,12 @@ begin
 
 end;
 
+procedure TForm_ThreeZCyl.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+   Action:=CaFree;
+   Form_ThreeZCyl:=nil;
+end;
+
 procedure TForm_ThreeZCyl.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 var
@@ -901,7 +907,7 @@ try
    end;
 
     ClearZcyl_ThreeDim;
-    if Assigned(Form_ThreeZCyl) then  FreeandNil(Form_ThreeZCyl);
+    //if Assigned(Form_ThreeZCyl) then  FreeandNil(Form_ThreeZCyl);
 finally
 
 end;
@@ -1001,7 +1007,6 @@ begin
     //加载数据
    LoadZCYLThreeDimData(Basic_Line,Val_D);
 
-   RefreshChartGraph;
 end;
 
 function TForm_ThreeZCyl.Inverse_Distance_Powe(p0, p1, p2, p3,
@@ -1373,11 +1378,19 @@ var
 begin
    inc(tmpWl);
    if tmpWl=1 then  begin
-      ZCYL_Series.SideBrush.Clear ;
+        ZCYL_Series.SideBrush.Image.Bitmap:=nil;
+      ZCYL_Series.SideBrush.BackColor:=ClGreen;
+      ZCYL_Series.SideBrush.Color :=ClYellow;
    end else if tmpWl=2 then  begin
-      //ThreeSeries.SideBrush.Image.Bitmap.
       ZCYL_Series.SideBrush.Image.Bitmap:=nil;
-      ZCYL_Series.SideBrush.BackColor:=clGray;
+      ZCYL_Series.SideBrush.BackColor:=clGradientActiveCaption;
+      ZCYL_Series.SideBrush.Color :=ClYellow;
+
+   end  else  if tmpWl=3 then  begin
+      ZCYL_Series.SideBrush.Clear ;
+   end  else  if tmpWl=4 then  begin
+      ZCYL_Series.SideBrush.Image.Bitmap:=nil;
+      ZCYL_Series.SideBrush.BackColor:=clYellow;
       ZCYL_Series.SideBrush.Color :=ClYellow;
       try
          bmap1:=Tbitmap.Create;//创建位图 bitmap1
@@ -1387,21 +1400,6 @@ begin
       finally
          FreeAndNil(bmap1);
       end;
-   end  else  if tmpWl=3 then  begin
-      ZCYL_Series.SideBrush.Image.Bitmap:=nil;
-      ZCYL_Series.SideBrush.BackColor:=clGray;
-      ZCYL_Series.SideBrush.Color :=ClYellow;
-      try
-         bmap1:=Tbitmap.Create;//创建位图 bitmap1
-//         MainDataModule.MySqliteDataBase.GetBMPToSQlite('m.bmp','1',bmap1);
-         ZCYL_Series.SideBrush.Image.Bitmap :=bmap1;
-      finally
-         FreeAndNil(bmap1);
-      end;
-   end  else  if tmpWl=4 then  begin
-      ZCYL_Series.SideBrush.Image.Bitmap:=nil;
-      ZCYL_Series.SideBrush.BackColor:=ClGreen;
-      ZCYL_Series.SideBrush.Color :=ClYellow;
    end else if  tmpWl=5 then  begin
       ZCYL_Series.SideBrush.Image.Bitmap:=nil;
       ZCYL_Series.SideBrush.BackColor:=clGray;
@@ -1602,12 +1600,18 @@ end;
 procedure TForm_ThreeZCyl.SetFromWidthAndHeigth(flag: integer);
 begin
    if Flag=1  then  begin
-       ShowScreen:=1;
-       Show;
-   end else begin
-       ShowScreen:=0;
-       Show;
+      BorderStyle:=BsSizeable;
+      StatusBar1.Visible :=False;
+      WindowState:=wsNormal;
+   end else   begin
+      BorderStyle:=BsSizeable;
+      StatusBar1.Visible :=true;
+      WindowState:= wsNormal;
    end;
+
+  ShowScreen:=flag;
+  Show;
+  RefreshChartGraph;
 end;
 
 function TForm_ThreeZCyl.SetMarkLabelVisible(Value: Boolean): Boolean;
@@ -1637,9 +1641,11 @@ begin
     ZCYL_Series.PaletteSteps:=32;
     //
     ZCYL_Series.SideBrush.Clear ;
-    ZCYL_Series.SideBrush.Image.Bitmap:=nil;
-    ZCYL_Series.SideBrush.BackColor:=ClGreen;
-    ZCYL_Series.SideBrush.Color :=ClYellow;
+    if ShowScreen <>2 then  begin
+        ZCYL_Series.SideBrush.Image.Bitmap:=nil;
+        ZCYL_Series.SideBrush.BackColor:=ClGreen;
+        ZCYL_Series.SideBrush.Color :=ClYellow;
+    end;
 end;
 
 procedure TForm_ThreeZCyl.SmoothThreeDimPointValue(min_Dao, Max_Dao, Min_Sup,

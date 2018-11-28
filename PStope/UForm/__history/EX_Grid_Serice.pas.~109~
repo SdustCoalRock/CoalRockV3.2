@@ -1,0 +1,525 @@
+unit EX_Grid_Serice;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs,PStope_WorKFace,PStope_Immediate,PStope_SupportClass,
+  Vcl.StdCtrls, Vcl.Grids, Vcl.ExtCtrls ;
+
+type
+  pDrawZKT =^TZKTRecord;
+  TZKTRecord=packed record
+     Y_total_T :double;     //　Y 方向文字高度
+     Y_total_H :double;     //  Ｙ 方向图形高度
+     TitleText :Widestring; //标题
+     Pointxy   :Array [0..3] of TPoint; //  绘制柱状图图时的坐标变量
+     TableH    :Integer; //表头高度
+     textHtemp :double;     // 计算岩层名称时的临时变量
+     YLPoint   :Array [0..3] of Tpoint; // 绘制岩梁时的坐标变量
+     Yc_Xiabiao:integer;// 从那一层岩层结束显示
+     Yl_Name_bl,Yl_Text_bl:double;//    岩梁的名称与字符比例
+     Yl_name_count,Yl_Text_count:integer;// 岩梁显示的行数
+     Stop_H:Integer;   //表格后部线段终止
+
+     ZtPoint :Array [0..3] of Tpoint;//之托曾填充数组
+     HanziHeight:Integer;//汉字的最小高度
+     X_Image_Bl,Y_Image_Bl:double;   //画图的比例
+     X_Text_Bl,Y_Text_Bl:double;     //文字的比例
+     TopBlank,BottomBlank: integer;  //图片上下的空白
+     LeftBlank,RightBlank:integer;   // 图片左右的空白
+     ZhuZhuangtu_Wid:Integer; //  指定柱状图的宽度
+     Yc_End_Nu :integer; //   最上面一层岩层的编号
+
+
+     //对比钻孔的绘制
+     NQ_count,Bj_Count:integer; //
+     Dep_k,Step_k:integer;  //临时变量
+
+  end;
+
+  TEX_Grid_From = class(TForm)
+    StringGrid1: TStringGrid;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+
+    
+     t_Gzm:TG_Stope;     //工作面
+     t_zk:Tzk_bore;     //钻孔
+     t_imm_r:TImmediate_roof; //直接顶
+     t_old:Told_roof;    //老顶
+     t_ZhiJia:TZJ_Class;  //支架
+
+     pDF:pDrawZKT;
+     Zk_Total_H:double;
+
+     procedure SetBasicClass;
+     //workFaceInfo
+     procedure InitWorkFaceGrid(Grid1:TStringGrid);
+     procedure FillWorkFaceBasicInfo(Grid1:TStringGrid);
+    //ZkYc
+     procedure InitYcZkGrid(Grid1:TStringGrid);
+     procedure FillZkYcDrillInfo(Grid1:TStringGrid);
+     // DrawZhuzhuangTu
+     procedure InitImage(Image1:Timage;Falg:integer);
+     procedure DrawTitleandTable(Image:Timage;Falg:integer);
+     procedure DrawZhuZhuangTu(Image:Timage;Falg:integer);
+     procedure FillYCBmp(Image:Timage;Ycid,Falg:integer);
+      // 调整DPI显示
+     procedure WMDpiChanged(var Message: TMessage); message WM_DPICHANGED;
+
+  public
+    { Public declarations }
+     //填充工作面基本信息
+     procedure FillWorkFaceInfo(Grid1:TStringGrid);
+     procedure DrawZk_Image(image1:TImage;Falg:integer);
+     procedure FillZkYc(Grid1:TStringGrid);
+  end;
+
+var
+  EX_Grid_From: TEX_Grid_From;
+
+function CreateEx_Grid_Class(ACaption:string;Wid,Hig,Flag:integer):integer;stdcall;
+
+implementation
+
+{$R *.dfm}
+
+uses Main_PStope, Lu_Public_BasicModual;
+function CreateEx_Grid_Class(ACaption:string;Wid,Hig,Flag:integer):integer;stdcall;
+
+begin
+    if Assigned(EX_Grid_From) then   FreeAndNil(EX_Grid_From);
+
+    EX_Grid_From:=TEX_Grid_From.Create(nil);
+    try
+        with EX_Grid_From do  begin
+//            Caption:=ACaption;
+//            WindowState:= wsNormal;
+//            ParentWindow:=Ahandle;
+//            if Hig >Height then
+//               Top :=Round((Hig-Height)/2)
+//            else  Top :=0;
+//            if Wid> Width then
+//               Left:=Round((Wid-Width)/2)
+//            else  Left:=0;
+            if Flag=1 then  Show ;
+
+
+        end;
+        Result:=1;//函数值
+    except
+        FreeAndNil(EX_Grid_From);
+    end;
+end;
+
+{ TEX_Grid_From }
+
+
+procedure TEX_Grid_From.DrawTitleandTable(Image: Timage;Falg:integer);
+begin
+    //指定柱状图的宽度
+    pDF.ZhuZhuangtu_Wid:=Image.Width-pDF.LeftBlank -pDF.RightBlank -180;
+    // //写标题
+    Image.Canvas.Font.Size := 8;
+    Image.Canvas.TextOut(pDF.LeftBlank+30,round(Image.Height/30) div 2,pDF.TitleText);
+   //画表头
+     Image.Canvas.MoveTo(pDF.LeftBlank,pDF.TopBlank-pDF.TableH);
+     Image.Canvas.LineTo(pDF.LeftBlank+160,pDF.TopBlank-pDF.TableH);
+     Image.Canvas.MoveTo(pDF.LeftBlank,pDF.TopBlank);
+     Image.Canvas.LineTo(pDF.LeftBlank+160,pDF.TopBlank);
+     // 竖线
+     Image.Canvas.MoveTo(pDF.LeftBlank,pDF.TopBlank-pDF.TableH);
+     Image.Canvas.LineTo(pDF.LeftBlank,pDF.TopBlank);
+     Image.Canvas.MoveTo(pDF.LeftBlank+25,pDF.TopBlank-pDF.TableH);
+     Image.Canvas.LineTo(pDF.LeftBlank+25,pDF.TopBlank );
+     Image.Canvas.MoveTo(pDF.LeftBlank+80,pDF.TopBlank-pDF.TableH);
+     Image.Canvas.LineTo(pDF.LeftBlank+80,pDF.TopBlank );
+     if Falg=0 then   begin
+        Image.Canvas.MoveTo(pDF.LeftBlank+120,pDF.TopBlank-pDF.TableH);
+        Image.Canvas.LineTo(pDF.LeftBlank+120,pDF.TopBlank );
+     end;
+
+     Image.Canvas.MoveTo(pDF.LeftBlank+160,pDF.TopBlank-pDF.TableH);
+     Image.Canvas.LineTo(pDF.LeftBlank+160,pDF.TopBlank );
+
+     //===岩层名称
+
+     Image.Canvas.Font.Size := 8;
+     Image.Canvas.TextOut(pDF.LeftBlank+2,pDF.TopBlank-pDF.HanziHeight,'编号');
+     Image.Canvas.TextOut(pDF.LeftBlank+27,pDF.TopBlank-pDF.HanziHeight,'岩层名称');
+     if Falg=0 then   begin
+         Image.Canvas.TextOut(pDF.LeftBlank+82,pDF.TopBlank-pDF.HanziHeight,'累计(m)');
+         Image.Canvas.TextOut(pDF.LeftBlank+122,pDF.TopBlank-pDF.HanziHeight,'厚度(m)');
+     end else if Falg=1 then   begin  //综合钻孔柱状图
+         Image.Canvas.TextOut(pDF.LeftBlank+82,pDF.TopBlank-pDF.HanziHeight,'最小/最大/平均');
+     end;
+
+     //写岩层厚度
+
+
+end;
+
+procedure TEX_Grid_From.DrawZhuZhuangTu(Image: Timage;Falg:integer);
+var
+  i:integer;
+begin
+   PDF.Y_total_H:=0 ;
+   PDF.Y_total_T:=0;
+   PDF.Pointxy[0].X :=PDF.LeftBlank+180;
+   PDF.Pointxy[0].Y :=PDF.TopBlank-PDF.TableH;
+
+   PDF.Pointxy[1].X := PDF.Pointxy[0].X+PDF.ZhuZhuangtu_wid;
+   PDF.Pointxy[1].Y := PDF.Pointxy[0].Y;
+   //第一条斜线
+  Image.Canvas.MoveTo(pDF.LeftBlank+160,PDF.TopBlank);
+  Image.Canvas.LineTo(pDF.LeftBlank+180,PDF.TopBlank-PDF.TableH);
+  Zk_Total_H:=0;
+   for I := 0 to t_zk.Zk_Yc_Count-1 do  begin
+       FillYCBmp(Image,i,Falg);
+       PDF.Pointxy[0].X :=PDF.Pointxy[3].x;
+       PDF.Pointxy[0].Y :=PDF.Pointxy[3].Y;
+       PDF.Pointxy[1].X :=PDF.Pointxy[2].x;
+       PDF.Pointxy[1].Y :=PDF.Pointxy[2].Y;
+   end;
+
+
+end;
+
+procedure TEX_Grid_From.DrawZk_Image(image1: TImage;Falg:integer);
+{
+  Falg: =0  一个具体的柱状图
+  Falg ：=1 综合柱状图
+}
+begin
+    InitImage(image1,Falg);
+    DrawTitleandTable(Image1,Falg);
+    DrawZhuZhuangTu(Image1,Falg);
+end;
+
+procedure TEX_Grid_From.FillWorkFaceBasicInfo(Grid1: TStringGrid);
+var
+   Rowi:integer;
+   vRect:    TRect;
+begin
+      Rowi:=1; //1
+      Grid1.Cells[0,Rowi]:='工作面名称';
+      Grid1.Cells[1,Rowi]:=t_Gzm.S_Name;
+      inc(Rowi); //2
+      Grid1.Cells[0,Rowi]:='工作面编号';
+      Grid1.Cells[1,Rowi]:=t_Gzm.S_No;
+      inc(Rowi);  //3
+      Grid1.Cells[0,Rowi]:='所在煤层';
+      Grid1.Cells[1,Rowi]:=t_Gzm.S_mc_name;
+//      inc(Rowi);  //4
+//      Grid1.Cells[0,Rowi]:='采煤方式';
+//      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_Cmff(t_Gzm.s_c) ;
+      inc(Rowi);  //5
+      Grid1.Cells[0,Rowi]:='开采高度(m)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_Cg_h);
+      inc(Rowi);  //6
+      Grid1.Cells[0,Rowi]:='放煤高度(m)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_Fm_h);
+      inc(Rowi);  //7
+      Grid1.Cells[0,Rowi]:='倾角(度)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_qj);
+      inc(Rowi);  //8
+      Grid1.Cells[0,Rowi]:='埋藏深度(m)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_mcsd_h);
+      inc(Rowi);  //9
+      Grid1.Cells[0,Rowi]:='倾斜长(m)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_L_qx);
+      inc(Rowi); //10
+      Grid1.Cells[0,Rowi]:='走向长(m)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_Sx_zx);
+      inc(Rowi);  //11
+      Grid1.Cells[0,Rowi]:='累计进尺(m)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_Jc_L);
+      inc(Rowi); //12
+      Grid1.Cells[0,Rowi]:='普氏系数';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_Coal_F(round(t_Gzm.S_f_PS)) ;
+
+      inc(Rowi);  //13
+      Grid1.Cells[0,Rowi]:='煤内摩擦角';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_M_mcj);
+      inc(Rowi);  //14
+      Grid1.Cells[0,Rowi]:='泊松比';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_Bsb);
+      inc(Rowi);  //15
+      Grid1.Cells[0,Rowi]:='仰斜俯斜';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_YxFx(t_Gzm.Dz_yxfx);
+      inc(Rowi);  //16
+      Grid1.Cells[0,Rowi]:='基岩厚度';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_JYHD(t_Gzm.Dz_JYHD);
+      inc(Rowi);  //17
+      Grid1.Cells[0,Rowi]:='地质构造';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_Cmff(t_Gzm.Dz_DCGZ);
+      inc(Rowi);  //18
+      Grid1.Cells[0,Rowi]:='瓦斯含量';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_WSFC(t_Gzm.Dz_WSFC);
+      inc(Rowi);  //19
+      Grid1.Cells[0,Rowi]:='顶板含水';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_TopWater(t_Gzm.Dz_TopWater);
+      inc(Rowi);  //20
+      Grid1.Cells[0,Rowi]:='底板含水';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_BottomWater(t_Gzm.Dz_BottomWater);
+      inc(Rowi);  //21
+      Grid1.Cells[0,Rowi]:='水平应力';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_HangDao_Stress(t_Gzm.Dz_HeoStress);
+      inc(Rowi);  //22
+      Grid1.Cells[0,Rowi]:='矿压显现';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_RockPress(t_Gzm.Dz_Kyxx);
+      inc(Rowi);  //23
+      Grid1.Cells[0,Rowi]:='巷道支护';
+      Grid1.Cells[1,Rowi]:=public_Basic.Get_workFace_HangDao_support(t_Gzm.Dz_HangDaoSup);
+      inc(Rowi);  //24
+      Grid1.Cells[0,Rowi]:='日推进速度(m)';
+      Grid1.Cells[1,Rowi]:=FormatFloat('0.00',t_Gzm.S_DayStep_speed);
+
+
+end;
+
+procedure TEX_Grid_From.FillWorkFaceInfo(Grid1: TStringGrid);
+begin
+   InitWorkFaceGrid(Grid1);
+   FillWorkFaceBasicInfo(Grid1);
+end;
+
+procedure TEX_Grid_From.FillYCBmp(Image: Timage; Ycid,Falg: integer);
+var
+ bmap1:Tbitmap;//创建位图 bitmap1
+ tmpTextTop:double;
+ TextY:integer;
+ zh_st:string;
+begin
+   bmap1:=Tbitmap.Create;//创建位图 bitmap1
+
+   PDF.Y_total_H:=PDF.Y_total_H+t_zk.Yc_Rock[Ycid].R_h;
+   tmpTextTop:=PDF.Y_total_T;
+   PDF.Y_total_T:=PDF.Y_total_T+PDF.HanziHeight+t_zk.Yc_Rock[Ycid].R_h*PDF.Y_Text_Bl;
+   PDF.Pointxy[2].X :=PDF.Pointxy[1].X ;
+   PDF.Pointxy[2].Y :=PDF.TopBlank-Pdf.TableH+Trunc(PDF.Y_total_H*PDF.Y_Image_BL);
+   PDF.Pointxy[3].X :=PDF.Pointxy[0].X ;
+   PDF.Pointxy[3].Y :=PDF.Pointxy[2].Y ;
+   //把岩层编号与岩层名称进行填充了
+     if PDF.Y_Text_Bl>0  then begin
+        TextY:=pDF.TopBlank+TRUNC(tmpTextTop + t_zk.Yc_Rock[Ycid].R_h*PDF.Y_Text_Bl /2 )+1;
+     end else begin
+        TextY:=pDF.TopBlank+TRUNC(tmpTextTop)+1;
+     end;
+
+    Image.Canvas.TextOut(pDF.LeftBlank+2,TextY,IntTostr(Ycid+1));
+    Image.Canvas.TextOut(pDF.LeftBlank+27,TextY,t_zk.Yc_Rock[Ycid].R_Name);
+    if Falg=0  then   begin
+          Image.Canvas.TextOut(pDF.LeftBlank+82,TextY,FormatFloat('0.0',t_zk.Yc_Rock[Ycid].R_h));
+          Zk_Total_H:=Zk_Total_H+t_zk.Yc_Rock[Ycid].R_h;
+          Image.Canvas.TextOut(pDF.LeftBlank+122,TextY,FormatFloat('0.0',Zk_Total_H));
+    end else  if Falg=1  then   begin  //钻孔综合柱状图
+         zh_st:= FormatFloat('0.0',t_zk.Yc_Rock[Ycid].R_MinH) +'/' +
+                 FormatFloat('0.0',t_zk.Yc_Rock[Ycid].R_MaxH) +'/' +
+                 FormatFloat('0.0',t_zk.Yc_Rock[Ycid].R_h);
+
+         Image.Canvas.TextOut(pDF.LeftBlank+82,TextY,zh_st);
+         Zk_Total_H:=Zk_Total_H+t_zk.Yc_Rock[Ycid].R_h;
+    end;
+
+
+    // 画竖线
+    Image.Canvas.MoveTo(pDF.LeftBlank,trunc(pDF.TopBlank+tmpTextTop));
+    Image.Canvas.LineTo(pDF.LeftBlank,trunc(pDF.TopBlank+PDF.Y_total_T));
+    Image.Canvas.MoveTo(pDF.LeftBlank+25,trunc(pDF.TopBlank+tmpTextTop));
+    Image.Canvas.LineTo(pDF.LeftBlank+25,trunc(pDF.TopBlank+PDF.Y_total_T));
+    Image.Canvas.MoveTo(pDF.LeftBlank+80,trunc(pDF.TopBlank+tmpTextTop));
+    Image.Canvas.LineTo(pDF.LeftBlank+80,trunc(pDF.TopBlank+PDF.Y_total_T));
+    if Falg=0  then   begin
+       Image.Canvas.MoveTo(pDF.LeftBlank+120,trunc(pDF.TopBlank+tmpTextTop));
+       Image.Canvas.LineTo(pDF.LeftBlank+120,trunc(pDF.TopBlank+PDF.Y_total_T));
+    end;
+
+
+    Image.Canvas.MoveTo(pDF.LeftBlank+160,trunc(pDF.TopBlank+tmpTextTop));
+    Image.Canvas.LineTo(pDF.LeftBlank+160,trunc(pDF.TopBlank+PDF.Y_total_T));
+
+    // 画横线
+    Image.Canvas.MoveTo(pDF.LeftBlank,trunc(pDF.TopBlank+PDF.Y_total_T));
+    Image.Canvas.LineTo(pDF.LeftBlank+160,trunc(pDF.TopBlank+PDF.Y_total_T));
+    //画斜线
+    Image.Canvas.LineTo(pDF.LeftBlank+180,PDF.Pointxy[3].y);
+
+   Image.Canvas.Brush.Bitmap:=nil;
+   //填充岩层的图例
+
+   if t_zk.Yc_Rock[Ycid].BmpFile <>'' then begin
+       ExPstopeClass.MySqliteTable.GetBMPToSQlite(t_zk.Yc_Rock[Ycid].BmpFile+'.Bmp','1',bmap1);
+       Image.Canvas.Polygon(PDF.Pointxy) ;
+       Image.Canvas.Brush.Bitmap:=bmap1;
+       if   (PDF.Pointxy[2].Y-PDF.Pointxy[1].Y>2)  then
+            Image.Canvas.FloodFill(Trunc((PDF.Pointxy[0].X+PDF.Pointxy[1].X)/2),
+                      Trunc((PDF.Pointxy[1].Y+PDF.Pointxy[2].Y)/2),clBlack,fsBorder);
+       Image.Canvas.Brush.Bitmap:=nil;
+   end;
+
+   FreeAndNil(bmap1);
+
+end;
+
+procedure TEX_Grid_From.FillZkYc(Grid1:TStringGrid);
+begin
+   InitYcZkGrid( Grid1);
+   FillZkYcDrillInfo(Grid1);
+end;
+
+procedure TEX_Grid_From.FillZkYcDrillInfo(Grid1: TStringGrid);
+var
+  i,Rowi:integer;
+  TotalS:double;
+begin
+   Rowi:=1; TotalS:=0;
+   for i := 0 to t_zk.Zk_Yc_Count-1 do  begin
+       Grid1.Cells[0,Rowi]:=IntToStr(i+1);
+       Grid1.Cells[1,Rowi]:=t_zk.Yc_Rock[i].R_Name;
+       Grid1.Cells[2,Rowi]:=FormatFloat('0.00',t_zk.Yc_Rock[i].R_h);
+       TotalS:=TotalS+t_zk.Yc_Rock[i].R_h;
+       Grid1.Cells[3,Rowi]:=FormatFloat('0.00',TotalS);
+       Inc(Rowi);
+       if Grid1.RowCount< Rowi+2 then
+          Grid1.RowCount:=Rowi+2 ;
+   end;
+
+end;
+
+procedure TEX_Grid_From.FormCreate(Sender: TObject);
+begin
+   SetBasicClass;
+end;
+
+procedure TEX_Grid_From.InitImage(Image1: Timage;Falg:integer);
+var
+  i:integer;
+begin
+   //Clear
+   Image1.Picture.Graphic:=nil;
+   Image1.Canvas.Refresh;
+   Image1.Canvas.FillRect(Image1.ClientRect);
+   // init
+   if Assigned(Pdf) then     Dispose(pDF);
+   new(pDf);
+   //空白边界初始化
+   pDF.TopBlank:=round(Image1.Height/30)+30 ;
+   pDF.BottomBlank:=round(Image1.Height/30);
+   pDF.LeftBlank:=round(Image1.Width/60);
+   pDF.RightBlank:=round(Image1.Width/60);
+   pDF.TableH:=20;
+   pDF.HanziHeight:=15;
+   if Falg=0 then  begin
+       pDF.TitleText:='【'+t_zk.Zk_name+'】钻孔柱状图';
+       pDF.HanziHeight:=15;
+   end else begin
+       pDF.TitleText:='【'+t_zk.Zk_name+'】综合钻孔柱状图';
+       pDF.HanziHeight:=15;
+   end;
+   // 计算比例
+   pDF.Y_total_H:=0;
+   for I:=0 to t_zk.Zk_Yc_Count-1 do
+          pDF.Y_total_H:=pDF.Y_total_H+t_zk.Yc_Rock[i].R_h;
+
+   if Image1.Height-pDF.TopBlank-pDF.BottomBlank-(t_zk.Zk_Yc_Count-1)*pDF.HanziHeight >0  then   begin
+       pDF.Y_Text_Bl:=(Image1.Height-pDF.TopBlank-pDF.BottomBlank-
+                         (t_zk.Zk_Yc_Count-1)*pDF.HanziHeight)/pDF.Y_total_H;
+   end else begin
+       pDF.Y_Text_Bl:=0;
+       pDF.HanziHeight:= trunc((Image1.Height-pDF.TopBlank-pDF.BottomBlank)/ (t_zk.Zk_Yc_Count-1) );
+   end;
+
+
+
+
+   pDF.Y_Image_BL:=(Image1.Height-pDF.TopBlank-pDF.BottomBlank+pDF.TableH)/pDF.Y_total_H;
+
+
+end;
+
+procedure TEX_Grid_From.InitWorkFaceGrid(Grid1: TStringGrid);
+begin
+     //初始化地质stringgrid
+    Grid1.ColCount :=2;
+    Grid1.RowCount :=24;
+
+    Grid1.FixedCols:=0;
+    Grid1.FixedRows:=1;
+    Grid1.DefaultRowHeight:=18;
+    Grid1.ColWidths[0]:=90;
+    Grid1.ColWidths[1]:=trunc(Grid1.Width)-120;
+
+    Grid1.Canvas.Font.Size:=8;
+    Grid1.Cells[0,0]:='名称';
+    Grid1.Cells[1,0]:='取值';
+
+
+end;
+
+procedure TEX_Grid_From.InitYcZkGrid(Grid1: TStringGrid);
+begin
+    //初始化岩层stringgrid
+    Grid1.ColCount :=4;
+    Grid1.RowCount :=10;
+
+    Grid1.FixedCols:=0;
+    Grid1.FixedRows:=1;
+    Grid1.DefaultRowHeight:=18;
+    Grid1.ColWidths[0]:=25;
+    Grid1.ColWidths[1]:=75;
+    Grid1.ColWidths[2]:=(trunc(Grid1.Width)-130) div 2;
+    Grid1.ColWidths[3]:=(trunc(Grid1.Width)-130) div 2;
+
+    Grid1.Canvas.Font.Size:=8;
+    Grid1.Cells[0,0]:='序号';
+    Grid1.Cells[1,0]:='岩层名称';
+    Grid1.Cells[2,0]:='厚度(m)';
+    Grid1.Cells[3,0]:='累计(m)';
+
+
+end;
+
+procedure TEX_Grid_From.SetBasicClass;
+begin
+   t_Gzm:=ExPstopeClass.Ex_Gzm ;
+   t_zk:=ExPstopeClass.Ex_zk ;
+   t_imm_r:=ExPstopeClass.Ex_imm_r ;
+   t_old:=ExPstopeClass.Ex_old ;
+   t_zhijia:=ExPstopeClass.Ex_ZhiJia ;
+end;
+
+procedure TEX_Grid_From.WMDpiChanged(var Message: TMessage);
+{$IFDEF DELPHI_STYLE_SCALING}
+  function FontHeightAtDpi(aDPI, aFontSize: integer): integer;
+  var
+    tmpCanvas: TCanvas;
+  begin
+    tmpCanvas := TCanvas.Create;
+    try
+      tmpCanvas.Handle := GetDC(0);
+      tmpCanvas.Font.Assign(self.Font);
+      tmpCanvas.Font.PixelsPerInch := aDPI; //must be set BEFORE size
+      tmpCanvas.Font.size := aFontSize;
+      result := tmpCanvas.TextHeight('0');
+    finally
+      tmpCanvas.free;
+    end;
+  end;
+  {$ENDIF}
+
+begin
+  inherited;
+  {$IFDEF DELPHI_STYLE_SCALING}
+  ChangeScale(FontHeightAtDpi(LOWORD(Message.wParam), self.Font.Size), FontHeightAtDpi(self.PixelsPerInch, self.Font.Size));
+  {$ELSE}
+  ChangeScale(LOWORD(Message.wParam), self.PixelsPerInch);
+  {$ENDIF}
+  self.PixelsPerInch := LOWORD(Message.wParam);
+
+
+end;
+
+end.

@@ -31,7 +31,9 @@ uses
   Pstope_ShowWindows in '..\PublicSysForm\Pstope_ShowWindows.pas',
   PStope_SupportClass in '..\PublicSysForm\PStope_SupportClass.pas',
   VerFityDataComm in '..\PublicSysForm\VerFityDataComm.pas',
-  UForm_ThreeZcyl in 'UForm\UForm_ThreeZcyl.pas' {Form_ThreeZCyl};
+  UForm_ThreeZcyl in 'UForm\UForm_ThreeZcyl.pas' {Form_ThreeZCyl},
+  EX_Grid_Serice in 'UForm\EX_Grid_Serice.pas' {EX_Grid_From},
+  uHintWin in '..\PublicSysForm\uHintWin.pas';
 
 {$R *.res}
 

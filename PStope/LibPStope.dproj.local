@@ -24,10 +24,10 @@
     <Transaction>2018/01/09 10:19:56.000.733,E:\work_lulei\CoalPressProject\PStope\UForm\uFormFyyd.pas=</Transaction>
     <Transaction>2018/01/09 10:19:59.000.905,E:\work_lulei\CoalPressProject\PStope\UForm\UFormZhijia.pas=</Transaction>
     <Transaction>2018/01/09 10:20:10.000.897,E:\work_lulei\CoalPressProject\PStope\UForm\zhijiaCs_D.pas=</Transaction>
-    <Transaction>2018/01/09 10:21:31.000.527,=E:\work_lulei\CoalPressProject\PublicSysForm\SQLite3.pas</Transaction>
     <Transaction>2018/01/09 10:21:31.000.495,=E:\work_lulei\CoalPressProject\PublicSysForm\MySQLDataSet.pas</Transaction>
-    <Transaction>2018/01/09 10:21:31.000.569,=E:\work_lulei\CoalPressProject\PublicSysForm\SQLiteTable3.pas</Transaction>
+    <Transaction>2018/01/09 10:21:31.000.527,=E:\work_lulei\CoalPressProject\PublicSysForm\SQLite3.pas</Transaction>
     <Transaction>2018/01/09 10:21:31.000.547,=E:\work_lulei\CoalPressProject\PublicSysForm\sqlite3udf.pas</Transaction>
+    <Transaction>2018/01/09 10:21:31.000.569,=E:\work_lulei\CoalPressProject\PublicSysForm\SQLiteTable3.pas</Transaction>
     <Transaction>2018/01/09 10:21:31.000.481,=E:\work_lulei\CoalPressProject\PublicSysForm\mysql.pas</Transaction>
     <Transaction>2018/01/09 10:22:00.000.992,E:\work_lulei\CoalPressProject\PublicSysForm\Lu_NoData_function.pas=</Transaction>
     <Transaction>2018/01/09 10:22:10.000.728,=E:\work_lulei\CoalPressProject\PublicSysForm\Lu_base_function.pas</Transaction>
@@ -80,11 +80,15 @@
     <Transaction>2018/01/28 20:20:56.000.055,C:\Users\lulei\Desktop\PStope_SupportClass.pas=E:\work_lulei\CoalPressProject\PublicSysForm\PStope_SupportClass.pas</Transaction>
     <Transaction>2018/01/28 20:35:44.000.134,C:\Users\lulei\Desktop\PStope_SupportClass.pas=</Transaction>
     <Transaction>2018/01/28 20:35:47.000.375,C:\Users\lulei\Desktop\Pstope_ShowWindows.pas=</Transaction>
-    <Transaction>2018/01/28 20:36:53.000.180,=E:\work_lulei\CoalPressProject\PublicSysForm\Pstope_ShowWindows.pas</Transaction>
     <Transaction>2018/01/28 20:36:53.000.204,=E:\work_lulei\CoalPressProject\PublicSysForm\PStope_SupportClass.pas</Transaction>
+    <Transaction>2018/01/28 20:36:53.000.180,=E:\work_lulei\CoalPressProject\PublicSysForm\Pstope_ShowWindows.pas</Transaction>
     <Transaction>2018/01/29 14:09:06.000.217,E:\work_lulei\CoalPressProject\PStope\UForm\zhijiaCs_D.pas=</Transaction>
     <Transaction>2018/02/04 10:30:12.000.801,=E:\work_lulei\CoalPressProject\V3.0\PublicSysForm\VerFityDataComm.pas</Transaction>
     <Transaction>2018/08/19 19:47:32.000.096,=E:\work_lulei\CoalPressProject\V3.1\PStope\UForm\UForm_ThreeZcyl.pas</Transaction>
+    <Transaction>2018/11/15 08:35:57.000.356,=D:\work_lulei\CoalPressProject\V3.2\GitSource\PStope\Unit3.pas</Transaction>
+    <Transaction>2018/11/15 08:36:47.000.267,D:\work_lulei\CoalPressProject\V3.2\GitSource\PStope\Unit3.pas=D:\work_lulei\CoalPressProject\V3.2\GitSource\PStope\UForm\EX_Grid_Serice.pas</Transaction>
+    <Transaction>2018/11/15 08:36:47.000.267,D:\work_lulei\CoalPressProject\V3.2\GitSource\PStope\Unit3.dfm=D:\work_lulei\CoalPressProject\V3.2\GitSource\PStope\UForm\EX_Grid_Serice.dfm</Transaction>
+    <Transaction>2018/11/30 09:33:20.000.690,=D:\work_lulei\CoalPressProject\V3.2\GitSource\PublicSysForm\uHintWin.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="..\..\GitSource"/>
@@ -98,6 +102,7 @@
     <File Path="..\PublicSysForm\SQLite3.pas"/>
     <File Path="..\PublicSysForm\sqlite3udf.pas"/>
     <File Path="..\PublicSysForm\SQLiteTable3.pas"/>
+    <File Path="..\PublicSysForm\uHintWin.pas"/>
     <File Path="..\PublicSysForm\uLuSqliteDealWith.pas"/>
     <File Path="..\PublicSysForm\VerFityDataComm.pas"/>
     <File Path="..\UsedForm"/>
@@ -105,6 +110,8 @@
     <File Path="UForm"/>
     <File Path="UForm\ChecKInputForm.pas"/>
     <File Path="UForm\ChecKInputForm.dfm"/>
+    <File Path="UForm\EX_Grid_Serice.pas"/>
+    <File Path="UForm\EX_Grid_Serice.dfm"/>
     <File Path="UForm\Main_PStope.pas"/>
     <File Path="UForm\uFormFyyd.pas"/>
     <File Path="UForm\uFormFyyd.dfm"/>

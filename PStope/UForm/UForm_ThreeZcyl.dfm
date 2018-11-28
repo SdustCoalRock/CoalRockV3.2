@@ -2,8 +2,8 @@ object Form_ThreeZCyl: TForm_ThreeZCyl
   Left = 0
   Top = 0
   Caption = #25903#25215#21387#21147#20998#24067#35268#24459#19977#32500#27169#25311#22270
-  ClientHeight = 811
-  ClientWidth = 1259
+  ClientHeight = 694
+  ClientWidth = 1015
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,7 +11,8 @@ object Form_ThreeZCyl: TForm_ThreeZCyl
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Visible = True
+  Position = poDesigned
+  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   PixelsPerInch = 96
@@ -19,7 +20,7 @@ object Form_ThreeZCyl: TForm_ThreeZCyl
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 1259
+    Width = 1015
     Height = 36
     AutoSize = True
     ButtonHeight = 36
@@ -300,8 +301,8 @@ object Form_ThreeZCyl: TForm_ThreeZCyl
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 792
-    Width = 1259
+    Top = 675
+    Width = 1015
     Height = 19
     Panels = <
       item
@@ -313,6 +314,7 @@ object Form_ThreeZCyl: TForm_ThreeZCyl
       item
         Width = 50
       end>
+    ExplicitWidth = 1268
   end
   object ImageList1: TImageList
     BlendColor = clWindow
@@ -321,7 +323,7 @@ object Form_ThreeZCyl: TForm_ThreeZCyl
     Left = 708
     Top = 65528
     Bitmap = {
-      494C01014A00E003700510001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
+      494C01014A00E0037C0510001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
       010000000000000000000000000000000000C0C0C000C0C0C000C0C0C000C0C0
       C000C0C0C000C0C0C000C0C0C000FFFFFF004A494A00CECFCE00C0C0C000C0C0

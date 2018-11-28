@@ -1,0 +1,2165 @@
+unit UFormZhijia;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, ExtCtrls, StdCtrls, Buttons, Grids, ComCtrls,Jpeg,PngImage,StrUtils,
+  math ,PStope_WorKFace,PStope_Immediate,PStope_SupportClass, Vcl.Menus,
+  System.ImageList, Vcl.ImgList,uHintWin ;
+
+type
+
+
+  TFormZhiJia = class(TForm)
+    TopPanel: TPanel;
+    BottomPanel: TPanel;
+    Button1: TButton;
+    Button2: TButton;
+    PageControl1: TPageControl;
+    TabSheetDz: TTabSheet;
+    StringGridDZ: TStringGrid;
+    TabSheetFY: TTabSheet;
+    StringGridFy: TStringGrid;
+    TabSheetZj: TTabSheet;
+    StringGridZJ: TStringGrid;
+    TabSheet_Canshu: TTabSheet;
+    StringGrid_ZJCS: TStringGrid;
+    TabSheet_ZCYL: TTabSheet;
+    TabSheet2_MBPH: TTabSheet;
+    StringGrid_ZCYL: TStringGrid;
+    StringGrid_MBPB: TStringGrid;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    GroupBox1: TGroupBox;
+    Image_Sm: TImage;
+    Memo_Sm: TMemo;
+    ImageList1: TImageList;
+    DispPopMemu: TPopupMenu;
+    Pop_disptool: TMenuItem;
+    Pop_StartOn: TMenuItem;
+    Pop_BackStep: TMenuItem;
+    Pop_OneStep: TMenuItem;
+    Pop_AutoStep: TMenuItem;
+    N24: TMenuItem;
+    Pop_MoveLeft: TMenuItem;
+    Pop_MoveRight: TMenuItem;
+    N15: TMenuItem;
+    Pop_ZoomMin: TMenuItem;
+    Pop_ZoomMAX: TMenuItem;
+    Pop_ReCallZoom: TMenuItem;
+    N1: TMenuItem;
+    Pop_Fist_imm: TMenuItem;
+    Pop_Second_imm: TMenuItem;
+    N3: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
+    N6: TMenuItem;
+    N7: TMenuItem;
+    N2: TMenuItem;
+    N8: TMenuItem;
+    N9: TMenuItem;
+    N10: TMenuItem;
+    N11: TMenuItem;
+    Timer1: TTimer;
+    Image_Zj_Parent: TPanel;
+    Image_ZJ: TImage;
+    TipMemo: TMemo;
+    N12: TMenuItem;
+    N13: TMenuItem;
+    N14: TMenuItem;
+ 
+    procedure FormShow(Sender: TObject);
+
+    procedure StringGridDZSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure FormResize(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    
+
+    procedure StringGridFySelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure StringGridZJSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure BitBtn3Click(Sender: TObject);
+
+
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure FormDeactivate(Sender: TObject);
+    procedure StringGridDZKeyPress(Sender: TObject; var Key: Char);
+    procedure StringGridFyKeyPress(Sender: TObject; var Key: Char);
+    procedure StringGrid_ZJCSKeyPress(Sender: TObject; var Key: Char);
+    procedure StringGridZJKeyPress(Sender: TObject; var Key: Char);
+    procedure StringGrid_ZCYLDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure Panel1Click(Sender: TObject);
+    procedure Panel2Click(Sender: TObject);
+    procedure StringGrid_MBPBDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+    procedure StringGrid_MBPBSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure TabSheetZjShow(Sender: TObject);
+    procedure Image_ZJMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure N6Click(Sender: TObject);
+    procedure N7Click(Sender: TObject);
+    procedure Pop_AutoStepClick(Sender: TObject);
+    procedure Pop_MoveRightClick(Sender: TObject);
+    procedure Pop_ZoomMinClick(Sender: TObject);
+    procedure Pop_ZoomMAXClick(Sender: TObject);
+    procedure Pop_Fist_immClick(Sender: TObject);
+    procedure Pop_Second_immClick(Sender: TObject);
+    procedure N9Click(Sender: TObject);
+    procedure N10Click(Sender: TObject);
+    procedure N2Click(Sender: TObject);
+    procedure N8Click(Sender: TObject);
+    procedure Pop_disptoolClick(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure N11Click(Sender: TObject);
+    procedure N3Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure Pop_MoveLeftClick(Sender: TObject);
+    procedure N12Click(Sender: TObject);
+    procedure Pop_BackStepClick(Sender: TObject);
+    procedure N13Click(Sender: TObject);
+    procedure N14Click(Sender: TObject);
+
+  private
+    { Private declarations }
+    DllFileName:string;
+    ComboDz_psxs_12,ComboDz_cmfs_4,ComboDz_yxfx_16,ComboDz_jyhd,ComboDz_dcgz,ComboDz_WsFc : TComboBox;
+    ComboDz_TopWater,ComboDz_BottomWater,ComboDz_HeoStress,ComboDz_kyxx,ComboDz_HangDaoSup :TComboBox;
+    ComBo_YlJg,Combo_nYLc,Combo_ckq,combo_imm_leibie,combo_old_leibie,combo_diban_leibie,combo_fdm_leibie:TComboBox;
+
+     GIF_lizhu,GIF_HB,GiF_Dl:Integer;
+     t_Gzm:TG_Stope;     //工作面
+     t_zk:Tzk_bore;     //钻孔
+     t_imm_r:TImmediate_roof; //直接顶
+     t_old:Told_roof;    //老顶
+     t_ZhiJia:TZJ_Class;  //支架
+     ShowScreen:integer;
+     Exhandle:THandle; //外部句柄
+     DrawREC:TDrawZjRecord;
+     FHint:THintWin;// 气泡
+    Procedure initGzmDCGrid(Sender:TObject);
+    Procedure initzjGrid(Sender:TObject);
+    procedure initFyydGrid(Sender:TObject);
+    procedure InitYLCanshuGrid(Sender:TObject);
+    Procedure InitZCYLGrid(Sender:TObject);
+    procedure InitMBpBGrid(Sender:TObject);
+    procedure CreateCanshuFile(FileName:string);
+    procedure ReadFileFillCanshuGrid(FileName:string);
+    procedure SaveDataToFile(FileNAme:string);
+
+    procedure Edit_Cs(Sender:Tobject); //修订参数
+    procedure SetFromWidthAndHeigth(flag:integer);
+    procedure FromSaveToBmp(pic_path:string);
+    procedure ReadMbpb_Lilun(BianMa:integer;Image:Timage);
+    Procedure ReadMemo_Mbph(BianMa:integer;Memo:TMemo);
+
+    procedure DrawZcZj(Image:TImage);// 绘制综采液压支架
+    function ReturnSuoLiang(Zj:TZJ_Class;Use_H:double):double;
+
+
+    procedure SetBasicClass;
+     // 调整DPI显示
+    procedure WMDpiChanged(var Message: TMessage); message WM_DPICHANGED;
+  public
+    { Public declarations }
+     Mc_FdBs: double;
+
+  end;
+var
+   FormZhiJia:TFormZhiJia;
+
+ function ShowZhiJia_inn(AHandle:THandle;ACaption:string;Wid,Hig,Flag:integer):integer;stdcall;
+
+implementation
+
+uses  Main_PStope, Lu_Public_BasicModual,System.IniFiles, uFormFyyd,
+  UForm_ThreeZcyl;
+
+
+{$R *.dfm}
+function ShowZhiJia_inn(AHandle:THandle;ACaption:string;Wid,Hig,Flag:integer):integer;stdcall;
+
+begin
+    if Assigned(FormZhiJia) then   FreeAndNil(FormZhiJia);
+
+    FormZhiJia:=TFormZhiJia.Create(nil);
+    try
+        with FormZhiJia do  begin
+            Caption:=ACaption;
+            ParentWindow:=Ahandle;
+            Exhandle:=Ahandle;
+            if Hig >Height then
+               Top :=Round((Hig-Height)/2)
+            else  Top :=0;
+            if Wid> Width then
+               Left:=Round((Wid-Width)/2)
+            else  Left:=0;
+            SetFromWidthAndHeigth(Flag);
+        end;
+        Result:=1;//函数值
+    except
+        FreeAndNil(FormZhiJia);
+    end;
+end;
+ //============
+
+
+
+//===================
+procedure TFormZhiJia.initGzmDCGrid(Sender:TObject);
+ Var
+    I,j :Integer;
+    UseCol,useRow:integer;
+    vRect:    TRect;
+begin
+    //初始化地质stringgrid
+    StringGridDZ.ColCount :=9;
+    if StringGridDZ.Height/20<20 then begin
+        StringGridDZ.RowCount :=20;
+    end else begin
+        StringGridDZ.RowCount :=trunc(StringGridDZ.Height/20);
+    end;
+
+    StringGridDZ.FixedCols:=0;
+    StringGridDZ.FixedRows:=1;
+    StringGridDZ.DefaultRowHeight:=18;
+    StringGridDZ.ColWidths[4]:=50;
+    StringGridDZ.ColWidths[0]:=30;        StringGridDZ.ColWidths[5]:=30;
+    StringGridDZ.ColWidths[1]:=120;       StringGridDZ.ColWidths[6]:=120;
+    StringGridDZ.ColWidths[2]:=trunc(StringGridDZ.Width/2)-210;
+        StringGridDZ.ColWidths[7]:=trunc(StringGridDZ.Width/2)-210;
+    StringGridDZ.ColWidths[3]:=10;       StringGridDZ.ColWidths[8]:=10;
+
+    StringGridDZ.Canvas.Font.Size:=8;
+    StringGridDZ.Cells[0,0]:='序号';     StringGridDZ.Cells[5,0]:='序号';
+    StringGridDZ.Cells[1,0]:='名称';     stringGridDZ.Cells[6,0]:='名称';
+    StringGridDZ.Cells[2,0]:='取值';     StringGridDZ.Cells[7,0]:='取值';
+
+      StringGridDZ.Cells[1,1]:='工作面基本信息';
+      StringGridDZ.Cells[0,2]:='1';
+      StringGridDZ.Cells[1,2]:='工作面名称';
+      StringGridDZ.Cells[2,2]:=t_Gzm.S_Name;
+      StringGridDZ.Cells[0,3]:='2';
+      StringGridDZ.Cells[1,3]:='工作面编号';
+      StringGridDZ.Cells[2,3]:=t_Gzm.S_No;
+      StringGridDZ.Cells[0,4]:='3';
+      StringGridDZ.Cells[1,4]:='所在煤层';
+      StringGridDZ.Cells[2,4]:=t_Gzm.S_mc_name;
+      StringGridDZ.Cells[0,5]:='4';
+      StringGridDZ.Cells[1,5]:='采煤方式';
+         if ComboDz_cmfs_4=nil then begin
+                vRect := StringGridDZ.CellRect(2, 4);
+                ComboDz_cmfs_4 := TComboBox.Create(StringGridDZ);
+                ComboDz_cmfs_4.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_cmfs_4.BoundsRect := vRect;
+                ComboDz_cmfs_4.Color :=clBtnFace;
+                ComboDz_cmfs_4.Visible := true;
+               // ComboDz_cmfs_4.OnClick:=Combo_Gzm_cmfs_4;
+
+                ComboDz_cmfs_4.Style :=csDropDownList;
+                ComboDz_cmfs_4.Items.Clear;
+                ComboDz_cmfs_4.Items.Add('炮采');// 1	cqcsb	cmfa	1	炮采
+                ComboDz_cmfs_4.Items.Add('普采');//    2	cqcsb	cmfa	2	普采
+                ComboDz_cmfs_4.Items.Add('综采');//    3	cqcsb	cmfa	3	综采（采全高）
+                ComboDz_cmfs_4.Items.Add('放顶煤开采');//    4	cqcsb	cmfa	4	放顶煤开采
+                ComboDz_cmfs_4.Items.Add('分层开采上分层');//    5	cqcsb	cmfa	4	分层开采上分层
+                ComboDz_cmfs_4.Items.Add('分层开采下分层');//    6	cqcsb	cmfa	4	分层开采上分层
+               
+                 for I := 0 to ComboDz_cmfs_4.Items.Count - 1 do
+                    begin
+                       if ComboDz_cmfs_4.Items[i] =Trim(StringReplace(t_Gzm.S_cmfs,#13#10,'',[])) then  begin
+                          ComboDz_cmfs_4.ItemIndex:=i;
+                          break;
+                       end;
+                    end;
+                 if i>ComboDz_cmfs_4.Items.Count - 1 then  begin
+                    if Public_BAsic.strToInt_lu(t_Gzm.S_cmfs)>0 then begin
+                          ComboDz_cmfs_4.ItemIndex:=Public_BAsic.strToInt_lu(t_Gzm.S_cmfs)-1;
+                    end else  begin
+                          ComboDz_cmfs_4.ItemIndex:=0;
+                    end;
+                 end;
+
+
+         end;
+      StringGridDZ.Cells[0,6]:='5';
+      StringGridDZ.Cells[1,6]:='开采高度(m)';
+      StringGridDZ.Cells[2,6]:=FormatFloat('0.00',t_Gzm.S_Cg_h);
+      StringGridDZ.Cells[0,7]:='6';
+      StringGridDZ.Cells[1,7]:='放煤高度(m)';
+      StringGridDZ.Cells[2,7]:=FormatFloat('0.00',t_Gzm.S_Fm_h);
+      StringGridDZ.Cells[0,8]:='7';
+      StringGridDZ.Cells[1,8]:='倾角(度)';
+      StringGridDZ.Cells[2,8]:=FormatFloat('0.00',t_Gzm.S_qj);
+      StringGridDZ.Cells[0,9]:='8';
+      StringGridDZ.Cells[1,9]:='埋藏深度(m)';
+      StringGridDZ.Cells[2,9]:=FormatFloat('0.00',t_Gzm.S_mcsd_h);
+      StringGridDZ.Cells[0,10]:='9';
+      StringGridDZ.Cells[1,10]:='倾斜长(m)';
+      StringGridDZ.Cells[2,10]:=FormatFloat('0.00',t_Gzm.S_L_qx);
+      StringGridDZ.Cells[0,11]:='10';
+      StringGridDZ.Cells[1,11]:='走向长(m)';
+      StringGridDZ.Cells[2,11]:=FormatFloat('0.00',t_Gzm.S_Sx_zx);
+      StringGridDZ.Cells[0,12]:='11';
+      StringGridDZ.Cells[1,12]:='累计进尺(m)';
+      StringGridDZ.Cells[2,12]:=FormatFloat('0.00',t_Gzm.S_Jc_L);
+      StringGridDZ.Cells[0,13]:='12';
+      StringGridDZ.Cells[1,13]:='普氏系数';
+       if ComboDz_psxs_12=nil then begin
+                vRect := StringGridDZ.CellRect(2, 12);
+                ComboDz_psxs_12 := TComboBox.Create(StringGridDZ);
+                ComboDz_psxs_12.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_psxs_12.BoundsRect := vRect;
+                ComboDz_psxs_12.Color :=clBtnFace;
+                ComboDz_psxs_12.Visible := true;
+               // ComboDz_psxs_12.OnClick:=Combo_Gzm_psxs_12;
+
+                ComboDz_psxs_12.Style :=csDropDownList;
+                ComboDz_psxs_12.Items.Add('普氏系数0.8以下');// 普氏系数0.8以下
+                ComboDz_psxs_12.Items.Add('普氏系数0.8-1.5之间');   // 6	cqcsb	mtyd	2	普氏系数0.8-1.5之间
+                ComboDz_psxs_12.Items.Add('普氏系数1.5-2.5之间');   // 7	cqcsb	mtyd	3	普氏系数1.5-2.5之间
+                ComboDz_psxs_12.Items.Add('氏系数2.5以上');   // 8	cqcsb	mtyd	4	普氏系数2.5以上1
+
+                   if t_Gzm.S_f_PS =1then begin
+                       ComboDz_psxs_12.ItemIndex:=0;
+                       t_Gzm.S_M_njl:=1;
+                       t_Gzm.S_M_mcj:=20;
+                       t_Gzm.S_Bsb:=0.35;
+                       t_Gzm.S_K_zcfz:=1.6-0.1*(t_Gzm.S_Cg_h-4);
+                   end else if t_Gzm.S_f_PS=2 then begin
+                       ComboDz_psxs_12.ItemIndex:=1;
+                       t_Gzm.S_M_njl:=3;
+                       t_Gzm.S_M_mcj:=25;
+                       t_Gzm.S_Bsb:=0.3;
+                       t_Gzm.S_K_zcfz:=2.0-0.1*(t_Gzm.S_Cg_h-4);
+                   end else if t_Gzm.S_f_PS=3 then begin
+                       ComboDz_psxs_12.ItemIndex:=2;
+                       t_Gzm.S_M_njl:=5;
+                       t_Gzm.S_M_mcj:=30;
+                       t_Gzm.S_Bsb:=0.25;
+                       t_Gzm.S_K_zcfz:=2.3-0.1*(t_Gzm.S_Cg_h-4);
+                   end else begin
+                       ComboDz_psxs_12.ItemIndex:=3;
+                       t_Gzm.S_M_njl:=10;
+                       t_Gzm.S_M_mcj:=35;
+                       t_Gzm.S_Bsb:=0.2;
+                       t_Gzm.S_K_zcfz:=2.6-0.1*(t_Gzm.S_Cg_h-4);
+                   end;
+
+         end;
+
+      StringGridDZ.Cells[0,14]:='13';
+      StringGridDZ.Cells[1,14]:='煤内摩擦角';
+      StringGridDZ.Cells[2,14]:=FormatFloat('0.00',t_Gzm.S_M_mcj);
+      StringGridDZ.Cells[0,15]:='14';
+      StringGridDZ.Cells[1,15]:='泊松比';
+      StringGridDZ.Cells[2,15]:=FormatFloat('0.00',t_Gzm.S_Bsb);
+      StringGridDZ.Cells[0,16]:='15';
+      StringGridDZ.Cells[1,16]:='仰斜俯斜';    //ComboDz_yxfx_16
+      if ComboDz_yxfx_16=nil then begin
+                vRect := StringGridDZ.CellRect(2, 15);
+                ComboDz_yxfx_16 := TComboBox.Create(StringGridDZ);
+                ComboDz_yxfx_16.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_yxfx_16.BoundsRect := vRect;
+                ComboDz_yxfx_16.Color :=clBtnFace;
+                ComboDz_yxfx_16.Visible := true;
+               // ComboDz_yxfx_16.OnClick:=Combo_Gzm_yxfx_16;
+
+                ComboDz_yxfx_16.Style :=csDropDownList;
+                ComboDz_yxfx_16.Items.Add('水平推进');// 1	水平推进
+                ComboDz_yxfx_16.Items.Add('仰斜推进');
+                ComboDz_yxfx_16.Items.Add('俯斜推进');
+                 if t_Gzm.Dz_yxfx>0 then begin
+                          ComboDz_yxfx_16.ItemIndex:=t_Gzm.Dz_yxfx-1;
+                 end else begin
+                          ComboDz_yxfx_16.ItemIndex:=0;
+                 end;
+
+
+         end;
+     // 下面 是第二列
+      UseCol:=5;useRow:=-15;
+      StringGridDZ.Cells[0+UseCol,17+useRow]:='16';
+      StringGridDZ.Cells[1+UseCol,17+useRow]:='基岩厚度';    //ComboDz_yxfx_16
+      if ComboDz_jyhd=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 16+useRow);
+                ComboDz_jyhd := TComboBox.Create(StringGridDZ);
+                ComboDz_jyhd.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_jyhd.BoundsRect := vRect;
+                ComboDz_jyhd.Color :=clBtnFace;
+                ComboDz_jyhd.Visible := true;
+               // ComboDz_jyhd.OnClick:=Combo_Gzm_jyhd;
+
+                ComboDz_jyhd.Style :=csDropDownList;
+                ComboDz_jyhd.Items.Add('薄基岩');//
+                ComboDz_jyhd.Items.Add('一般基岩');
+                ComboDz_jyhd.Items.Add('中厚基岩');
+                ComboDz_jyhd.Items.Add('巨厚基岩');
+                 if t_Gzm.Dz_JYHD>0 then begin
+                          ComboDz_jyhd.ItemIndex:=t_Gzm.Dz_JYHD-1;
+                 end else begin
+                          ComboDz_jyhd.ItemIndex:=0;
+                 end;
+         end;
+
+      StringGridDZ.Cells[0+UseCol,18+useRow]:='17';
+      StringGridDZ.Cells[1+UseCol,18+useRow]:='地质构造';    //ComboDz_yxfx_16
+      if ComboDz_DCGZ=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 17+useRow);
+                ComboDz_DCGZ := TComboBox.Create(StringGridDZ);
+                ComboDz_DCGZ.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_DCGZ.BoundsRect := vRect;
+                ComboDz_DCGZ.Color :=clBtnFace;
+                ComboDz_DCGZ.Visible := true;
+                //ComboDz_DCGZ.OnClick:=Combo_Gzm_dcgz;
+
+                ComboDz_DCGZ.Style :=csDropDownList;
+                ComboDz_DCGZ.Items.Add('地质构造较少');//
+                ComboDz_DCGZ.Items.Add('背斜轴部');
+                ComboDz_DCGZ.Items.Add('向斜轴部');
+                ComboDz_DCGZ.Items.Add('断层密集，但不影响推进');
+                ComboDz_DCGZ.Items.Add('断层密集，影响推进');
+                ComboDz_DCGZ.Items.Add('构造极其复杂');
+                if t_Gzm.Dz_DCGZ>0 then begin
+                          ComboDz_DCGZ.ItemIndex:=(t_Gzm.Dz_DCGZ)-1;
+                end else begin
+                          ComboDz_DCGZ.ItemIndex:=0;
+                 end;
+         end;
+
+     StringGridDZ.Cells[0+UseCol,19+useRow]:='18';
+     StringGridDZ.Cells[1+UseCol,19+useRow]:='瓦斯含量';    //ComboDz_yxfx_16
+      if ComboDz_WSFC=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 18+useRow);
+                ComboDz_WSFC := TComboBox.Create(StringGridDZ);
+                ComboDz_WSFC.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_WSFC.BoundsRect := vRect;
+                ComboDz_WSFC.Color :=clBtnFace;
+                ComboDz_WSFC.Visible := true;
+                //ComboDz_WSFC.OnClick:=Combo_Gzm_WSFC;
+
+                ComboDz_WSFC.Style :=csDropDownList;
+                ComboDz_WSFC.Items.Add('瓦斯含量较低');//
+                ComboDz_WSFC.Items.Add('低瓦斯，局部超限');
+                ComboDz_WSFC.Items.Add('高瓦斯');
+                if (t_Gzm.Dz_WSFC)>0 then begin
+                          ComboDz_WSFC.ItemIndex:=(t_Gzm.Dz_WSFC)-1;
+                end else begin
+                          ComboDz_WSFC.ItemIndex:=0;
+                 end;
+         end;
+
+     StringGridDZ.Cells[0+UseCol,20+useRow]:='19';
+     StringGridDZ.Cells[1+UseCol,20+useRow]:='顶板含水';    //ComboDz_yxfx_16
+      if ComboDz_TopWater=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 19+useRow);
+                ComboDz_TopWater := TComboBox.Create(StringGridDZ);
+                ComboDz_TopWater.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_TopWater.BoundsRect := vRect;
+                ComboDz_TopWater.Color :=clBtnFace;
+                ComboDz_TopWater.Visible := true;
+               // ComboDz_TopWater.OnClick:=Combo_Gzm_TopWater;
+
+                ComboDz_TopWater.Style :=csDropDownList;
+                ComboDz_TopWater.Items.Add('顶板无水');//
+                ComboDz_TopWater.Items.Add('含水层距离顶板较近');
+                ComboDz_TopWater.Items.Add('含水层距离顶板较远');
+                ComboDz_TopWater.Items.Add('曾发生透水事故');
+                ComboDz_TopWater.Items.Add('其他');
+                if (t_Gzm.Dz_TopWater)>0 then begin
+                          ComboDz_TopWater.ItemIndex:=(t_Gzm.Dz_TopWater)-1;
+                end else begin
+                          ComboDz_TopWater.ItemIndex:=0;
+                 end;
+         end;
+
+     StringGridDZ.Cells[0+UseCol,21+useRow]:='20';
+     StringGridDZ.Cells[1+UseCol,21+useRow]:='底板含水';    //ComboDz_yxfx_16
+      if ComboDz_BottomWater=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 20+useRow);
+                ComboDz_BottomWater := TComboBox.Create(StringGridDZ);
+                ComboDz_BottomWater.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_BottomWater.BoundsRect := vRect;
+                ComboDz_BottomWater.Color :=clBtnFace;
+                ComboDz_BottomWater.Visible := true;
+               // ComboDz_BottomWater.OnClick:=Combo_Gzm_BottomWater;
+
+                ComboDz_BottomWater.Style :=csDropDownList;
+                ComboDz_BottomWater.Items.Add('底板无水源');//
+                ComboDz_BottomWater.Items.Add('底板有水源，较远');
+                ComboDz_BottomWater.Items.Add('底板有水源，较近');
+                ComboDz_BottomWater.Items.Add('曾发生底板突出事故');
+                ComboDz_BottomWater.Items.Add('其他');
+                if (t_Gzm.Dz_BottomWater)>0 then begin
+                          ComboDz_BottomWater.ItemIndex:=(t_Gzm.Dz_BottomWater)-1;
+                end else begin
+                          ComboDz_BottomWater.ItemIndex:=0;
+                 end;
+         end;
+
+     StringGridDZ.Cells[0+UseCol,22+useRow]:='21';
+     StringGridDZ.Cells[1+UseCol,22+useRow]:='水平应力';    //ComboDz_yxfx_16
+      if ComboDz_HeoStress=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 21+useRow);
+                ComboDz_HeoStress := TComboBox.Create(StringGridDZ);
+                ComboDz_HeoStress.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_HeoStress.BoundsRect := vRect;
+                ComboDz_HeoStress.Color :=clBtnFace;
+                ComboDz_HeoStress.Visible := true;
+              //  ComboDz_HeoStress.OnClick:=Combo_Gzm_HeoStress;
+
+                ComboDz_HeoStress.Style :=csDropDownList;
+                ComboDz_HeoStress.Items.Add('基本无水平应力');//
+                ComboDz_HeoStress.Items.Add('水平应力小于垂直应力');
+                ComboDz_HeoStress.Items.Add('水平应力与垂直应力相当');
+                ComboDz_HeoStress.Items.Add('水平应力大于垂直应力1.5倍以上');
+                if (t_Gzm.Dz_HeoStress)>0 then begin
+                          ComboDz_HeoStress.ItemIndex:=(t_Gzm.Dz_HeoStress)-1;
+                 end else begin
+                          ComboDz_HeoStress.ItemIndex:=0;
+                 end;
+         end;
+
+     StringGridDZ.Cells[0+UseCol,23+useRow]:='22';
+     StringGridDZ.Cells[1+UseCol,23+useRow]:='矿压显现';    //ComboDz_yxfx_16
+      if ComboDz_kyxx=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 22+useRow);
+                ComboDz_kyxx := TComboBox.Create(StringGridDZ);
+                ComboDz_kyxx.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_kyxx.BoundsRect := vRect;
+                ComboDz_kyxx.Color :=clBtnFace;
+                ComboDz_kyxx.Visible := true;
+               // ComboDz_kyxx.OnClick:=Combo_Gzm_Kyxx;
+
+                ComboDz_kyxx.Style :=csDropDownList;
+                ComboDz_kyxx.Items.Add('矿压显现不明显');
+                ComboDz_kyxx.Items.Add('有矿压显现，不影响生产');
+                ComboDz_kyxx.Items.Add('矿压显现较剧烈，影响生产');
+                ComboDz_kyxx.Items.Add('发生过顶板事故');
+                if (t_Gzm.Dz_Kyxx)>0 then begin
+                          ComboDz_kyxx.ItemIndex:=(t_Gzm.Dz_Kyxx)-1;
+                 end else begin
+                          ComboDz_kyxx.ItemIndex:=0;
+                 end;
+         end;
+
+     StringGridDZ.Cells[0+UseCol,24+useRow]:='23';
+     StringGridDZ.Cells[1+UseCol,24+useRow]:='巷道支护';    //ComboDz_yxfx_16
+      if ComboDz_HangDaoSup=nil then begin
+                vRect := StringGridDZ.CellRect(2+UseCol, 23+useRow);
+                ComboDz_HangDaoSup := TComboBox.Create(StringGridDZ);
+                ComboDz_HangDaoSup.Parent := StringGridDZ.Parent;
+                     OffsetRect(vRect, StringGridDZ.left+1, StringGridDZ.Top+StringGridDZ.DefaultRowHeight*1);
+                ComboDz_HangDaoSup.BoundsRect := vRect;
+                ComboDz_HangDaoSup.Color :=clBtnFace;
+                ComboDz_HangDaoSup.Visible := true;
+               // ComboDz_HangDaoSup.OnClick:=Combo_Gzm_HangDaoSup;
+
+                ComboDz_HangDaoSup.Style :=csDropDownList;
+                ComboDz_HangDaoSup.Items.Add('巷道基本不需要支护');
+                ComboDz_HangDaoSup.Items.Add('巷道简单锚网支护');
+                ComboDz_HangDaoSup.Items.Add('巷道架棚支护，基本不变形');
+                ComboDz_HangDaoSup.Items.Add('巷道变形，底鼓，安全影响小');
+                ComboDz_HangDaoSup.Items.Add('巷巷道急速变形，底鼓，严重影响安全');
+                 if (t_Gzm.Dz_HangDaoSup)>0 then begin
+                          ComboDz_HangDaoSup.ItemIndex:=(t_Gzm.Dz_HangDaoSup)-1;
+                  end else begin
+                          ComboDz_HangDaoSup.ItemIndex:=0;
+                  end;
+         end;
+
+        //日推进速度
+      StringGridDZ.Cells[0+UseCol,25+useRow]:='24';
+      StringGridDZ.Cells[1+UseCol,25+useRow]:='日推进速度(m)';
+      StringGridDZ.Cells[2+UseCol,25+useRow]:=FormatFloat('0.00',t_Gzm.S_DayStep_speed);
+
+end;
+procedure TFormZhiJia.InitMBpBGrid(Sender: TObject);
+var
+  i,j:integer;
+begin
+    StringGrid_MBPB.Width :=PageControl1.Width div 2;
+
+    StringGrid_MBPB.RowCount:=9;
+    StringGrid_MBPB.ColCount :=5;
+
+   for I := 0 to StringGrid_MBPB.ColCount -1 do
+      for j := 0 to StringGrid_MBPB.RowCount -1 do
+        StringGrid_MBPB.Cells [i,j]:='' ;
+    StringGrid_MBPB.FixedCols:=1;
+    StringGrid_MBPB.FixedRows:=1;
+    StringGrid_MBPB.ColWidths[0]:=30;
+    StringGrid_MBPB.DefaultRowHeight:=20;
+    StringGrid_MBPB.Canvas.Font.Size:=8;
+    StringGrid_MBPB.ColWidths[1]:=150;
+    StringGrid_MBPB.ColWidths[2]:=75;
+    StringGrid_MBPB.ColWidths[3]:=75;
+    StringGrid_MBPB.ColWidths[4]:=StringGrid_MBPB.Width-350;
+
+    StringGrid_MBPB.Cells[0,0]:='序号';
+    StringGrid_MBPB.Cells[1,0]:='计算理论名称';
+    StringGrid_MBPB.Cells[2,0]:='片帮高度(m)';
+    StringGrid_MBPB.Cells[3,0]:='片帮深度(m)';
+
+    StringGrid_MBPB.Cells[4,0]:='查看理论';
+
+    StringGrid_MBPB.Cells[1,1]:='大数据分析方法';
+    StringGrid_MBPB.Cells[1,2]:='压剪式片帮计算';
+    StringGrid_MBPB.Cells[1,3]:='劈裂式片帮计算';
+    StringGrid_MBPB.Cells[1,4]:='横拱式片帮计';
+
+    StringGrid_MBPB.Cells[1,5]:='压杆理论计算片帮';
+    StringGrid_MBPB.Cells[1,6]:='煤壁滑动体力学计算';
+    StringGrid_MBPB.Cells[1,8]:='综合多种算法建议';
+
+//
+    for I := 1 to 6 do begin
+        StringGrid_MBPB.Cells[0,i]:=intTostr(i);
+        StringGrid_MBPB.Cells[2,i]:=FormatFloat('#.##',t_zhijia.Zj_JiSuan_hubang_H[i]);
+        StringGrid_MBPB.Cells[3,i]:=FormatFloat('#.##',t_zhijia.Zi_JiSuan_hubang_s[i]);
+        StringGrid_MBPB.Cells[4,i]:='点击查看';
+    end;
+    // 综合意见与建议
+    StringGrid_MBPB.Cells[0,8]:=intTostr(7);
+    StringGrid_MBPB.Cells[2,8]:=FormatFloat('#.##',t_zhijia.Zj_JiSuan_hubang_H[0]);
+    StringGrid_MBPB.Cells[3,8]:=FormatFloat('#.##',t_zhijia.Zi_JiSuan_hubang_s[0]);
+    StringGrid_MBPB.Cells[4,8]:='点击查看';
+end;
+
+procedure TFormZhiJia.InitYLCanshuGrid(Sender: TObject);
+var
+  i:integer;
+begin
+    StringGrid_ZJCS.FixedCols:=1;
+    StringGrid_ZJCS.FixedRows:=2;
+    StringGrid_ZJCS.ColCount :=8;
+    StringGrid_ZJCS.RowCount :=20;
+    StringGrid_ZJCS.DefaultRowHeight:=25;
+    StringGrid_ZJCS.DefaultRowHeight:=18;
+
+    StringGrid_ZJCS.ColWidths[0]:=20;
+    StringGrid_ZJCS.ColWidths[1]:=80;
+    StringGrid_ZJCS.ColWidths[2]:=80;
+    StringGrid_ZJCS.ColWidths[3]:=100;
+    for I := 4 to 7 do
+        StringGrid_ZJCS.ColWidths[i]:=trunc((StringGrid_ZJCS.Width-300)/4) ;
+
+    StringGridZJ.Canvas.Font.Size:=8;
+    StringGrid_ZJCS.Cells[0,0]:='序';
+        StringGrid_ZJCS.Cells[0,1]:='号';
+    StringGrid_ZJCS.Cells[1,0]:='内应力';
+        StringGrid_ZJCS.Cells[1,1]:='场情况';
+    StringGrid_ZJCS.Cells[2,0]:='岩梁结';
+        StringGrid_ZJCS.Cells[2,1]:='构状况';
+    StringGrid_ZJCS.Cells[3,0]:='顶板来';
+        StringGrid_ZJCS.Cells[3,1]:='压情况';
+    StringGrid_ZJCS.Cells[4,0]:='软岩顶';
+        StringGrid_ZJCS.Cells[4,1]:='板取值';
+    StringGrid_ZJCS.Cells[5,0]:='一般顶';
+        StringGrid_ZJCS.Cells[5,1]:='板取值';
+    StringGrid_ZJCS.Cells[6,0]:='坚硬顶';
+        StringGrid_ZJCS.Cells[6,1]:='板取值';
+    StringGrid_ZJCS.Cells[7,0]:='浅埋深';
+        StringGrid_ZJCS.Cells[7,1]:='薄基岩';
+
+    for I := 0 to 12 do   begin
+        if ( i mod 6 =3 )then  StringGrid_ZJCS.Cells[1,i+2]:='  应';
+        if i mod 3 =0 then  continue;
+
+        if (i div 6 =0) and ( i mod 6 =1 )then begin
+            StringGrid_ZJCS.Cells[1,i+2]:='  有';
+        end else if  (i div 6 =1) and ( i mod 6 =1 )then begin
+            StringGrid_ZJCS.Cells[1,i+2]:='  无';
+        end;
+        //
+        if ( i mod 6 =2 )then  StringGrid_ZJCS.Cells[1,i+2]:='  内';
+
+        if ( i mod 6 =4 )then  StringGrid_ZJCS.Cells[1,i+2]:='  力';
+        if ( i mod 6 =5 )then  StringGrid_ZJCS.Cells[1,i+2]:='  场';
+
+        if ( i mod 6 =1 )then  StringGrid_ZJCS.Cells[2,i+2]:='  单';
+        if ( i mod 6 =2 )then  StringGrid_ZJCS.Cells[2,i+2]:=' 岩梁';
+        if ( i mod 6 =4 )then  StringGrid_ZJCS.Cells[2,i+2]:='  多';
+        if ( i mod 6 =5 )then  StringGrid_ZJCS.Cells[2,i+2]:=' 岩梁';
+
+        if ( i mod 3 =1 )then  StringGrid_ZJCS.Cells[3,i+2]:='初次来压';
+        if ( i mod 3 =2 )then  StringGrid_ZJCS.Cells[3,i+2]:='周期来压';
+    end;
+
+end;
+
+procedure TFormZhiJia.InitZCYLGrid(Sender: TObject);
+var
+  i,j,t:integer;
+  Rowi:integer;
+  JinChi:Double;
+  ZCyl_Str:String;
+  zcyl_List_0,zcyl_List_1,zcyl_List_2,zcyl_List_3:TStrings;
+begin
+//  while StringGrid_ZCYL do  begin
+//
+//  end;
+   StringGrid_ZCYL.RowCount:=20;
+   StringGrid_ZCYL.ColCount :=6;
+
+   for I := 0 to StringGrid_ZCYL.ColCount -1 do
+      for j := 0 to StringGrid_ZCYL.RowCount -1 do
+        StringGrid_ZCYL.Cells [i,j]:='' ;
+    StringGrid_ZCYL.FixedCols:=1;
+    StringGrid_ZCYL.FixedRows:=1;
+    StringGrid_ZCYL.ColWidths[0]:=80;
+    StringGrid_ZCYL.DefaultRowHeight:=18;
+    StringGrid_ZCYL.Canvas.Font.Size:=8;
+
+    for I := 1 to 4 do
+        StringGrid_ZCYL.ColWidths[i]:=(StringGrid_ZCYL.Width-100) div 6;
+     StringGrid_ZCYL.ColWidths[5]:=(StringGrid_ZCYL.Width-100) div 3;
+
+     StringGrid_ZCYL.Cells[1,0]:='内应力范围(m)';
+     StringGrid_ZCYL.Cells[2,0]:='内应力峰值系数)';
+     StringGrid_ZCYL.Cells[3,0]:='外应力范围(m)';
+     StringGrid_ZCYL.Cells[4,0]:='外应力峰值系数)';
+     StringGrid_ZCYL.Cells[5,0]:='外应力峰值距离煤壁距离(m)';
+     Rowi:=1;
+     zcyl_List_0:=TStringList.Create;  zcyl_List_1:=TStringList.Create;
+     zcyl_List_2:=TStringList.Create;  zcyl_List_3:=TStringList.Create;
+
+     try
+         for t := 0 to 2 do  begin
+             if t=0 then  begin
+                JinChi:=t_Gzm.S_L_qx/2;
+             end else if t=1 then begin
+                JinChi:=t_Gzm.S_L_qx;
+             end else begin
+                JinChi:=t_Gzm.S_L_qx*2;
+             end;
+
+
+             ZCyl_Str:=t_Gzm.Return_Zcyl('1.0',JinChi,t_zk) ;
+             zcyl_List_0.Delimiter:=';';
+             zcyl_List_0.DelimitedText:= ZCyl_Str;
+             zcyl_List_1.Delimiter:=',';
+             zcyl_List_1.DelimitedText:= zcyl_List_0[2];
+             zcyl_List_2.Delimiter:=',';
+             zcyl_List_2.DelimitedText:= zcyl_List_0[3];
+             zcyl_List_3.Delimiter:=',';
+             zcyl_List_3.DelimitedText:= zcyl_List_0[4];
+
+
+              for j := 0 to 4 do  begin  // 行
+                  for I := 0 to 5 do    // 列
+                     if i=0 then  begin
+                        if j=0 then  begin
+                           StringGrid_ZCYL.Cells[0,Rowi]:='当前进尺';
+                        end else if j=1 then  begin
+                           StringGrid_ZCYL.Cells[0,Rowi]:='开切眼后方';
+                        end else if j=2 then  begin
+                           StringGrid_ZCYL.Cells[0,Rowi]:='下顺槽外侧';
+                        end else if j=3 then  begin
+                           StringGrid_ZCYL.Cells[0,Rowi]:='工作面前方';
+                        end else if j=4 then  begin
+                           StringGrid_ZCYL.Cells[0,Rowi]:='上顺槽外侧';
+                        end;
+                     end else begin
+                       if (i=1) and ( j=0) then  begin
+                          StringGrid_ZCYL.Cells[i,Rowi]:=FormatFloat('#.##',JinChi)+'米 ';
+                       end else if (i>1 ) and ( j=0) then  begin
+                          continue;
+                       end else begin
+                          if i=2 then  begin
+                             StringGrid_ZCYL.Cells[i,Rowi]:= zcyl_List_0[0];
+                          end else  if i=4 then  begin
+                             StringGrid_ZCYL.Cells[i,Rowi]:= zcyl_List_0[1];
+                          end else  if i=1 then  begin
+                             StringGrid_ZCYL.Cells[i,Rowi]:= zcyl_List_1[j-1];
+                          end else  if i=5 then  begin
+                             StringGrid_ZCYL.Cells[i,Rowi]:= zcyl_List_2[j-1];
+                          end else  if i=3 then  begin
+                             StringGrid_ZCYL.Cells[i,Rowi]:= zcyl_List_3[j-1];
+                          end;
+                       end;
+                     end;
+                 Inc(Rowi);
+              end;
+              Inc(Rowi);
+         end;
+
+     finally
+        FreeAndNil(zcyl_List_0);
+     end;
+
+
+end;
+
+//======
+ Procedure TFormZhiJia.initzjGrid(Sender:TObject);
+ var
+   UseCol,useRow:integer;
+ begin
+       //初始化支架stringgrid
+    StringGridZJ.Width :=320;
+    StringGridZJ.ColCount :=4;
+    StringGridZJ.RowCount :=30;
+
+    StringGridZJ.FixedCols:=0;
+    StringGridZJ.FixedRows:=1;
+    StringGridZJ.DefaultRowHeight:=18;
+
+    StringGridZJ.ColWidths[0]:=30;
+    StringGridZJ.ColWidths[1]:=120;
+    StringGridZJ.ColWidths[2]:=trunc(StringGridZJ.Width)-230;
+
+    StringGridZJ.ColWidths[3]:=30;
+
+    StringGridZJ.Canvas.Font.Size:=8;
+    StringGridZJ.Cells[0,0]:='序号';
+    StringGridZJ.Cells[1,0]:='名称';
+    StringGridZJ.Cells[2,0]:='取值';
+
+
+
+    StringGridZJ.Canvas.Font.Size:=8;
+
+    //-- FormatFloat('0.00',P_Stope.t_Gzm.CK_DownMz);
+    StringGridZJ.Cells[0,1]:='1';
+    StringGridZJ.Cells[1,1]:='支架编号';
+    StringGridZJ.Cells[2,1]:=t_ZhiJia.Zj_BianHao;
+    //----
+    StringGridZJ.Cells[0,2]:='2';
+    StringGridZJ.Cells[1,2]:='支架型号';
+    StringGridZJ.Cells[2,2]:=t_ZhiJia.Zj_XingHao;
+      //----
+    StringGridZJ.Cells[0,3]:='3';
+    StringGridZJ.Cells[1,3]:='支架立柱数量';
+    StringGridZJ.Cells[2,3]:=IntToStr(t_ZhiJia.Zj_Lizhu_count);
+    StringGridZJ.Cells[3,3]:='个';
+      //----
+    StringGridZJ.Cells[0,4]:='4';
+    StringGridZJ.Cells[1,4]:='支架控顶距';
+    StringGridZJ.Cells[2,4]:=FormatFloat('0.00',t_ZhiJia.Zj_KongdingJU);
+    StringGridZJ.Cells[3,4]:='米';
+      //----
+    StringGridZJ.Cells[0,5]:='5';
+    StringGridZJ.Cells[1,5]:='支架中心矩';
+    StringGridZJ.Cells[2,5]:=FormatFloat('0.00',t_ZhiJia.Zj_zhongxinju);
+    StringGridZJ.Cells[3,5]:='米';
+     //----
+    StringGridZJ.Cells[0,6]:='6';
+    StringGridZJ.Cells[1,6]:='支架合力作用点';
+    StringGridZJ.Cells[2,6]:=FormatFloat('0.00',t_ZhiJia.Zj_hlzyd);
+    StringGridZJ.Cells[3,6]:='米';
+     //----
+    StringGridZJ.Cells[0,7]:='7';
+    StringGridZJ.Cells[1,7]:='支架设计阻抗力';
+    StringGridZJ.Cells[2,7]:=FormatFloat('0.00',t_ZhiJia.Zj_toall_F);
+    StringGridZJ.Cells[3,7]:='KN';
+    //----
+    StringGridZJ.Cells[0,8]:='8';
+    StringGridZJ.Cells[1,8]:='初压预计最大阻抗力';
+    StringGridZJ.Cells[2,8]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_C0_F[0]);
+    StringGridZJ.Cells[3,8]:='KN';
+      //----
+    StringGridZJ.Cells[0,9]:='9';
+    StringGridZJ.Cells[1,9]:='初压预计最小阻抗力';
+    StringGridZJ.Cells[2,9]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_C0_F[1]);
+    StringGridZJ.Cells[3,9]:='KN';
+      //----
+    StringGridZJ.Cells[0,10]:='10';
+    StringGridZJ.Cells[1,10]:='初压预计合理阻抗力';
+    StringGridZJ.Cells[2,10]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_C0_F[2]);
+    StringGridZJ.Cells[3,10]:='KN';
+      //----
+    StringGridZJ.Cells[0,11]:='11';
+    StringGridZJ.Cells[1,11]:='周压预计最大阻抗力';
+    StringGridZJ.Cells[2,11]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_Ci_F[0]);
+    StringGridZJ.Cells[3,11]:='KN';
+      //----
+    StringGridZJ.Cells[0,12]:='12';
+    StringGridZJ.Cells[1,12]:='周压预计最小阻抗力';
+    StringGridZJ.Cells[2,12]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_Ci_F[1]);
+    StringGridZJ.Cells[3,12]:='KN';
+      //----
+    StringGridZJ.Cells[0,13]:='13';
+    StringGridZJ.Cells[1,13]:='周压预计合理阻抗力';
+    StringGridZJ.Cells[2,13]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_Ci_F[2]);
+    StringGridZJ.Cells[3,13]:='KN';
+      //----
+    StringGridZJ.Cells[0,14]:='14';
+    StringGridZJ.Cells[1,14]:='支架设计强度';
+    StringGridZJ.Cells[2,14]:=FormatFloat('0.00',t_ZhiJia.Zj_toall_P);
+    StringGridZJ.Cells[3,14]:='MPa';
+    //----
+    StringGridZJ.Cells[0,15]:='15';
+    StringGridZJ.Cells[1,15]:='初压预计最大强度';
+    StringGridZJ.Cells[2,15]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_C0_P[0]);
+    StringGridZJ.Cells[3,15]:='MPa';
+      //----
+    // 第二列
+    UseCol:=0;useRow:=0;
+    StringGridZJ.Cells[0+UseCol,16+useRow]:='16';
+    StringGridZJ.Cells[1+UseCol,16+useRow]:='初压预计最小强度';
+    StringGridZJ.Cells[2+UseCol,16+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_C0_P[1]);
+    StringGridZJ.Cells[3+UseCol,16+useRow]:='MPa';
+      //----
+    StringGridZJ.Cells[0+UseCol,17+useRow]:='17';
+    StringGridZJ.Cells[1+UseCol,17+useRow]:='初压预计合理强度';
+    StringGridZJ.Cells[2+UseCol,17+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_C0_P[2]);
+    StringGridZJ.Cells[3+UseCol,17+useRow]:='MPa';
+      //----
+    StringGridZJ.Cells[0+UseCol,18+useRow]:='18';
+    StringGridZJ.Cells[1+UseCol,18+useRow]:='周压预计最大强度';
+    StringGridZJ.Cells[2+UseCol,18+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_Ci_P[0]);
+    StringGridZJ.Cells[3+UseCol,18+useRow]:='MPa';
+      //----
+    StringGridZJ.Cells[0+UseCol,19+useRow]:='19';
+    StringGridZJ.Cells[1+UseCol,19+useRow]:='周压预计最小强度';
+    StringGridZJ.Cells[2+UseCol,19+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_Ci_P[1]);
+    StringGridZJ.Cells[3+UseCol,19+useRow]:='MPa';
+      //----
+    StringGridZJ.Cells[0+UseCol,20+useRow]:='20';
+    StringGridZJ.Cells[1+UseCol,20+useRow]:='周压预计合理强度';
+    StringGridZJ.Cells[2+UseCol,20+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_JiSuan_Ci_P[2]);
+    StringGridZJ.Cells[3+UseCol,20+useRow]:='MPa';
+      //----
+
+    StringGridZJ.Cells[0+UseCol,21+useRow]:='21';
+    StringGridZJ.Cells[1+UseCol,21+useRow]:='支架设计缩量';
+    StringGridZJ.Cells[2+UseCol,21+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_suoliang*1000);
+    StringGridZJ.Cells[3+UseCol,21+useRow]:='mm';
+    //----
+    StringGridZJ.Cells[0+UseCol,22+useRow]:='22';
+    StringGridZJ.Cells[1+UseCol,22+useRow]:='预计最大缩量';
+    StringGridZJ.Cells[2+UseCol,22+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_Jisuan_SL[0]*1000);
+    StringGridZJ.Cells[3+UseCol,22+useRow]:='mm';
+      //----
+    StringGridZJ.Cells[0+UseCol,23+useRow]:='23';
+    StringGridZJ.Cells[1+UseCol,23+useRow]:='预计最小缩量';
+    StringGridZJ.Cells[2+UseCol,23+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_Jisuan_SL[1]*1000);
+    StringGridZJ.Cells[3+UseCol,23+useRow]:='mm';
+      //----
+    StringGridZJ.Cells[0+UseCol,24+useRow]:='24';
+    StringGridZJ.Cells[1+UseCol,24+useRow]:='预计合理缩量';
+    StringGridZJ.Cells[2+UseCol,24+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_Jisuan_SL[2]*1000);
+    StringGridZJ.Cells[3+UseCol,24+useRow]:='mm';
+    //===========
+
+    StringGridZJ.Cells[0+UseCol,25+useRow]:='25';
+    StringGridZJ.Cells[1+UseCol,25+useRow]:='承担直接顶的强度';
+    StringGridZJ.Cells[2+UseCol,25+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_imm_p);
+    StringGridZJ.Cells[3+UseCol,25+useRow]:='MPa';
+      //----
+          //===========
+    StringGridZJ.Cells[0+UseCol,26+useRow]:='26';
+    StringGridZJ.Cells[1+UseCol,26+useRow]:='承担老初压平均强度';
+    StringGridZJ.Cells[2+UseCol,26+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_old_C0_p[2]);
+    StringGridZJ.Cells[3+UseCol,26+useRow]:='MPa';
+      //----
+    StringGridZJ.Cells[0+UseCol,27+useRow]:='27';
+    StringGridZJ.Cells[1+UseCol,27+useRow]:='承担老顶合理平均强度';
+    StringGridZJ.Cells[2+UseCol,27+useRow]:=FormatFloat('0.00',t_ZhiJia.Zj_old_Ci_p[2]);
+    StringGridZJ.Cells[3+UseCol,27+useRow]:='MPa';
+      //----
+
+ end;
+procedure TFormZhiJia.N10Click(Sender: TObject);
+begin
+   DrawREC.Zj_DL:=1;
+   DrawREC.Zj_Dl_Suoliange:=0;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N11Click(Sender: TObject);
+begin
+   DrawREC.ReulerMark:=FALSE;
+   GIF_lizhu:=0;
+   GiF_Dl:=0;
+   if DrawREC.Zj_Hb=1 then  begin  // 一级互帮
+      if DrawREC.ZJ_First_HB_Jd >170 then  begin
+          GIF_HB:=1;
+       end else if DrawREC.ZJ_First_HB_Jd < 95 then begin
+          GIF_HB:=2;
+       end else begin
+          GIF_HB:=2;
+       end;
+   end else  if DrawREC.Zj_Hb=2 then  begin  // 二级互帮
+       if DrawREC.ZJ_First_HB_Jd >170 then  begin
+          GIF_HB:=1;
+       end else if DrawREC.ZJ_First_HB_Jd < 10 then begin
+          GIF_HB:=2;
+       end else begin
+          GIF_HB:=2;
+       end;
+   end;
+
+
+   Timer1.Interval :=400;
+   Timer1.Enabled :=True;
+end;
+
+procedure TFormZhiJia.N12Click(Sender: TObject);
+begin
+   DrawREC.Zj_Hb:=1;
+   DrawREC.ZJ_First_HB_Jd:=120;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N13Click(Sender: TObject);
+begin
+  DrawREC.ReulerMark:=true;
+  Pop_BackStep.Caption:='取消参数标注';
+  DrawREC.Disp_ComeState:=1;
+  DrawREC.Zj_LiZhu_SuoLiang:=trunc(ReturnSuoLiang(t_ZhiJia,t_gzm.S_Cg_h));
+  DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N14Click(Sender: TObject);
+begin
+  DrawREC.ReulerMark:=true;
+  Pop_BackStep.Caption:='取消参数标注';
+  DrawREC.Disp_ComeState:=2;
+  DrawREC.Zj_LiZhu_SuoLiang:=trunc(ReturnSuoLiang(t_ZhiJia,t_gzm.S_Cg_h-t_zhijia.Zj_Jisuan_SL[0] ));
+  DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N2Click(Sender: TObject);
+begin
+   DrawREC.Zj_Hb:=1;
+   DrawREC.ZJ_First_HB_Jd:=0;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N3Click(Sender: TObject);
+begin
+   DrawREC.ReulerMark:=FALSE;
+   GIF_lizhu:=0;
+   GIF_HB:=0;
+   if DrawREC.Zj_Dl_Suoliange >95 then  begin
+      GiF_Dl:=1;
+   end else if DrawREC.Zj_Dl_Suoliange < 5 then begin
+      GiF_Dl:=2;
+   end else begin
+      GiF_Dl:=2;
+   end;
+   Timer1.Interval :=400;
+   Timer1.Enabled :=True;
+end;
+
+procedure TFormZhiJia.N6Click(Sender: TObject);
+begin
+   DrawREC.Zj_State :=1;
+   DrawREC.Zj_LiZhu_SuoLiang:=0;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N7Click(Sender: TObject);
+begin
+   DrawREC.Zj_State :=2;
+   DrawREC.Zj_LiZhu_SuoLiang:=100;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N8Click(Sender: TObject);
+begin
+   DrawREC.Zj_Hb:=1;
+   DrawREC.ZJ_First_HB_Jd:=180;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.N9Click(Sender: TObject);
+begin
+   DrawREC.Zj_DL:=1;
+   DrawREC.Zj_Dl_Suoliange:=100;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Panel1Click(Sender: TObject);
+begin
+   ShowFyyd_inn(Exhandle,'采场上覆岩层运动规律推断',0,0,1);
+end;
+
+procedure TFormZhiJia.Panel2Click(Sender: TObject);
+begin
+  ShowZCYL_inn(Exhandle,'支承压力分布范围三维模拟展示',0,0,2);
+end;
+
+procedure TFormZhiJia.Pop_AutoStepClick(Sender: TObject);
+begin
+   DrawREC.Zj_DL:=2;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Pop_BackStepClick(Sender: TObject);
+begin
+   DrawREC.ReulerMark:=true;
+   DrawREC.ReulerMark:=not DrawREC.ReulerMark;
+   if DrawREC.ReulerMark then  begin
+      Pop_BackStep.Caption:='取消参数标注';
+   end else begin
+      Pop_BackStep.Caption:='添加参数标注';
+   end;
+
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Pop_disptoolClick(Sender: TObject);
+begin
+   DrawREC.ReulerMark:=FALSE;
+   GIF_HB:=0;
+   GiF_Dl:=0;
+   if DrawREC.Zj_LiZhu_SuoLiang >95 then  begin
+      Pop_disptool.Caption :='动画支架压缩';
+      GIF_lizhu:=1;
+   end else if DrawREC.Zj_LiZhu_SuoLiang < 5 then begin
+      Pop_disptool.Caption :='动画支架注液';
+      GIF_lizhu:=2;
+   end else begin
+      GIF_lizhu:=2;
+   end;
+   Timer1.Interval :=400;
+   Timer1.Enabled :=True;
+
+end;
+
+procedure TFormZhiJia.Pop_Fist_immClick(Sender: TObject);
+begin
+   DrawREC.ZJ_FM:=1;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Pop_MoveLeftClick(Sender: TObject);
+begin
+   DrawREC.Zj_Hb:=1;
+   DrawREC.ZJ_First_HB_Jd:=90;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Pop_MoveRightClick(Sender: TObject);
+begin
+   DrawREC.Zj_Hb:=2;
+   DrawREC.ZJ_First_HB_Jd:=70;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Pop_Second_immClick(Sender: TObject);
+begin
+   DrawREC.ZJ_FM:=2;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Pop_ZoomMAXClick(Sender: TObject);
+begin
+  DrawREC.zj_LZ:=2;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Pop_ZoomMinClick(Sender: TObject);
+begin
+   DrawREC.zj_LZ:=4;
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.ReadFileFillCanshuGrid(FileName: string);
+var
+  pIniFile:     TIniFile;
+  i:integer;
+begin
+      if not FileExists(Public_Basic.Get_MyModulePath+FileName) then   begin
+         self.CreateCanshuFile(FileName);
+      end;
+
+      pIniFile := Tinifile.create(Public_Basic.Get_MyModulePath+'ZhijiaCs_lulei.dll');
+      for I := 3 to 13 do  begin
+         // I
+         if (i-2) mod 3=0 then   continue;
+
+          StringGrid_ZJCS.Cells[4,i]:=format('%1.2f',[pIniFile.ReadFloat('I',IntToStr(i),0)]);
+            // II
+          StringGrid_ZJCS.Cells[5,i]:=format('%1.2f',[pIniFile.ReadFloat('II',IntToStr(i),0)]);
+            // III
+          StringGrid_ZJCS.Cells[6,i]:=format('%1.2f',[pIniFile.ReadFloat('III',IntToStr(i),0)]);
+            // III
+          StringGrid_ZJCS.Cells[7,i]:=format('%1.2f',[pIniFile.ReadFloat('IV',IntToStr(i),0)]);
+
+
+      end;
+      pIniFile.Free;
+
+end;
+
+procedure TFormZhiJia.ReadMbpb_Lilun(BianMa: integer;Image:Timage);
+begin
+   if BianMa >100  then   begin
+      EXPstopeClass.MySqliteTable.GetBMPToSQlite(BianMa,'5',Image.Picture.Bitmap);
+   end else begin
+      Image.Picture.Graphic :=nil;
+   end;
+
+   ReadMemo_Mbph(BianMa,Memo_sm);
+end;
+
+procedure TFormZhiJia.ReadMemo_Mbph(BianMa: integer; Memo: TMemo);
+var
+ Sqt:string;
+begin
+   Memo.Clear ;
+   Sqt:='';
+   if BianMa=100  then   begin
+      Sqt:='    根据历史数据总结究，煤壁片帮与支架工作阻力的关系有如下的线性关系 '+
+           ' l=636.72 ( h/2) -127Pm, 即随着支架工作阻力的增大，可使煤壁片帮深度呈反比减少， ' +
+           '支架工作阻力的大小对煤壁片帮深度有明显影响，加大支架工作阻力，可以改善煤壁完好状态; ';
+   end else if BianMa=90  then   begin
+      Sqt:='    综合分析方法是通过对采动条件与地质条件的综合分析，对六中分析方法进行综合比对，选用的一个' +
+           '片帮深度与帮片高度的数值';
+   end else if BianMa=101  then   begin
+      Sqt:='    压剪式片帮的力学模型是指当煤壁处煤体因破碎程度较低而尚有一定残余强度时，在较高支承压力的作用下，' +
+           '煤壁将会发生剪切滑移式片帮 如下图所示 。';
+
+   end else if BianMa=102  then   begin
+      Sqt:='    劈裂式片帮的力学是煤壁处煤体尚未完全破坏，而且垂直于层理的裂隙又较发育的煤体，' +
+           '被揭露后将失去横向约束，其应力状态也将处于双向应力状态，此时在支承压力的作用下煤壁会发生压裂式破坏，从而产生劈裂式片帮 如下图所示 。';
+
+   end else if BianMa=103  then   begin
+      Sqt:='    横拱式片帮的力学模型是根据工程岩体的卸围压破坏原理可知，当煤体被揭露后，将因横向膨胀力的作用而产生鼓出变形。' +
+           '借鉴普氏垮落拱理论分析可知，若此时煤壁处的煤体已完全破碎且块体较大时，在垂直层理的支承压力作用下，煤壁将形成横拱式片帮 如下图所示 。';
+
+   end else if BianMa=104  then   begin
+      Sqt:='    压杆理论模型是指假设压杆处在临界平衡状态，根据小挠度微分方程以及端部约束条件确定煤壁的挠度曲线，求得煤壁在顶板压力作用下的挠度最大值， ' +
+           '即煤壁容易失稳位置力学分析 如下图所示 。';
+
+   end else if BianMa=105  then   begin
+      Sqt:='    煤壁滑动体力学模型是指基本顶周期来压期间，煤壁承受上方直接顶载荷、超前支承压力以及基本顶“传递岩梁”结构失稳产生的附加应力的影响， ' +
+           '煤壁此时承受最大垂直应力，处于最不稳定状态，在巨大剪应力作用下，煤壁将发生大变形—破裂—碎裂—片帮，' +
+           '煤体沿一“滑动面”滑落失稳，由于煤质均匀，“滑动面”类似为一圆弧面，弧面以上部分是由较破碎煤体组成，破碎煤体内部抗压和抗拉强度较低 '+
+           '为研究需要，将支架和煤壁之间由顶煤和直接顶组成部分视为梁结构，其上方边界为基本顶“传递岩梁”结构，前方边界为在煤壁一定深度断裂的顶煤， ' +
+           '后方边界为采空区，建立简化的软煤大采高工作面煤壁滑动体力学模型 如下图所示 。';
+
+   end;
+
+   Memo.Lines.Add(Sqt) ;
+end;
+
+function TFormZhiJia.ReturnSuoLiang(Zj:TZJ_Class;Use_H: double): double;
+var
+  Y_Unit:integer;
+  Tmp_H:double;
+  zj_d_s:double;
+   tmp_used_suo_Unit:double;
+begin
+   tmp_used_suo_Unit:= 50/zj.ZJ_Disg_max_H *(zj.ZJ_Disg_max_H-zj.ZJ_Disg_min_H) ;// 该立柱一共需要缩多少个单元
+   if tmp_used_suo_Unit >20 then tmp_used_suo_Unit:=20;
+   zj_d_s:=zj.ZJ_Disg_max_H-zj.Zj_Disg_Min_H;
+   Tmp_H:=trunc(20/zj_d_s*(zj.ZJ_Disg_max_H-Use_H))*5;
+   Result:=Tmp_H;
+end;
+
+//-------------
+procedure TFormZhiJia.initFyydGrid(Sender:TObject);
+var
+    vRect:    TRect;
+begin
+    //初始化覆岩运动规律stringGrid
+    StringGridFy.ColCount :=4;
+    if StringGridFy.Height/20<30  then  begin
+         StringGridFy.RowCount :=30;
+    end else begin
+         StringGridFy.RowCount :=trunc(StringGridFy.Height/20);
+    end;
+    StringGridFy.FixedCols:=0;
+    StringGridFy.FixedRows:=1;
+    StringGridFy.DefaultRowHeight:=18;
+    StringGridFy.ColWidths[0]:=80;
+    StringGridFy.ColWidths[1]:=StringGridFy.Width-400;
+    StringGridFy.ColWidths[2]:=200;
+    StringGridFy.ColWidths[3]:=100;
+
+    StringGridFy.Canvas.Font.Size:=8;
+    StringGridFy.Cells[0,0]:='序号';
+    StringGridFy.Cells[1,0]:='名称';
+    StringGridFy.Cells[2,0]:='取值';
+
+
+    StringGridFy.Canvas.Font.Size:=8;
+
+    //-- FormatFloat('0.00',P_Stope.t_Gzm.CK_DownMz);
+    StringGridFy.Cells[0,1]:='1';
+    StringGridFy.Cells[1,1]:='顶板结构';
+      if Combo_YlJg=nil then begin
+                vRect := StringGridFy.CellRect(2, 0);
+                Combo_YlJg := TComboBox.Create(StringGridFY);
+                Combo_YlJg.Parent := StringGridFY.Parent;
+                     OffsetRect(vRect, StringGridFY.left+1, StringGridFY.Top+StringGridFY.DefaultRowHeight*1);
+                Combo_YlJg.BoundsRect := vRect;
+                Combo_YlJg.Color :=clBtnFace;
+                Combo_YlJg.Visible := true;
+               // Combo_YlJg.OnClick:=Combo_YlJg_Fy_1;
+
+                Combo_YlJg.Style :=csDropDownList;
+                Combo_YlJg.Items.Add('单岩梁结构');// 1	水平推进
+                Combo_YlJg.Items.Add('多岩梁结构');
+
+                 if t_old.YL_struc=1  then begin
+                          Combo_YlJg.ItemIndex:=0;
+                 end else begin
+                          Combo_YlJg.ItemIndex:=1;
+                 end;
+
+
+         end;
+    //
+    StringGridFy.Cells[0,2]:='2';
+    StringGridFy.Cells[1,2]:='是否有内应力场';
+      if Combo_nylc=nil then begin
+                vRect := StringGridFy.CellRect(2, 1);
+                Combo_nylc := TComboBox.Create(StringGridFY);
+                Combo_nylc.Parent := StringGridFY.Parent;
+                     OffsetRect(vRect, StringGridFY.left+1, StringGridFY.Top+StringGridFY.DefaultRowHeight*1);
+                Combo_nylc.BoundsRect := vRect;
+                Combo_nylc.Color :=clBtnFace;
+                Combo_nylc.Visible := true;
+
+                Combo_nylc.Style :=csDropDownList;
+                Combo_nylc.Items.Add('有内应力场');// 1	水平推进
+                Combo_nylc.Items.Add('无内应力场');
+
+                 if t_Gzm.ZCYL_s0>1  then begin
+                          Combo_nylc.ItemIndex:=1;
+                 end else begin
+                          Combo_nylc.ItemIndex:=0;
+                 end;
+
+
+         end;
+
+    //----
+    StringGridFy.Cells[0,3]:='3';
+    StringGridFy.Cells[1,3]:='直接顶高度';
+    StringGridFy.Cells[2,3]:=FormatFloat('0.00',t_imm_r.Immroof_M);
+    StringGridFy.Cells[3,3]:='米';
+      //----
+    StringGridFy.Cells[0,4]:='4';
+    StringGridFy.Cells[1,4]:='直接顶初次垮落步距';
+    StringGridFy.Cells[2,4]:=FormatFloat('0.00',t_imm_r.Immroof_C0);
+    StringGridFy.Cells[3,4]:='个';
+      //----
+    StringGridFy.Cells[0,5]:='5';
+    StringGridFy.Cells[1,5]:='老顶最大高度';
+    StringGridFy.Cells[2,5]:=FormatFloat('0.00',t_old.YL_max_m);
+    StringGridFy.Cells[3,5]:='米';
+      //----
+    StringGridFy.Cells[0,6]:='6';
+    StringGridFy.Cells[1,6]:='老顶最小高度';
+    StringGridFy.Cells[2,6]:=FormatFloat('0.00',t_old.YL_min_m);
+    StringGridFy.Cells[3,6]:='米';
+      //-----
+    StringGridFy.Cells[0,7]:='7';
+    StringGridFy.Cells[1,7]:='老顶初次来压最大步距';
+    StringGridFy.Cells[2,7]:=FormatFloat('0.00',t_old.YL_First_step[0]);
+    StringGridFy.Cells[3,7]:='米';
+      //-----
+    StringGridFy.Cells[0,8]:='8';
+    StringGridFy.Cells[1,8]:='老顶初次来压最小步距';
+    StringGridFy.Cells[2,8]:=FormatFloat('0.00',t_old.YL_First_step[1]);
+    StringGridFy.Cells[3,8]:='米';
+      //-----
+    StringGridFy.Cells[0,9]:='9';
+    StringGridFy.Cells[1,9]:='老顶初次来压平均步距';
+    StringGridFy.Cells[2,9]:=FormatFloat('0.00',t_old.YL_First_step[2]);
+    StringGridFy.Cells[3,9]:='米';
+      //-------
+    StringGridFy.Cells[0,10]:='10';
+    StringGridFy.Cells[1,10]:='老顶周期来压最大步距';
+    StringGridFy.Cells[2,10]:=FormatFloat('0.00',t_old.YL_First_step[0]*0.408);
+    StringGridFy.Cells[3,10]:='米';
+      //-----
+    StringGridFy.Cells[0,11]:='11';
+    StringGridFy.Cells[1,11]:='老顶周期来压最小步距';
+    StringGridFy.Cells[2,11]:=FormatFloat('0.00',t_old.YL_First_step[1]*0.408);
+    StringGridFy.Cells[3,11]:='米';
+      //-----
+    StringGridFy.Cells[0,12]:='12';
+    StringGridFy.Cells[1,12]:='老顶周期来压平均步距';
+    StringGridFy.Cells[2,12]:=FormatFloat('0.00',t_old.YL_First_step[2]*0.408);
+    StringGridFy.Cells[3,12]:='米';
+     //
+       //
+    StringGridFy.Cells[0,13]:='13';
+    StringGridFy.Cells[1,13]:='直接顶类别';
+      if Combo_imm_leibie=nil then begin
+                vRect := StringGridFy.CellRect(2,12);
+                Combo_imm_leibie := TComboBox.Create(StringGridFY);
+                Combo_imm_leibie.Parent := StringGridFY.Parent;
+                     OffsetRect(vRect, StringGridFY.left+1, StringGridFY.Top+StringGridFY.DefaultRowHeight*1);
+                Combo_imm_leibie.BoundsRect := vRect;
+                Combo_imm_leibie.Color :=clBtnFace;
+                Combo_imm_leibie.Visible := true;
+
+                Combo_imm_leibie.Style :=csDropDownList;
+                Combo_imm_leibie.Items.Add('1a 极不稳定');//
+                Combo_imm_leibie.Items.Add('1b 较不稳定');
+                Combo_imm_leibie.Items.Add('2a 中下稳定');//
+                Combo_imm_leibie.Items.Add('2b 中上稳定');
+                Combo_imm_leibie.Items.Add('3  类稳定顶板');//
+                Combo_imm_leibie.Items.Add('4  类非常稳定顶板'); //
+                Combo_imm_leibie.ItemIndex:=t_imm_r.Imm_leibie-1;
+     end;
+
+    //----
+           //
+    StringGridFy.Cells[0,14]:='14';
+    StringGridFy.Cells[1,14]:='老顶类别';
+      if Combo_old_leibie=nil then begin
+                vRect := StringGridFy.CellRect(2, 13);
+                Combo_old_leibie := TComboBox.Create(StringGridFY);
+                Combo_old_leibie.Parent := StringGridFY.Parent;
+                     OffsetRect(vRect, StringGridFY.left+1, StringGridFY.Top+StringGridFY.DefaultRowHeight*1);
+                Combo_old_leibie.BoundsRect := vRect;
+                Combo_old_leibie.Color :=clBtnFace;
+                Combo_old_leibie.Visible := true;
+
+                Combo_old_leibie.Style :=csDropDownList;
+                Combo_old_leibie.Items.Add('I    不明显');//
+                Combo_old_leibie.Items.Add('II   明显');
+                Combo_old_leibie.Items.Add('III  强烈');//
+                Combo_old_leibie.Items.Add('IVa  非常强烈');
+                Combo_old_leibie.Items.Add('IVb  非常强烈');//
+
+
+                     Combo_old_leibie.ItemIndex:=t_old.Old_leibie-1;
+     end;
+
+    //----
+            //
+    StringGridFy.Cells[0,15]:='15';
+    StringGridFy.Cells[1,15]:='底板类别';
+      if Combo_diban_leibie=nil then begin
+                vRect := StringGridFy.CellRect(2, 14);
+                Combo_diban_leibie := TComboBox.Create(StringGridFY);
+                Combo_diban_leibie.Parent := StringGridFY.Parent;
+                     OffsetRect(vRect, StringGridFY.left+1, StringGridFY.Top+StringGridFY.DefaultRowHeight*1);
+                Combo_diban_leibie.BoundsRect := vRect;
+                Combo_diban_leibie.Color :=clBtnFace;
+                Combo_diban_leibie.Visible := true;
+
+                Combo_diban_leibie.Style :=csDropDownList;
+                Combo_diban_leibie.Items.Add('I    极软');//
+                Combo_diban_leibie.Items.Add('II   松软');
+                Combo_diban_leibie.Items.Add('IIIa 较软');//
+                Combo_diban_leibie.Items.Add('IIIb 较软');
+                Combo_diban_leibie.Items.Add('IV   中硬');//
+                Combo_diban_leibie.Items.Add('V   坚硬');//
+
+                Combo_diban_leibie.ItemIndex:=t_old.diban_leobie-1;
+     end;
+     //
+     StringGridFy.Cells[0,16]:='16';
+     StringGridFy.Cells[1,16]:='顶煤冒放性';
+      if Combo_fdm_leibie=nil then begin
+                vRect := StringGridFy.CellRect(2, 15);
+                Combo_fdm_leibie := TComboBox.Create(StringGridFY);
+                Combo_fdm_leibie.Parent := StringGridFY.Parent;
+                     OffsetRect(vRect, StringGridFY.left+1, StringGridFY.Top+StringGridFY.DefaultRowHeight*1);
+                Combo_fdm_leibie.BoundsRect := vRect;
+                Combo_fdm_leibie.Color :=clBtnFace;
+                Combo_fdm_leibie.Visible := true;
+
+                Combo_fdm_leibie.Style :=csDropDownList;
+                Combo_fdm_leibie.Items.Add('不放顶');//
+                Combo_fdm_leibie.Items.Add('1类 可放性好');
+                Combo_fdm_leibie.Items.Add('2类 可放性较好');//
+                Combo_fdm_leibie.Items.Add('3类 可放性一般');
+                Combo_fdm_leibie.Items.Add('4类 可放性差');//
+                Combo_fdm_leibie.Items.Add('5类  难放');//
+
+                Combo_fdm_leibie.ItemIndex:=t_imm_r.FDm_leibie;
+     end;
+
+
+end;
+///
+procedure TFormZhiJia.SaveDataToFile(FileNAme: string);
+var
+  pIniFile:     TIniFile;
+  i:integer;
+begin
+    if not FileExists(Public_Basic.Get_MyModulePath+FileNAme) then exit;
+    pIniFile := Tinifile.create(Public_Basic.Get_MyModulePath+FileNAme);
+    for I := 3 to 13 do  begin
+
+       if (i-2) mod 3 =0 then   continue;
+        // I
+        pIniFile.WriteFloat('I',IntToStr(i),StrToFloat(self.StringGrid_ZJCS.Cells[4,i]));
+
+        // II
+        pIniFile.WriteFloat('II',IntToStr(i),StrToFloat(self.StringGrid_ZJCS.Cells[5,i]));
+
+          // III
+        pIniFile.WriteFloat('III',IntToStr(i),StrToFloat(self.StringGrid_ZJCS.Cells[6,i]));
+
+          // III
+        pIniFile.WriteFloat('IV',IntToStr(i),StrToFloat(self.StringGrid_ZJCS.Cells[7,i]));
+
+
+    end;
+
+     pIniFile.Free;
+
+end;
+
+procedure TFormZhiJia.SetBasicClass;
+begin
+   t_Gzm:=ExPstopeClass.Ex_Gzm ;
+   t_zk:=ExPstopeClass.Ex_zk ;
+   t_imm_r:=ExPstopeClass.Ex_imm_r ;
+   t_old:=ExPstopeClass.Ex_old ;
+   t_zhijia:=ExPstopeClass.Ex_ZhiJia ;
+end;
+
+procedure TFormZhiJia.SetFromWidthAndHeigth(flag: integer);
+{
+  Flag=2    对支承压力分布范围 数据进行显示
+  Flag=3    对煤壁片帮计算结果进行展示
+  Flag=4    覆岩运动规律展示
+}
+begin
+   Show;
+   if Flag=2  then  begin
+       WindowState:= wsNormal;
+       TopPanel.Visible :=true;
+       BottomPanel.Visible :=False;
+       TopPanel.Caption :='【'+t_Gzm.S_Name+'】工作面支承压力分布规律力学计算结果' ;
+       TabSheetDz.TabVisible :=False;
+       TabSheetFY.TabVisible :=False;
+       TabSheetZj.TabVisible :=False;
+       TabSheet_Canshu.TabVisible :=False;
+       TabSheet_ZCYL.TabVisible :=true;
+       TabSheet2_MBPH.TabVisible :=False;
+       TabSheet_ZCYL.Show;
+
+   end else if Flag=3  then  begin
+       WindowState:= wsNormal;
+       TopPanel.Visible :=true;
+       BottomPanel.Visible :=False;
+       TopPanel.Caption :='【'+t_Gzm.S_Name+'】工作面煤壁片帮力学计算结果' ;
+       TabSheetDz.TabVisible :=False;
+       TabSheetFY.TabVisible :=False;
+       TabSheetZj.TabVisible :=False;
+       TabSheet_Canshu.TabVisible :=False;
+       TabSheet_ZCYL.TabVisible :=False;
+       TabSheet2_MBPH.TabVisible :=true;
+       TabSheet2_MBPH.Show;
+
+   end else if Flag=4  then  begin
+       WindowState:= wsNormal;
+       TopPanel.Visible :=true;
+       BottomPanel.Visible :=False;
+       TopPanel.Caption :='【'+t_Gzm.S_Name+'】工作面覆岩运动规律模型推断结果' ;
+       TabSheetDz.TabVisible :=False;
+       TabSheetFY.TabVisible :=true;
+       TabSheetZj.TabVisible :=False;
+       TabSheet_Canshu.TabVisible :=False;
+       TabSheet_ZCYL.TabVisible :=False;
+       TabSheet2_MBPH.TabVisible :=False;
+       TabSheetFY.Show;
+   end else if Flag=5  then  begin
+       WindowState:= wsMaximized;
+       TopPanel.Visible :=true;
+       BottomPanel.Visible :=False;
+       TopPanel.Caption :='【'+t_Gzm.S_Name+'】工作面液压支架优化选型设计' ;
+       TabSheetDz.TabVisible :=False;
+       TabSheetFY.TabVisible :=False;
+       TabSheetZj.TabVisible :=True;
+       TabSheet_Canshu.TabVisible :=False;
+       TabSheet_ZCYL.TabVisible :=False;
+       TabSheet2_MBPH.TabVisible :=False;
+       TabSheetZj.Show;
+
+
+   end else begin
+       WindowState:= wsNormal;
+       TopPanel.Visible :=False;
+       BottomPanel.Visible :=true;
+       TabSheetDz.TabVisible :=true;
+       TabSheetFY.TabVisible :=true;
+       TabSheetZj.TabVisible :=true;
+       TabSheet_Canshu.TabVisible :=False;
+       TabSheet_ZCYL.TabVisible :=False;
+       TabSheet2_MBPH.TabVisible :=False;
+       TabSheetFY.Show;
+   end;
+   ShowScreen:=flag;
+
+end;
+
+procedure TFormZhiJia.StringGridDZKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9','.',#8]) then key:=#0
+end;
+
+procedure TFormZhiJia.StringGridDZSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+       if ACol=0 then  StringGridDZ.Options :=StringGridZJ.Options -[goEditing];
+       if ACol=1 then  StringGridDZ.Options :=StringGridZJ.Options -[goEditing];
+       if ACol=2 then  StringGridDZ.Options :=StringGridZJ.Options +[goEditing];
+
+ // if (ACol = 1) and (ACol = 2) then CanSelect := False;  //第一列第二行不可选
+end;
+
+procedure TFormZhiJia.StringGridFyKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9','.',#8]) then key:=#0;
+end;
+
+procedure TFormZhiJia.StringGridFySelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+       if ACol=0 then  StringGridFY.Options :=StringGridZJ.Options -[goEditing];
+       if ACol=1 then  StringGridFY.Options :=StringGridZJ.Options -[goEditing];
+       if ACol=2 then  StringGridFY.Options :=StringGridZJ.Options +[goEditing];
+end;
+
+procedure TFormZhiJia.StringGridZJKeyPress(Sender: TObject; var Key: Char);
+begin
+   if not (key in ['0'..'9','.',#8]) then key:=#0;
+end;
+
+procedure TFormZhiJia.StringGridZJSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+       if ACol=0 then  StringGridZJ.Options :=StringGridZJ.Options -[goEditing];
+       if ACol=1 then  StringGridZJ.Options :=StringGridZJ.Options -[goEditing];
+       if ACol=2 then  StringGridZJ.Options :=StringGridZJ.Options +[goEditing];
+end;
+
+procedure TFormZhiJia.StringGrid_MBPBDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  Str: String;
+  R: TRect;
+begin
+  with StringGrid_MBPB do
+  begin
+    Canvas.FillRect(Rect);
+    Str := Cells[ACol,ARow];
+    R := Rect;
+    if ACol>1 then  begin
+       DrawText(Canvas.Handle,PChar(Str),Length(Str),r,DT_CENTER or DT_SINGLELINE or DT_VCENTER); //文字居中
+    end else begin
+       DrawText(Canvas.Handle,PChar(Str),Length(Str),r,DT_LEFT or DT_SINGLELINE or DT_VCENTER); //文字居中
+    end;
+  end;
+
+end;
+
+procedure TFormZhiJia.StringGrid_MBPBSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+   if ACol=4 then begin
+      if ARow=1 then  begin
+         ReadMbpb_Lilun(100,image_sm);
+      end else if ARow=2 then  begin
+         ReadMbpb_Lilun(101,image_sm);
+      end else if ARow=3 then  begin
+         ReadMbpb_Lilun(102,image_sm);
+      end else if ARow=4 then  begin
+         ReadMbpb_Lilun(103,image_sm);
+      end else if ARow=5 then  begin
+         ReadMbpb_Lilun(104,image_sm);
+      end else if ARow=6 then  begin
+         ReadMbpb_Lilun(105,image_sm);
+
+      end else if ARow=8 then  begin
+         ReadMbpb_Lilun(90,image_sm);
+      end;
+   end;
+
+end;
+
+procedure TFormZhiJia.StringGrid_ZCYLDrawCell(Sender: TObject; ACol,
+  ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  Str: String;
+  R: TRect;
+begin
+  with StringGrid_ZCYL do
+  begin
+    Canvas.FillRect(Rect);
+    Str := Cells[ACol,ARow];
+    R := Rect;
+    DrawText(Canvas.Handle,PChar(Str),Length(Str),r,DT_CENTER or DT_SINGLELINE or DT_VCENTER); //文字居中
+  end;
+
+end;
+
+procedure TFormZhiJia.StringGrid_ZJCSKeyPress(Sender: TObject; var Key: Char);
+begin
+      if not (key in ['0'..'9','.',#8]) then key:=#0;
+end;
+
+procedure TFormZhiJia.TabSheetZjShow(Sender: TObject);
+begin
+    DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.Timer1Timer(Sender: TObject);
+begin
+  // 立柱动作
+   if GIF_lizhu =1 then  begin
+      DrawREC.Zj_LiZhu_SuoLiang:=DrawREC.Zj_LiZhu_SuoLiang-5;
+      if DrawREC.Zj_LiZhu_SuoLiang <5 then  begin
+         GIF_lizhu:=0;
+         Timer1.Enabled :=False;
+      end;
+   end else  if GIF_lizhu =2 then begin
+      DrawREC.Zj_LiZhu_SuoLiang:=DrawREC.Zj_LiZhu_SuoLiang+5;
+      if DrawREC.Zj_LiZhu_SuoLiang >95 then  begin
+         GIF_lizhu:=0;
+         Timer1.Enabled :=False;
+      end;
+   end;
+  //互帮动作
+  if GIF_HB =1 then  begin
+      DrawREC.ZJ_First_HB_Jd:=DrawREC.ZJ_First_HB_Jd-10;
+      if DrawREC.Zj_Hb=1 then   begin
+         if DrawREC.ZJ_First_HB_Jd <100 then  begin
+             GIF_HB:=0;
+             Timer1.Enabled :=False;
+          end;
+      end else begin
+         if DrawREC.ZJ_First_HB_Jd <80 then  begin
+             GIF_HB:=0;
+             Timer1.Enabled :=False;
+         end;
+      end;
+
+      
+   end else  if GIF_HB =2 then begin
+      DrawREC.ZJ_First_HB_Jd:=DrawREC.ZJ_First_HB_Jd+10;
+      if DrawREC.ZJ_First_HB_Jd >170 then  begin
+         GIF_HB:=0;
+         Timer1.Enabled :=False;
+      end;
+   end;
+   //顶梁伸缩动作
+  if GiF_Dl =1 then  begin
+      DrawREC.Zj_Dl_Suoliange:=DrawREC.Zj_Dl_Suoliange-12;
+      if DrawREC.Zj_Dl_Suoliange <12 then  begin
+         GiF_Dl:=0;
+         Timer1.Enabled :=False;
+      end;
+   end else  if GiF_Dl =2 then begin
+      DrawREC.Zj_Dl_Suoliange:=DrawREC.Zj_Dl_Suoliange+12;
+      if DrawREC.Zj_Dl_Suoliange >95 then  begin
+         GiF_Dl:=0;
+         Timer1.Enabled :=False;
+      end;
+   end;
+
+   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.WMDpiChanged(var Message: TMessage);
+
+  {$IFDEF DELPHI_STYLE_SCALING}
+  function FontHeightAtDpi(aDPI, aFontSize: integer): integer;
+  var
+    tmpCanvas: TCanvas;
+  begin
+    tmpCanvas := TCanvas.Create;
+    try
+      tmpCanvas.Handle := GetDC(0);
+      tmpCanvas.Font.Assign(self.Font);
+      tmpCanvas.Font.PixelsPerInch := aDPI; //must be set BEFORE size
+      tmpCanvas.Font.size := aFontSize;
+      result := tmpCanvas.TextHeight('0');
+    finally
+      tmpCanvas.free;
+    end;
+  end;
+  {$ENDIF}
+
+begin
+  inherited;
+  {$IFDEF DELPHI_STYLE_SCALING}
+  ChangeScale(FontHeightAtDpi(LOWORD(Message.wParam), self.Font.Size), FontHeightAtDpi(self.PixelsPerInch, self.Font.Size));
+  {$ELSE}
+  ChangeScale(LOWORD(Message.wParam), self.PixelsPerInch);
+  {$ENDIF}
+  self.PixelsPerInch := LOWORD(Message.wParam);
+
+end;
+
+procedure TFormZhiJia.BitBtn3Click(Sender: TObject);
+begin
+      self.Close ;
+end;
+
+procedure TFormZhiJia.Button1Click(Sender: TObject);
+
+begin
+         SaveDataToFile(DllFileName);
+         Edit_Cs(Sender);
+         t_ZhiJia.Cal_Sup_Para(T_gzm,t_zk,T_imm_r,t_old);
+         initzjGrid(Sender);
+         InitYLCanshuGrid(Sender);
+         TabSheetZj.Show;
+end;
+procedure TFormZhiJia.Button2Click(Sender: TObject);
+begin
+        CreateCanshuFile(DllFileName);
+        ReadFileFillCanshuGrid(DllFileName);
+
+        initGzmDCGrid(Sender);
+        initzjGrid(Sender);
+        initFyydGrid(Sender);
+
+end;
+
+
+procedure TFormZhiJia.CreateCanshuFile(FileName: string);
+var
+  pIniFile:     TIniFile;
+  i:integer;
+begin
+   if FileExists(Public_Basic.Get_MyModulePath+FileName) then
+      DeleteFile(Public_Basic.Get_MyModulePath+FileName);
+
+      pIniFile := Tinifile.create(Public_Basic.Get_MyModulePath+FileName);
+     // I
+      pIniFile.WriteFloat('I','3',0.25);
+      pIniFile.WriteFloat('I','4',0.5);
+      pIniFile.WriteFloat('I','6',0.5);
+      pIniFile.WriteFloat('I','7',1);
+
+      pIniFile.WriteFloat('I','9',0.3);
+      pIniFile.WriteFloat('I','10',0.6);
+      pIniFile.WriteFloat('I','12',0.6);
+      pIniFile.WriteFloat('I','13',1.1);
+       // II
+      pIniFile.WriteFloat('II','3',0.25);
+      pIniFile.WriteFloat('II','4',0.5);
+      pIniFile.WriteFloat('II','6',0.5);
+      pIniFile.WriteFloat('II','7',0.8);
+
+      pIniFile.WriteFloat('II','9',0.4);
+      pIniFile.WriteFloat('II','10',0.6);
+      pIniFile.WriteFloat('II','12',0.6);
+      pIniFile.WriteFloat('II','13',1);
+       // III
+      pIniFile.WriteFloat('III','3',0.1);
+      pIniFile.WriteFloat('III','4',0.3);
+      pIniFile.WriteFloat('III','6',0.6);
+      pIniFile.WriteFloat('III','7',1);
+
+      pIniFile.WriteFloat('III','9',0.2);
+      pIniFile.WriteFloat('III','10',0.4);
+      pIniFile.WriteFloat('III','12',0.6);
+      pIniFile.WriteFloat('III','13',1);
+      // IV
+      pIniFile.WriteFloat('IV','3',0.8);
+      pIniFile.WriteFloat('IV','4',1.5);
+      pIniFile.WriteFloat('IV','6',1);
+      pIniFile.WriteFloat('IV','7',2);
+
+      pIniFile.WriteFloat('IV','9',1);
+      pIniFile.WriteFloat('IV','10',1.8);
+      pIniFile.WriteFloat('IV','12',1);
+      pIniFile.WriteFloat('IV','13',2);
+      pIniFile.Free;
+
+
+end;
+
+procedure TFormZhiJia.DrawZcZj(Image: TImage);
+begin
+
+        Image.Picture.Graphic :=nil;
+        t_Zhijia.MainDraw_Class_Zj(Image,
+                                   Image.BoundsRect.TopLeft,
+                                   Image.BoundsRect.BottomRight,
+                                   t_gzm.S_Cg_h ,
+                                   DrawREC
+                                   ) ;
+
+end;
+
+// 修订参数
+
+ procedure TFormZhiJia.Edit_Cs(Sender:Tobject);
+ begin
+     t_Gzm.S_cmfs:=IntToStr(self.ComboDz_cmfs_4.ItemIndex+1); //采煤方式
+     if self.ComboDz_cmfs_4.ItemIndex=3 then
+       begin
+          t_Gzm.S_Fm_h:=StrToFloat(self.StringGridDZ.Cells[2,7]);// 放煤高度
+       end else begin
+          t_Gzm.S_Fm_h:=0;
+       end;
+
+     t_Gzm.S_Cg_h:=StrToFloat(self.StringGridDZ.Cells[2,6]);//开采高度
+     t_Gzm.S_qj:= StrToFloat(self.StringGridDZ.Cells[2,8]);//倾角
+     t_Gzm.S_mcsd_h:= StrToFloat(self.StringGridDZ.Cells[2,9]);//埋藏深度
+     t_Gzm.S_L_qx:= StrToFloat(self.StringGridDZ.Cells[2,10]);//   倾向长
+     t_Gzm.S_Jc_L:= StrToFloat(self.StringGridDZ.Cells[2,12]);//   累计进尺
+     t_Gzm.S_f_PS:=(self.ComboDz_psxs_12.ItemIndex+1); //普氏系数
+             if t_Gzm.S_f_PS =1then begin
+                       t_Gzm.S_M_njl:=1;
+                       t_Gzm.S_M_mcj:=20;
+                       t_Gzm.S_Bsb:=0.35;
+                       t_Gzm.S_K_zcfz:=1.6-0.1*(t_Gzm.S_Cg_h-4);
+                   end else if t_Gzm.S_f_PS=2 then begin
+                       t_Gzm.S_M_njl:=3;
+                       t_Gzm.S_M_mcj:=25;
+                       t_Gzm.S_Bsb:=0.3;
+                       t_Gzm.S_K_zcfz:=2.0-0.1*(t_Gzm.S_Cg_h-4);
+                   end else if t_Gzm.S_f_PS=3 then begin
+                       t_Gzm.S_M_njl:=5;
+                       t_Gzm.S_M_mcj:=30;
+                       t_Gzm.S_Bsb:=0.25;
+                       t_Gzm.S_K_zcfz:=2.3-0.1*(t_Gzm.S_Cg_h-4);
+                   end else begin
+                       t_Gzm.S_M_njl:=10;
+                       t_Gzm.S_M_mcj:=35;
+                       t_Gzm.S_Bsb:=0.2;
+                       t_Gzm.S_K_zcfz:=2.6-0.1*(t_Gzm.S_Cg_h-4);
+                   end;
+     t_Gzm.Dz_yxfx:=(self.ComboDz_yxfx_16.ItemIndex+1); // 仰斜俯斜
+     t_Gzm.Dz_JYHD:=(self.ComboDz_jyhd.ItemIndex+1); // 基岩厚度
+     t_Gzm.Dz_DCGZ:=(self.ComboDz_dcgz.ItemIndex+1); // 地质构造
+     t_Gzm.Dz_WSFC:=(self.ComboDz_WsFc.ItemIndex+1); //  瓦斯含量
+     t_Gzm.Dz_TopWater:=(self.ComboDz_TopWater.ItemIndex+1); //  顶板水
+     t_Gzm.Dz_BottomWater:=(self.ComboDz_BottomWater.ItemIndex+1); // 底板水
+     t_Gzm.Dz_HeoStress:=(self.ComboDz_HeoStress.ItemIndex+1); // 水平应力
+     t_Gzm.Dz_Kyxx:=(self.ComboDz_kyxx.ItemIndex+1); //  矿压现象
+     t_Gzm.Dz_HangDaoSup:=(self.ComboDz_HangDaoSup.ItemIndex+1); // 巷道支护
+     t_Gzm.S_DayStep_speed:=Public_Basic.StrToDouble_Lu(StringGridDZ.Cells[7,10])  ;// 日推进速度
+
+//     if  StrToFloat(StringGridDZ.Cells[2,27])> 0 then  begin                  // //上界煤柱
+//          t_Gzm.CK_UpMz:=StrToFloat( StringGridDZ.Cells[2,27]);
+//          t_Gzm.CK_Upkc:=1;
+//     end else begin
+//          t_Gzm.CK_UpMz:=0;
+//          t_Gzm.CK_Upkc:=0;
+//     end;
+//
+//     if  StrToFloat(StringGridDZ.Cells[2,29])>0 then  begin                 //下界煤柱
+//          t_Gzm.CK_downmz:=StrToFloat( StringGridDZ.Cells[2,29]);
+//          t_Gzm.CK_downkc:=1;
+//     end else begin
+//          t_Gzm.CK_downmz:=0;
+//          t_Gzm.CK_downkc:=0;
+//     end;
+//     //
+//          t_Gzm.UP_Ckq:=Combo_ckq.ItemIndex;      //上覆岩层是否存在采空区
+//              if (t_Gzm.UP_Ckq)>0 then begin
+//                           t_Gzm.UP_CKQ_Kc_H:=StrToFloat(StringGridDZ.Cells[2,32]);
+//                           t_Gzm.UP_CKQ_JuLI:=StrTofloat(StringGridDZ.Cells[2,33]);
+//              end else begin
+//                        t_Gzm.UP_CKQ_Kc_H:=0;
+//                        t_Gzm.UP_CKQ_JuLI:=0;
+//              end;
+
+    //
+      t_old.YL_struc:=self.ComBo_YlJg.ItemIndex+1;  //    岩梁结构
+     { if (t_Gzm.ZCYL_s0<1) and (self.Combo_nYLc.ItemIndex=1) then   //内应力场
+          t_Gzm.ZCYL_s0:=1.5;
+      if (t_Gzm.ZCYL_s0>1) and (self.Combo_nYLc.ItemIndex=0) then
+          t_Gzm.ZCYL_s0:=0.5;
+      }
+    //
+    t_imm_r.Immroof_M:=StrToFloat(StringGridFy.Cells[2,3]);//  直接顶高度
+    t_imm_r.Immroof_C0:=StrToFloat(StringGridFy.Cells[2,4]);//  直接顶初次垮落步距
+    t_old.YL_max_m := StrToFloat(StringGridFy.Cells[2,5]);//  老顶最大高度
+    t_old.YL_min_m := StrToFloat(StringGridFy.Cells[2,6]);// 老顶最小高度
+    t_old.YL_First_step[0] := StrToFloat(StringGridFy.Cells[2,7]);// 老顶初次来压最大步距
+    t_old.YL_First_step[1] := StrToFloat(StringGridFy.Cells[2,8]);// 老顶初次来压最小步距
+    t_old.YL_First_step[2] := StrToFloat(StringGridFy.Cells[2,9]);// 老顶初次来压平均步距
+    t_imm_r.Imm_leibie:=Combo_imm_leibie.ItemIndex+1;  // 直接顶类别
+    t_old.Old_leibie:= Combo_old_leibie.ItemIndex+1;   //  老顶类别
+    t_old.diban_leobie:=Combo_diban_leibie.ItemIndex+1;       // 底板类别'
+    t_imm_r.FDm_leibie:=Combo_fdm_leibie.ItemIndex;          //  顶煤冒放性
+
+    t_ZhiJia.Zj_KongdingJU:= StrToFloat(StringGridZj.Cells[2,4]);// 支架控顶距
+    t_ZhiJia.Zj_zhongxinju:= StrToFloat(StringGridZj.Cells[2,5]);// 支架中心距
+    t_ZhiJia.Zj_hlzyd:= StrToFloat(StringGridZj.Cells[2,6]);// 支架合力作用点
+    t_ZhiJia.Zj_toall_F:= StrToFloat(StringGridZj.Cells[2,7]);// 支架设计阻力
+
+ end;
+procedure TFormZhiJia.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+   pic_Path:string;
+
+begin
+   Pic_Path  :=Public_Basic.Get_MyModulePath+'saveBmp\CoalBMP\OneCoal'+'_2_1.BMP';
+   if ShowScreen=1 then begin
+     FromSaveToBmp(Pic_Path);
+   end;
+
+     if Assigned(FormZhiJia) then   FreeAndNil(FormZhiJia);
+end;
+
+procedure TFormZhiJia.FormCreate(Sender: TObject);
+
+begin
+  DllFileName:='ZhijiaCs_lulei.dll';
+  PageControl1.Align :=alClient;
+  SetBasicClass;
+  FHint:=THintWin.Create(self);
+
+     DrawREC.Zj_LiZhu_SuoLiang:=0; // 液压支架立柱的缩量 0-100
+     DrawREC.zj_LZ:=2;  // 液压支架立柱数量
+     DrawREC.ZJ_FM:=2;
+     DrawREC.Zj_DL:=1;// 1 整体 2 铰接
+     DrawREC.Zj_Hb:=2; // 1 一级互帮  2 二级互帮
+     DrawREC.ZJ_First_HB_Jd:=70;// 支架一级互帮角度
+     DrawREC.ShowV :=true;
+     DrawREC.Zj_Dl_Suoliange:=100;// 支架顶梁缩量 0-100
+     DrawREC.Zj_body_fillColor:=ClRed; // 支架主体填充颜色   $e9e7ef
+     DrawREC.Zj_First_hb_L:=10;// 一级护帮板的高度
+
+
+     DrawREC.TipHandle:=Image_Zj_Parent.Handle;
+     if t_gzm.S_cmfs='4' then begin
+        DrawREC.ZJ_FM :=1;// 放顶煤
+     end else begin
+        DrawREC.ZJ_FM :=2; //综采
+     end;
+
+     GIF_lizhu:=0;
+     GIF_HB:=0;
+     GiF_Dl:=0;
+     if t_Zhijia.JG_jx='JX2' then begin
+         DrawREC.zj_LZ:=2;
+     end else begin
+         DrawREC.zj_LZ:=4;
+     end ;
+      // 液压支架正常工作状态
+      N13.Click ;
+end;
+
+procedure TFormZhiJia.FormDeactivate(Sender: TObject);
+begin
+    if Assigned(ComboDz_psxs_12) then  FreeAndNil(ComboDz_psxs_12);
+    if Assigned(ComboDz_cmfs_4) then  FreeAndNil(ComboDz_cmfs_4);
+    if Assigned(ComboDz_yxfx_16) then  FreeAndNil(ComboDz_yxfx_16);
+    if Assigned(ComboDz_jyhd) then  FreeAndNil(ComboDz_jyhd);
+    if Assigned(ComboDz_dcgz) then  FreeAndNil(ComboDz_dcgz);
+    if Assigned(ComboDz_WsFc) then  FreeAndNil(ComboDz_WsFc);
+    if Assigned(ComboDz_TopWater) then  FreeAndNil(ComboDz_TopWater);
+    if Assigned(ComboDz_BottomWater) then  FreeAndNil(ComboDz_BottomWater);
+    if Assigned(ComboDz_HeoStress) then  FreeAndNil(ComboDz_HeoStress);
+    if Assigned(ComboDz_kyxx) then  FreeAndNil(ComboDz_kyxx);
+    if Assigned(ComboDz_HangDaoSup) then  FreeAndNil(ComboDz_HangDaoSup);
+
+    if Assigned(ComBo_YlJg) then  FreeAndNil(ComBo_YlJg);
+    if Assigned(Combo_nYLc) then  FreeAndNil(Combo_nYLc);
+    if Assigned(Combo_ckq) then  FreeAndNil(Combo_ckq);
+    if Assigned(combo_imm_leibie) then  FreeAndNil(combo_imm_leibie);
+    if Assigned(combo_old_leibie) then  FreeAndNil(combo_old_leibie);
+    if Assigned(combo_diban_leibie) then  FreeAndNil(combo_diban_leibie);
+    if Assigned(combo_fdm_leibie) then  FreeAndNil(combo_fdm_leibie);
+
+end;
+
+procedure TFormZhiJia.FormDestroy(Sender: TObject);
+begin
+  if assigned(FHint) then FreeAndNil(FHint);
+
+end;
+
+// end
+
+
+procedure TFormZhiJia.FormResize(Sender: TObject);
+begin
+     //变化行数
+      if StringGridDZ.Height/20<30 then begin
+        StringGridDZ.RowCount :=30;
+      end else begin
+        StringGridDZ.RowCount :=trunc(StringGridDZ.Height/20);
+      end;
+
+      if self.PageControl1.ActivePageIndex =2 then
+          if DrawREC.ShowV then   DrawZcZj(Image_Zj);
+end;
+
+procedure TFormZhiJia.FormShow(Sender: TObject);
+var
+  i,Count1:integer;
+  temp1 :Str_Dt_array;
+begin
+    InitYLCanshuGrid(Sender);
+    {有可能更改岩梁的结构参数}
+    ReadFileFillCanshuGrid(DllFileName);
+
+    initGzmDCGrid(Sender);
+    initzjGrid(Sender);
+    initFyydGrid(Sender);
+    InitZCYLGrid(Sender);
+    InitMBpBGrid(Sender);
+
+
+
+end;
+
+procedure TFormZhiJia.FromSaveToBmp(pic_path: string);
+var
+    BitRect: TRect;
+    Bitmap: TBitmap;
+    FScreenCanvas: TCanvas;
+begin
+      Bitmap := TBitmap.Create;
+   try
+      Bitmap.SetSize(Self.ClientWidth, Self.ClientHeight);
+      BitRect.Left := 0;
+      BitRect.Top := 0;
+      BitRect.Right := BitRect.Left + Bitmap.Width;
+      BitRect.Bottom := BitRect.Top + Bitmap.Height;
+      FScreenCanvas := TCanvas.Create;
+      FScreenCanvas.Handle := Self.Canvas.Handle;
+      Bitmap.Canvas.Lock;
+      Bitmap.Canvas.CopyRect(BitRect, FScreenCanvas, Self.ClientRect);
+      Bitmap.Canvas.Unlock;
+      Bitmap.SaveToFile(pic_path);
+   finally
+     Bitmap.Free;
+   end;
+
+
+end;
+
+procedure TFormZhiJia.Image_ZJMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+ var
+  pt,pt0,pt1:Tpoint;
+begin
+   pt:= Image_ZJ.ClientToScreen(Point(0,0));
+   if Button=mbRight then begin
+      DispPopMemu.Popup(pt.X+x,pt.Y+y);
+   end else if Button=mbLeft then begin
+      DrawREC.Disp_Tip :=True;
+      pt0.X:=X;Pt0.Y:=Y;
+      pt1.x:=X+10;
+      pt1.y:=Y+10;
+      t_zhijia.TipMessage(TipMemo,pt0,pt1,DrawREC);
+   end;
+
+
+end;
+
+end.

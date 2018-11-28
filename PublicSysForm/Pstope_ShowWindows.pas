@@ -8,6 +8,46 @@ uses
   ;
 
 type
+  TComePressRecord=Class
+    private
+       FChlidCount:integer;
+       FYCid:integer;// 来压岩层编号
+       FJinChi:double;// 当前进尺
+       FComeState:integer;// 1 直接顶运动， 2 老顶支托层运动 第一次运动  3 老顶支托层 周期运动
+       FComePoint:TPoint;
+    protected
+        function GetCount:Integer;
+        function GetYCid:Integer;
+        procedure SetYCid(Value:integer);
+
+        function GetState:Integer;
+        procedure SetState(Value:integer);
+
+        function GetJinChi:double;
+        procedure SetJinChi(Value:double);
+
+        function GetPoint:TPoint;
+        procedure SetPoint(Value:TPoint);
+
+        procedure DrawArrow(Img:TImage);
+
+    published
+         property  NodeCount:integer read GetCount  ;
+         property  C_Ycid:integer read GetYCid write SetYCid ;
+         property  MyState:integer read GetState write SetState ;
+         property  C_Jinchi:double read GetJinChi write SetJinChi ;
+         property  ComePoint:TPoint read GetPoint write SetPoint ;
+
+
+    public
+        Chlids:array of  TComePressRecord;
+        Function  AddChlidNode:TComePressRecord;
+        procedure  ClearChlid;
+        procedure DispLayChildInfo(zk:Tzk_bore;img:TImage;Left_B,TOP_B:integer);
+
+        constructor Create;
+        destructor Destroy;override;
+  End;
 
   TDrawDTFZ_Record=class
        Y_text_H,Y_text_bl :double;     //　Y 方向文字高度  与比例
@@ -36,7 +76,7 @@ type
        jpg: TJPEGImage;
        Zj_lizhu,zc_fd: integer; //记录支架立柱与采煤方法
        ZhiJIa_Zl_xs:double;//支架阻力系数
-       temp1 :Str_Dt_array;  //剖返回支架
+       ReturnZCYL :Str_Dt_array;  //剖返回支承压力分布范围
        Count1:integer;     //剖返回支架变量
        inn_left_y0,inn_left_y2,inn_left_x2,inn_right_y0,inn_right_y2,inn_Right_x2 :integer;  //记录inn 坐标位置
        out_right_y0,out_left_y0,out_left_y1:integer;  //记录out坐标位置
@@ -57,7 +97,7 @@ type
        break_i_105:integer;//break_i_105
        Sink_Sa_used: double;//参与角度计算的下沉量
        t_Str_Fir,t_Str_sec:TStringList;// 字符数组
-       Y_min,Sink_leixing: integer; //下标为小得变量
+       Y_min,Sink_leixing: integer; //下标为小得变量    Sink_leixing =0 正在来压状态  Sink_leixing=1 来压完成状态
        Zcyl_l_p1,zcyl_l_P2,Zcyl_R_p1,zcyl_R_P2:TPoint; //支撑压力线的坐标
        alert_p1,alert_p2 :TPoint; //预警框 的位置坐标
        Alert_str:string ;// 预警的语句
@@ -85,12 +125,14 @@ type
        EX_Image:TImage;
        JinChi,X_pan_move:double;
        Tuxing,disp_two_tu,disp_ylg:integer;
+       Come_int:Integer;// 是否显示来压信息
        NQ_step:String;
        gzm:TG_stope;
        Zk:Tzk_bore;
        ZhiJia:TZJ_Class;
        imm:TImmediate_roof;
        old:Told_roof;
+       ComePress:TComePressRecord;
        // procedure
        procedure Draw_BasicInit; // 1
          procedure First_initImage(); //初始化image变量   1- 1
@@ -104,7 +146,7 @@ type
          procedure DrawCoalSupport;// 1-8 画支架
          procedure MoveScreen;// 1-9 移动屏幕坐标
        procedure Draw_Imm_Rock;// 2 上覆岩层运动 直接顶 步距模拟
-         Procedure Draw_RockNameAndThreeBord(tu_Y,Text_Y:integer;Ycid:integer);// 画岩层的斜面
+         Procedure Draw_RockNameAndThreeBord(tu_iY,Text_iY:integer;Ycid:integer;UsedH:Double);// 画岩层的斜面
          procedure Draw_RockName_xieMian;// 2-1 绘制岩层柱状与斜面
          procedure Draw_Top_Coal; //2-2 绘制顶煤
          procedure Draw_imm_Main; //2-3 直接顶的引导
@@ -117,6 +159,7 @@ type
          procedure Draw_Old_Left(YcId:integer); // 3-1  左侧老顶
          procedure Draw_Old_Left_LastRock(YcId:integer); // 3-1-1  左侧老顶 最后一层岩层
          procedure Draw_Old_Left_First(YcId:integer); // 3-1-2  左侧老顶 第一块
+         procedure WriteOldRockComePress(YCid,C_State:integer;pt:TPoint;JN:double); //记录老顶来压标记
          procedure Draw_Old_Left_Two(YcId:integer); // 3-1-3  左侧老顶 第二块
          procedure Draw_Old_Left_Two_Basic(YcId:integer); // 3-1-3 -1 左侧老顶 第二块  基本信息
          procedure Draw_Old_Left_Two_FirstComePress(YcId:integer); // 3-1-3 -2 第一次来压步距结束
@@ -147,7 +190,7 @@ type
      public
        // 用类来表达
         procedure SetDrawClassDcFZ(Image:TImage);
-        procedure SetDrawClass_canshu(JChi,X_pan:double;Tu,disp_two,ylg:integer;NQstep:String);
+        procedure SetDrawClass_canshu(JChi,X_pan:double;Tu,disp_two,ylg,ComPress:integer;NQstep:String);
         procedure SetDrawZhulei(tgzm:TG_stope;tZk:Tzk_bore;tZhiJia:TZJ_Class;timm:TImmediate_roof;told:Told_roof);
         function DrawZcyl(Image:TImage;P1,P2:TPoint;zcyl:Str_Dt_array;bl:double;left_right:bool):WordBool;
 
@@ -197,6 +240,17 @@ end;
 
 function TDraw_init.DrawZcyl(Image: TImage; P1, P2: TPoint; zcyl: Str_Dt_array;
   bl: double; left_right: bool): WordBool;
+  {
+    2018 年 11 月30日进行 内应力的 修订  pDrawRecord
+    zcyl     一共五个数值 分别是  K1，S0，K2，S1,Sx
+    修订的起因： 谭云亮认为  内应力不符合 基本的力学关系
+    修订的方法 ： 在老顶明显运动阶段， 内应力与支承压力峰值之间的波谷 明显
+                  在来定稳定步距阶段，内应力与 支承压力峰值之间的波谷 不明显
+    修订计算步骤：
+             pDrawRecord.Sink_leixing 是用来记录 老顶来压方式的 0 证明老顶正处于来压运动阶段
+             1 证明老顶处于运动稳定阶段
+  }
+
  var
    Zcyl_d :array [0..4] of double;
    px,py: array [0..21] of double;
@@ -214,38 +268,56 @@ function TDraw_init.DrawZcyl(Image: TImage; P1, P2: TPoint; zcyl: Str_Dt_array;
      if left_right then  bl:=-bl;
 
       Y_bl:=L_y/zcyl_d[2];
-            px[0]:=P2.X;                     py[0]:=P2.y;
-            px[1]:=P2.X-zcyl_d[1]*bl/2;      py[1]:=P2.y-(zcyl_d[0]*Y_bl);
+      px[0]:=P2.X;                     py[0]:=P2.y;
+      {内应力场的峰值}
+      px[1]:=P2.X-zcyl_d[1]*bl/2;      py[1]:=P2.y-(zcyl_d[0]*Y_bl);
+      if  pDrawRecord.Sink_leixing=0 then  begin // 证明来定处于显著运动阶段
             px[2]:=P2.X-zcyl_d[1]*bl;        py[2]:=P2.y-(zcyl_d[0]*Y_bl/3);
             px[3]:=P2.X-zcyl_d[3]*bl/2;      py[3]:=P2.y-(zcyl_d[2]*Y_bl*3/6);
             px[4]:=P2.X-zcyl_d[3]*bl*2/3;    py[4]:=P2.y-(zcyl_d[2]*Y_bl*5/6);
-            px[5]:=P2.X-zcyl_d[3]*bl;        py[5]:=P2.y-(zcyl_d[2]*Y_bl);
-            px[6]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*1/12;     py[6]:=P2.y-(((zcyl_d[2]-1)*5/6+1)*Y_bl);
-            px[7]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*2/12;      py[7]:=P2.y-(((zcyl_d[2]-1)*9/12+1)*Y_bl);
-            px[8]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*3/12;     py[8]:=P2.y-(((zcyl_d[2]-1)*8/12+1)*Y_bl);
-            px[9]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*4/12;      py[9]:=P2.y-(((zcyl_d[2]-1)*7/12+1)*Y_bl);
-            px[10]:=px[5]-(zcyl_d[4]-zcyl_d[3])*bl*5/12;    py[10]:=P2.y-(((zcyl_d[2]-1)*6/12+1)*Y_bl);
-            px[11]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*6/12;      py[11]:=P2.y-(((zcyl_d[2]-1)*5/12+1)*Y_bl);
-            px[12]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*7/12;      py[12]:=P2.y-(((zcyl_d[2]-1)*4/12+1)*Y_bl);
-            px[13]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*8/12;      py[13]:=P2.y-(((zcyl_d[2]-1)*3/12+1)*Y_bl);
-            px[14]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*9/12;      py[14]:=P2.y-(((zcyl_d[2]-1)*2/12+1)*Y_bl);
-            px[15]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*10/12;      py[15]:=P2.y-(((zcyl_d[2]-1)*1/12+1)*Y_bl);
-            px[16]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*11/12;    py[16]:=P2.y-(1*Y_bl);
-            px[17]:= P2.X-zcyl_d[4]*bl;         py[17]:=P2.y-(1*Y_bl);
-
-            if left_right then   begin
-                  if Px[17]> P1.x then   Px[17]:= P1.x ;
+      end else begin  // 老顶处于稳定运动阶段
+            px[2]:=P2.X-zcyl_d[1]*bl;        py[2]:=P2.y-(zcyl_d[0]*Y_bl*4/5);
+            px[3]:=P2.X-zcyl_d[3]*bl/2;
+            if zcyl_d[0]*Y_bl*4/5 > zcyl_d[2]*Y_bl*3/6 then  begin  // 如果大
+               py[3]:=P2.y-(zcyl_d[0]*Y_bl*4/5* 1.2);
             end else begin
-                  if Px[17]< P1.x then   Px[17]:= P1.x ;
+               py[3]:=P2.y-(zcyl_d[2]*Y_bl*3/6);
+            end;
+            px[4]:=P2.X-zcyl_d[3]*bl*2/3;    py[4]:=P2.y-(zcyl_d[2]*Y_bl*5/6);
+
+            if py[3]< py[4] then  begin
+               py[4]:=py[3]*(1.1);
             end;
 
-           Public_Basic.lu_spline(px,py,18,lu_x,Lu_y,Lu_n);
-           Image.Canvas.Pen.Color:=clred;
-           Image.Canvas.MoveTo(trunc(lu_x[0]),trunc(lu_y[0]));
-           for I := 1 to lu_n-1 do begin
-               Image.Canvas.LineTo(trunc(lu_x[i]),trunc(lu_y[i]))
-           end;
-           Image.Canvas.LineTo(p1.x,trunc(py[4])) ;
+      end;
+
+      px[5]:=P2.X-zcyl_d[3]*bl;        py[5]:=P2.y-(zcyl_d[2]*Y_bl);
+      px[6]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*1/12;     py[6]:=P2.y-(((zcyl_d[2]-1)*5/6+1)*Y_bl);
+      px[7]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*2/12;      py[7]:=P2.y-(((zcyl_d[2]-1)*9/12+1)*Y_bl);
+      px[8]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*3/12;     py[8]:=P2.y-(((zcyl_d[2]-1)*8/12+1)*Y_bl);
+      px[9]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*4/12;      py[9]:=P2.y-(((zcyl_d[2]-1)*7/12+1)*Y_bl);
+      px[10]:=px[5]-(zcyl_d[4]-zcyl_d[3])*bl*5/12;    py[10]:=P2.y-(((zcyl_d[2]-1)*6/12+1)*Y_bl);
+      px[11]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*6/12;      py[11]:=P2.y-(((zcyl_d[2]-1)*5/12+1)*Y_bl);
+      px[12]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*7/12;      py[12]:=P2.y-(((zcyl_d[2]-1)*4/12+1)*Y_bl);
+      px[13]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*8/12;      py[13]:=P2.y-(((zcyl_d[2]-1)*3/12+1)*Y_bl);
+      px[14]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*9/12;      py[14]:=P2.y-(((zcyl_d[2]-1)*2/12+1)*Y_bl);
+      px[15]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*10/12;      py[15]:=P2.y-(((zcyl_d[2]-1)*1/12+1)*Y_bl);
+      px[16]:= px[5]-(zcyl_d[4]-zcyl_d[3])*bl*11/12;    py[16]:=P2.y-(1*Y_bl);
+      px[17]:= P2.X-zcyl_d[4]*bl;         py[17]:=P2.y-(1*Y_bl);
+
+      if left_right then   begin
+            if Px[17]> P1.x then   Px[17]:= P1.x ;
+      end else begin
+            if Px[17]< P1.x then   Px[17]:= P1.x ;
+      end;
+
+     Public_Basic.lu_spline(px,py,18,lu_x,Lu_y,Lu_n);
+     Image.Canvas.Pen.Color:=clred;
+     Image.Canvas.MoveTo(trunc(lu_x[0]),trunc(lu_y[0]));
+     for I := 1 to lu_n-1 do begin
+         Image.Canvas.LineTo(trunc(lu_x[i]),trunc(lu_y[i]))
+     end;
+     Image.Canvas.LineTo(p1.x,trunc(py[4])) ;
        //画支撑压力线的 垂直箭头
         l_x_fort:=lu_x[0];
        for i := 0 to lu_n-1 do begin
@@ -338,36 +410,37 @@ var
      Public_Basic.lu_spline(p2x,p2y,K,p2_x,p2_y,Lu_2);
      //连成线
       Image.Canvas.Pen.Color:=clRed;
+      Image.Canvas.Pen.Width :=1;
       Image.Canvas.MoveTo(trunc(p1_x[0]),trunc(p1_y[0]));
      for i := 0 to Lu_1 - 1 do  begin
         Image.Canvas.LineTo(trunc(p1_x[i]),trunc(p1_y[i]));
      end;
        Image.Canvas.MoveTo(trunc(p2_x[0]),trunc(p2_y[0]));
-     for i := 0 to Lu_2 - 1 do  begin
-        Image.Canvas.LineTo(trunc(p2_x[i]),trunc(p2_y[i]));
-     end;
-     //画网格
-      Image.Canvas.Pen.Color:=clgreen;
-     LD_1_C:=0;
-     for I := 1 to Lu_1  - 1 do   begin
-         LD_1:=sqrt((p1_x[i]-P1_x[LD_1_C]) *(p1_x[i]-P1_x[LD_1_C])+(p1_y[i]-P1_y[LD_1_C])*(p1_y[i]-P1_y[LD_1_C]));
-         if LD_1>10  then   begin
-               LD_2_C:=I;
-               for j :=  I to Lu_2 - 1 do  begin
-                    LD_2:=sqrt((p2_x[j]-P2_x[LD_2_C]) *(p2_x[j]-P2_x[LD_2_C])+(p2_y[j]-P2_y[LD_2_C])*(p2_y[j]-P2_y[LD_2_C]));
-                    if Ld_2 >10 then  begin
-                       Image.Canvas.MoveTo(trunc(p1_x[i]),trunc(p1_y[i]));
-                       Image.Canvas.lineto(trunc(p2_x[j]),trunc(p2_y[j]));
-                       LD_1_C:=i;
-                       break;
-                    end;
-               end; //end for j
-         end;
-
-     end;  // end for i
+//     for i := 0 to Lu_2 - 1 do  begin
+//        Image.Canvas.LineTo(trunc(p2_x[i]),trunc(p2_y[i]));
+//     end;
+//     //画网格
+//      Image.Canvas.Pen.Color:=clgreen;
+//     LD_1_C:=0;
+//     for I := 1 to Lu_1  - 1 do   begin
+//         LD_1:=sqrt((p1_x[i]-P1_x[LD_1_C]) *(p1_x[i]-P1_x[LD_1_C])+(p1_y[i]-P1_y[LD_1_C])*(p1_y[i]-P1_y[LD_1_C]));
+//         if LD_1>10  then   begin
+//               LD_2_C:=I;
+//               for j :=  I to Lu_2 - 1 do  begin
+//                    LD_2:=sqrt((p2_x[j]-P2_x[LD_2_C]) *(p2_x[j]-P2_x[LD_2_C])+(p2_y[j]-P2_y[LD_2_C])*(p2_y[j]-P2_y[LD_2_C]));
+//                    if Ld_2 >10 then  begin
+//                       Image.Canvas.MoveTo(trunc(p1_x[i]),trunc(p1_y[i]));
+//                       Image.Canvas.lineto(trunc(p2_x[j]),trunc(p2_y[j]));
+//                       LD_1_C:=i;
+//                       break;
+//                    end;
+//               end; //end for j
+//         end;
+//
+//     end;  // end for i
 
      Image.Canvas.Pen.Color:=clblack;
-
+      Image.Canvas.Pen.Width :=1;
 end;
 
 { TDraw_init }
@@ -545,12 +618,15 @@ begin
    if not Assigned(pDrawRecord) then
      pDrawRecord:=TDrawDTFZ_Record.Create ;
    Zomm_D:=1.0;
+   ComePress:=TComePressRecord.Create ;
 end;
 
 destructor TDraw_init.Destroy;
 begin
   if Assigned(pDrawRecord) then
       FreeAndNil(pDrawRecord);
+  if Assigned(ComePress) then
+      FreeAndNil(ComePress);
   inherited;
 end;
 
@@ -571,7 +647,8 @@ begin
          Image_inn.Canvas.LineTo(Image_inn.Width ,Image_inn.Height);
 
         //剖分支承压力 数值
-         temp1:=public_Basic.split(Gzm.Return_Zcyl('2.0',Jinchi,zk),';',Count1);
+        { Ver=2.0      一共五个数值 分别是  K1，S0，K2，S1,Sx}
+         ReturnZCYL:=public_Basic.split(Gzm.Return_Zcyl('2.0',Jinchi,zk),';',Count1);
 
         bitmap.FreeImage ;
         if  zk.main_coal=zk.Zk_Yc_Count-1  then  begin // 没有底板
@@ -683,7 +760,7 @@ begin
              Point_Six_P[5].Y := inn_left_y0 ;
         Point_Six_P[3].X :=Point_Six_P[5].X +trunc(gzm.ZCYL_sx[2]*shiyong_bl);
              Point_Six_P[3].Y :=Point_Six_P[5].Y;
-        Point_Six_P[4].X :=Point_Six_P[3].X -trunc(StrToFloat(temp1[1])*shiyong_bl);
+        Point_Six_P[4].X :=Point_Six_P[3].X -trunc(StrToFloat(ReturnZCYL[1])*shiyong_bl);
              Point_Six_P[4].Y :=Point_Six_P[5].Y;
         Point_Six_P[0].X :=Point_Six_P[5].X;
              Point_Six_P[0].Y :=Point_Six_P[5].Y-trunc(gzm.S_Cg_h*gzm.Mc_FdBs*shiyong_bl);;
@@ -704,12 +781,12 @@ begin
 
         //填写左侧压力拱数据
         if zk.Yc_Rock[zk.main_coal].R_h<= gzm.S_Cg_h then  begin
-              YLG_L1.Add(InttoStr(Point_Six_P[1].X)+','+InttoStr(Point_Six_P[1].Y) );
-              YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y) );
+              YLG_L1.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(ReturnZCYL[1])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y) );
+              YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y) );
         end;
         // 累计图形高度 煤
-       Set_TU_H(trunc(zk.Yc_Rock[zk.main_coal].R_h*shiyong_bl));
-       Set_Text_H(trunc(zk.Yc_Rock[zk.main_coal].R_h*Y_Text_Bl));
+       Set_TU_H(trunc(zk.Yc_Rock[zk.main_coal].R_h*gzm.Mc_FdBs*shiyong_bl));
+       Set_Text_H(trunc(zk.Yc_Rock[zk.main_coal].R_h*gzm.Mc_FdBs*Y_Text_Bl));
     end;
 end;
 
@@ -721,7 +798,7 @@ begin
               Point_Six_P[5].Y := inn_left_y0 ;
         Point_Six_P[3].X :=Point_Six_P[2].X+trunc((jinchi+zhijia.Zj_KongdingJU)*shiyong_bl);
              Point_Six_P[3].Y :=Point_Six_P[5].Y;
-        Point_Six_P[4].X :=Point_Six_P[3].X +trunc(StrToFloat(temp1[1])*shiyong_bl);
+        Point_Six_P[4].X :=Point_Six_P[3].X +trunc(StrToFloat(ReturnZCYL[1])*shiyong_bl);
              Point_Six_P[4].Y :=Point_Six_P[5].Y;
         Point_Six_P[0].X :=Point_Six_P[5].X;
              Point_Six_P[0].Y :=Point_Six_P[5].Y-trunc(gzm.S_Cg_h*gzm.Mc_FdBs*shiyong_bl);;
@@ -741,7 +818,7 @@ begin
          //填写右侧压力拱数据
           if zk.Yc_Rock[zk.main_coal].R_h<= gzm.S_Cg_h then  begin
                 YLG_R1.add(InttoStr(Point_Six_P[4].X)+','+InttoStr(Point_Six_P[2].Y) );
-                YLG_R2.add(InttoStr(Point_Six_P[4].X+trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
+                YLG_R2.add(InttoStr(Point_Six_P[4].X+trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
 
           end;
 
@@ -785,6 +862,7 @@ begin
          end else begin
               zc_fd :=1;
          end;
+
          if ZhiJia.JG_jx='JX2' then begin
              zj_lizhu:=2;
          end else begin
@@ -806,7 +884,9 @@ function TDraw_init.DrawFyydDtfz_main:integer;
 begin
 
    with pDrawRecord do begin
-        {第一步 把绘图参数设置好}
+       {把记录的来压步距进行清空}
+       ComePress.ClearChlid ;
+       {第一步 把绘图参数设置好}
        Draw_BasicInit;
         {第二步 绘图直接顶运动步距}
        Draw_imm_Rock;
@@ -816,16 +896,23 @@ begin
        Draw_Ganshi ;
         {第五步 绘制支承压力分布范围}
         // 右侧支承压力分布范围
-       drawZcyl(Image_inn,zcyl_l_p1,zcyl_L_p2,temp1,shiyong_bl,false);
+       drawZcyl(Image_inn,zcyl_l_p1,zcyl_L_p2,ReturnZCYL,shiyong_bl,false);
         // 左侧支持压力分布范围
-       drawZcyl(Image_inn,zcyl_R_p1,zcyl_R_p2,temp1,shiyong_bl,true);
+       drawZcyl(Image_inn,zcyl_R_p1,zcyl_R_p2,ReturnZCYL,shiyong_bl,true);
        {第六步 绘制裂断拱  //支撑压力平衡拱}
         if disp_ylg=1 then  begin
            draw_ylg(Image_inn,YLG_L1,YLG_L2,YLG_R1,YLG_R2);
 
         end;
-       {第七步 把运动图拷贝到主图上}
+        {第七部 把 老顶来压时刻进行文字与弹出显示 }
+        if Come_int =1 then   begin
+           ComePress.DispLayChildInfo(Zk,Image_Inn,0,0) ;
+
+        end;
+
+       {第八步 把运动图拷贝到主图上}
        CopyImage_TuToOut;
+       
        {最后一步 增加水印 释放位图}
        if not Public_Basic.Licensing  then
             Public_Basic.AddSingleTextWaterFormImage(Ex_Image) ;
@@ -922,6 +1009,13 @@ begin
 end;
 
 procedure TDraw_init.Draw_Imm_Left;
+{
+  直接顶来压状态，利用  ComePress 对其进行记录
+  ComePress
+        5        4
+                     3
+        0       1    2
+}
 var
   k:integer;
 begin
@@ -930,9 +1024,9 @@ begin
        Point_Six_P[5].X :=0;
            Point_Six_P[5].Y :=inn_left_y0;
 
-       Point_Six_P[3].X :=inn_left_x2-trunc((StrToFloat(temp1[1])+YockLiang_Suo)*shiyong_bl);
-           if StrToFloat(temp1[3])>0 then begin
-                Point_Six_P[3].Y :=inn_left_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(temp1[3])-StrToFloat(temp1[1]))/StrToFloat(temp1[3]));
+       Point_Six_P[3].X :=inn_left_x2-trunc((StrToFloat(ReturnZCYL[1])+YockLiang_Suo)*shiyong_bl);
+           if StrToFloat(ReturnZCYL[3])>0 then begin
+                Point_Six_P[3].Y :=inn_left_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))/StrToFloat(ReturnZCYL[3]));
            end else begin
                 Point_Six_P[3].Y :=inn_left_y2;
            end;
@@ -940,7 +1034,7 @@ begin
              Point_Six_P[0].Y :=Point_Six_P[5].Y-trunc(used_h*shiyong_bl);
        Point_Six_P[2].X :=Point_Six_P[3].X;
              Point_Six_P[2].Y :=Point_Six_P[3].Y-trunc(used_h*shiyong_bl);
-       Point_Six_P[4].X :=inn_left_x2 -trunc(StrToFloat(temp1[1])*shiyong_bl);
+       Point_Six_P[4].X :=inn_left_x2 -trunc(StrToFloat(ReturnZCYL[1])*shiyong_bl);
              Point_Six_P[4].Y :=Point_Six_P[5].Y;
        Point_Six_P[1].X :=Point_Six_P[4].X;
              Point_Six_P[1].Y :=Point_Six_P[0].Y;
@@ -956,7 +1050,7 @@ begin
       Image_inn.Canvas.Brush.Bitmap:=nil;
        //填写左侧压力拱数据
       YLG_L1.Add(InttoStr(Point_Six_P[1].X)+','+InttoStr(Point_Six_P[1].Y) );
-      YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y) );
+      YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y) );
 
       Point_wk[3].X := Point_Six_P[0].X ;
       Point_wk[3].Y := Point_Six_P[0].Y;
@@ -977,7 +1071,7 @@ begin
 
        inn_left_y0:=Point_Six_P[0].Y ;inn_left_y2:=Point_Six_P[2].Y;inn_left_x2 := Point_Six_P[2].X ;
      //第一块
-      JinChi_sup:=Jinchi+zhijia.Zj_KongdingJU+2*StrToFloat(temp1[1])-step0*0.95;
+      JinChi_sup:=Jinchi+zhijia.Zj_KongdingJU+2*StrToFloat(ReturnZCYL[1])-step0*0.95;
       YanCengQingJiao:=(arctan(used_h/Step0))*10*JinChi_sup/(Step0*1.05);
 
       Pointxy[0].X :=Point_Six_P[3].X-trunc(0.5*used_h*sin(YanCengQingJiao)*shiyong_bl);
@@ -1051,13 +1145,26 @@ begin
             bitM.FreeImage;
             ExPstopeClass.MySqliteTable.GetBMPToSQlite(zk.Yc_Rock[Ycid].BmpFile+'.Bmp',IntToStr(Tuxing+1),bitM);
 
-            if jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(temp1[1])-2*YockLiang_Suo< Step0 * 0.95  then  begin
+            if jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(ReturnZCYL[1])-2*YockLiang_Suo< Step0 * 0.95  then  begin
                 //没有直接顶
                 break;
-            end else if  jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(temp1[1])-2*YockLiang_Suo<= Step0*1.05  then   begin
+            end else if  jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(ReturnZCYL[1])-2*YockLiang_Suo<= Step0*1.05  then   begin
                 // 直接顶裂断状态
                  Draw_Imm_Left; // 2-3-1 左侧直接顶
+                 with ComePress.AddChlidNode do  begin
+                      C_Ycid:= Ycid;
+                      MYState:=1;
+                      ComePoint:=Point_Six_P[3];
+                      C_JinChi:= jinChi;
+                 end;
                  Draw_Imm_Rigth; // 2-3-2 右侧直接顶
+                // 对直接顶来压状态进行记录
+                 with ComePress.AddChlidNode do  begin
+                      C_Ycid:= Ycid;
+                      MyState:=1;
+                      ComePoint:=Point_Six_P[3];
+                      C_JinChi:= jinChi;
+                 end;
             end else begin
                // 直接顶垮落状态
                  if Zjd_Wt=1 then   break;   // 如果下层没有沉降，上层出现沉降，退出
@@ -1068,10 +1175,9 @@ begin
 
            if Ycid<=imm.Start_No  then  ganshi_Count:=2;
            //制作柱状图与斜面
-           Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(0)),Ycid);
-           // 累计图形高度 煤
-           Set_TU_H(trunc(used_h*shiyong_bl));
-           Set_Text_H(trunc(used_h*Y_Text_Bl));
+           Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(-1)),
+                          Ycid,used_h);
+
         end;
 
        ganshi_h:=ganshi_h+gzm.S_Cg_h*(gzm.Mc_FdBs-1) ;
@@ -1128,10 +1234,9 @@ begin
            Image_inn.Canvas.Brush.Bitmap:=nil;
            inn_left_y0:=Pointxy[0].Y;
           //制作柱状图与斜面
-          Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(0)),YcId);
-           // 累计图形高度 煤
-          Set_TU_H(trunc(temp*shiyong_bl));
-          Set_Text_H(trunc(zk.Yc_Rock[YcId].R_h*Y_Text_Bl));
+          Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(-1)),
+                        YcId,zk.Yc_Rock[YcId].R_h);
+
          //如果有不动的岩层，肯定没有完结
           Zjd_Wt:=1;
 
@@ -1146,12 +1251,10 @@ begin
       //右侧
         Point_Six_P[5].X :=Image_inn.Width;
              Point_Six_P[5].Y :=inn_right_y0;
-        Point_Six_P[3].X :=inn_Right_x2+trunc((step0-StrToFloat(temp1[1])*2-Jinchi-YockLiang_Suo)*shiyong_bl);
-       //  Point_Six_P[3].X :=inn_Right_x2+trunc((zhijia.Zj_KongdingJU+step0-StrToFloat(temp1[1])*2-Jinchi-YockLiang_Suo)*shiyong_bl);
+        Point_Six_P[3].X :=inn_Right_x2+trunc((step0-StrToFloat(ReturnZCYL[1])*2-Jinchi-YockLiang_Suo)*shiyong_bl);
 
-
-       if StrToFloat(temp1[3])>0 then begin
-              Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(temp1[3])-StrToFloat(temp1[1]))/StrToFloat(temp1[3]));
+       if StrToFloat(ReturnZCYL[3])>0 then begin
+              Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))/StrToFloat(ReturnZCYL[3]));
          end else begin
               Point_Six_P[3].Y :=inn_right_y2;
          end;
@@ -1161,7 +1264,7 @@ begin
         Point_Six_P[2].X :=Point_Six_P[3].X;
            Point_Six_P[2].Y :=Point_Six_P[3].Y-trunc(used_h*shiyong_bl);
 
-        Point_Six_P[4].X :=Point_Six_P[3].X +trunc((zhijia.Zj_KongdingJU+StrToFloat(temp1[3]))*shiyong_bl);
+        Point_Six_P[4].X :=Point_Six_P[3].X +trunc((zhijia.Zj_KongdingJU+StrToFloat(ReturnZCYL[3]))*shiyong_bl);
              Point_Six_P[4].Y :=Point_Six_P[5].Y;
         Point_Six_P[1].X :=Point_Six_P[4].X;
              Point_Six_P[1].Y :=Point_Six_P[0].Y;
@@ -1173,8 +1276,9 @@ begin
         Fill_Image(Image_inn,Image_fill_P.x,Image_fill_P.y,Point_Six_P);
         Image_inn.Canvas.Brush.Bitmap:=nil;
           //填写右侧压力拱数据
-         YLG_R1.Insert(0,InttoStr(Point_Six_P[4].X)+','+InttoStr(Point_Six_P[2].Y) );
-         YLG_R2.insert(0,InttoStr(Point_Six_P[4].X+trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
+         YLG_R1.Insert(0,InttoStr(Point_Six_P[4].X-trunc((zhijia.Zj_KongdingJU+StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))*shiyong_bl)) +','
+                                  +InttoStr(Point_Six_P[2].Y) );
+         YLG_R2.insert(0,InttoStr(Point_Six_P[4].X+trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
        // if i=Yc_End_Nu then  begin
           Point_wk[3].X := Point_Six_P[2].X ;
           Point_wk[3].Y := Point_Six_P[2].Y;
@@ -1209,7 +1313,7 @@ begin
           Image_inn.Canvas.Brush.Bitmap:=nil;
           Image_inn.Canvas.Polygon(Pointxy);
           Image_inn.Canvas.Brush.Bitmap:=bitM;
-          Image_fill_P.x :=Trunc((Pointxy[0].X+Pointxy[3].X)/2); Image_fill_P.y:= Trunc((Pointxy[3].Y+Pointxy[2].Y)/2);
+          Image_fill_P.x :=Trunc((Pointxy[0].X+Pointxy[2].X)/2); Image_fill_P.y:= Trunc((Pointxy[0].Y+Pointxy[2].Y)/2);
              //对圈定的区域进行填充
           Fill_Image(Image_inn,Image_fill_P.x,Image_fill_P.y,Pointxy);
 
@@ -1246,8 +1350,8 @@ begin
            Point_Six_P[5].Y :=inn_left_y0;
 
        Point_Six_P[3].X :=inn_left_x2;
-           if StrToFloat(temp1[3])>0 then begin
-                Point_Six_P[3].Y :=inn_left_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(temp1[3])-StrToFloat(temp1[1]))/StrToFloat(temp1[3]));
+           if StrToFloat(ReturnZCYL[3])>0 then begin
+                Point_Six_P[3].Y :=inn_left_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))/StrToFloat(ReturnZCYL[3]));
            end else begin
                 Point_Six_P[3].Y :=inn_left_y2;
            end;
@@ -1256,7 +1360,7 @@ begin
              YockLiang_Suo:=YockLiang_Suo+used_h*tan(25/180*3.1415926);
        Point_Six_P[2].X :=Point_Six_P[3].X+trunc(used_h*tan(25/180*3.1415926)*shiyong_bl);
              Point_Six_P[2].Y :=Point_Six_P[3].Y-trunc(used_h*shiyong_bl);
-        Point_Six_P[4].X :=inn_left_x2 -trunc(StrToFloat(temp1[3])*shiyong_bl);
+        Point_Six_P[4].X :=inn_left_x2 -trunc(StrToFloat(ReturnZCYL[3])*shiyong_bl);
              Point_Six_P[4].Y :=Point_Six_P[5].Y;
         Point_Six_P[1].X :=Point_Six_P[4].X;
              Point_Six_P[1].Y :=Point_Six_P[0].Y;
@@ -1269,8 +1373,9 @@ begin
 
         Image_inn.Canvas.Brush.Bitmap:=nil;
              //填写左侧压力拱数据
-        YLG_L1.Add(InttoStr(Point_Six_P[1].X)+','+InttoStr(Point_Six_P[1].Y) );
-        YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y) );
+        YLG_L1.Add(InttoStr(Point_Six_P[1].X+trunc((StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))*shiyong_bl))+
+                            ','+InttoStr(Point_Six_P[1].Y) );
+        YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y) );
 
 
         inn_left_y0:=Point_Six_P[0].Y ;inn_left_y2:=Point_Six_P[2].Y;inn_left_x2 := Point_Six_P[2].X ;
@@ -1286,8 +1391,8 @@ begin
          Point_Six_P[5].X :=Image_inn.Width;
                  Point_Six_P[5].Y :=inn_right_y0;
             Point_Six_P[3].X :=inn_Right_x2;
-             if StrToFloat(temp1[3])>0 then begin
-                  Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(temp1[3])-StrToFloat(temp1[1]))/StrToFloat(temp1[3]));
+             if StrToFloat(ReturnZCYL[3])>0 then begin
+                  Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))/StrToFloat(ReturnZCYL[3]));
              end else begin
                   Point_Six_P[3].Y :=inn_right_y2;
              end;
@@ -1296,7 +1401,7 @@ begin
             Point_Six_P[2].X :=Point_Six_P[3].X-trunc(used_h*tan(25/180*3.1415926)*shiyong_bl);
                Point_Six_P[2].Y :=Point_Six_P[3].Y-trunc(used_h*shiyong_bl);
 
-            Point_Six_P[4].X :=Point_Six_P[3].X +trunc((zhijia.Zj_KongdingJU+StrToFloat(temp1[3]))*shiyong_bl);
+            Point_Six_P[4].X :=Point_Six_P[3].X +trunc((zhijia.Zj_KongdingJU+StrToFloat(ReturnZCYL[3]))*shiyong_bl);
                  Point_Six_P[4].Y :=Point_Six_P[5].Y;
             Point_Six_P[1].X :=Point_Six_P[4].X;
                  Point_Six_P[1].Y :=Point_Six_P[0].Y;
@@ -1309,8 +1414,9 @@ begin
 
          Image_inn.Canvas.Brush.Bitmap:=nil;
           //填写右侧压力拱数据
-         YLG_R1.Insert(0,InttoStr(Point_Six_P[4].X)+','+InttoStr(Point_Six_P[2].Y) );
-         YLG_R2.insert(0,InttoStr(Point_Six_P[4].X+trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
+         YLG_R1.Insert(0,InttoStr(Point_Six_P[4].X-trunc((zhijia.Zj_KongdingJU+StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))*shiyong_bl))+
+                          ','+InttoStr(Point_Six_P[2].Y) );
+         YLG_R2.insert(0,InttoStr(Point_Six_P[4].X+trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
 
          inn_right_y0:=Point_Six_P[0].Y ;inn_right_y2:=Point_Six_P[2].Y;inn_Right_x2 := Point_Six_P[2].X ;
          ganshi_y1:=Point_Six_P[0].Y;
@@ -1339,8 +1445,8 @@ begin
            Point_Six_P[5].Y :=inn_left_y0;
 
        Point_Six_P[3].X :=inn_left_x2+trunc(YockLiang_Suo*shiyong_bl);
-           if StrToFloat(temp1[3])>0 then begin
-                Point_Six_P[3].Y :=inn_left_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(temp1[3])-StrToFloat(temp1[1]))/StrToFloat(temp1[3]));
+           if StrToFloat(ReturnZCYL[3])>0 then begin
+                Point_Six_P[3].Y :=inn_left_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))/StrToFloat(ReturnZCYL[3]));
            end else begin
                 Point_Six_P[3].Y :=inn_left_y2;
            end;
@@ -1351,7 +1457,7 @@ begin
              Point_Six_P[0].Y :=Point_Six_P[5].Y-trunc(used_h*shiyong_bl);
        Point_Six_P[2].X :=Point_Six_P[3].X;
              Point_Six_P[2].Y :=Point_Six_P[3].Y-trunc(used_h*shiyong_bl);
-       Point_Six_P[4].X :=Point_Six_P[3].X -trunc(StrToFloat(temp1[3])*shiyong_bl);
+       Point_Six_P[4].X :=Point_Six_P[3].X -trunc(StrToFloat(ReturnZCYL[3])*shiyong_bl);
              Point_Six_P[4].Y :=Point_Six_P[5].Y;
        Point_Six_P[1].X :=Point_Six_P[4].X;
              Point_Six_P[1].Y :=Point_Six_P[0].Y;
@@ -1361,17 +1467,25 @@ end;
 
 procedure TDraw_init.Draw_Old_Left_First(YcId: integer);
 {
- 老顶第一块岩石
+ 老顶第一块岩石  也就是老顶第一次来压步距的判定
+ 此处岩梁的判断准则
+  当  10*JinChi_sup<Step0*1.05 剩余的距离小于 第一次来压的 0.1 倍是， 开始 模拟来压
+  来压按照进尺的 大小来进行的，即通过函数  FindPointY 计算 岩层在没有完全沉降结束时
+  所造成的顶板不同位置变化图。
+  点排列的 方式    左侧：   1     2
+                            0     3
 }
 var
   K:integer;
 begin
   with pDrawRecord do begin
-     JinChi_sup:=Jinchi+zhijia.Zj_KongdingJU+2*StrToFloat(temp1[3])-2*YockLiang_Suo-step0*0.95;
+     JinChi_sup:=Jinchi+zhijia.Zj_KongdingJU+2*StrToFloat(ReturnZCYL[3])-2*YockLiang_Suo-step0*0.95;
      if 10*JinChi_sup<Step0*1.05 then   begin
+          {正在下沉中}
           YanCengQingJiao:=(arctan(Rock_sa/Step0))*10*JinChi_sup/(Step0*1.05);
           Sink_leixing:=0;
      end else begin
+          {下沉完成}
           YanCengQingJiao:=arctan(Rock_sa/Step0*2);
           Sink_leixing:=1;
      end;
@@ -1385,12 +1499,15 @@ begin
       Pointxy[3].X :=Pointxy[2].X -trunc(Sink_Sa_used* sin(YanCengQingJiao)*shiyong_bl);
       Pointxy[3].Y :=Pointxy[2].Y +trunc(Sink_Sa_used* cos(YanCengQingJiao)*shiyong_bl);
     //判断下标  //调函数判断
-      Y_min :=Public_Basic.FindPointY(Pointxy[3].X,Pointxy[3].Y,t_str_sec,Sink_leixing);
+        Y_min :=Public_Basic.FindPointY(Pointxy[3].X,Pointxy[3].Y,t_str_sec,Sink_leixing);
         Pointxy[2].Y:=Pointxy[2].Y -(Pointxy[3].Y-Y_min);
         Pointxy[3].Y:=Y_min;
 
       Image_inn.Canvas.Brush.Bitmap:=nil;
       Image_inn.Canvas.Polygon(Pointxy);
+      // 把老顶初次来压的方式记录下来
+      if Sink_leixing=0 then   // 证明老顶正在经历来压
+         WriteOldRockComePress(YCid,2,Pointxy[3],Jinchi);
          //添加   t_Str_Fir
       t_Str_Fir.Add(IntTostr( Pointxy[1].X )+','+IntTostr( Pointxy[1].Y ));
       t_Str_Fir.Add(IntTostr( Pointxy[2].X )+','+IntTostr( Pointxy[2].Y ));
@@ -1438,10 +1555,10 @@ begin
               //对圈定的区域进行填充
          Fill_Image(Image_inn,Image_fill_P.x,Image_fill_P.y,Point_Six_P);
 
-           Image_inn.Canvas.Brush.Bitmap:=nil;
+         Image_inn.Canvas.Brush.Bitmap:=nil;
                 //填写左侧压力拱数据
         YLG_L1.Add(InttoStr(Point_Six_P[2].X)+','+InttoStr(Point_Six_P[2].Y) );
-        YLG_L2.Add(InttoStr(Point_Six_P[2].X-trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
+        YLG_L2.Add(InttoStr(Point_Six_P[2].X-trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
 
    end;
 end;
@@ -1453,7 +1570,7 @@ procedure TDraw_init.Draw_Old_Left_Two(YcId: integer);
 begin
     with pDrawRecord do begin
        Draw_Old_Left_Two_Basic(Ycid);// 3-1-3 -1   左侧老顶 第二块  基本信息
-       if jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(temp1[1])-2*YockLiang_Suo  >= Step0*1.05  then begin
+       if jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(ReturnZCYL[1])-2*YockLiang_Suo  >= Step0*1.05  then begin
           // 初次来压步距结束
           Draw_Old_Left_Two_FirstComePress(YcId); //3-1-3 -2 第一次来压步距 完成
        end;
@@ -1473,8 +1590,8 @@ begin
        Point_t_P[3].Y :=Pointxy[3].Y;
 
        Point_Six_P[3].X :=inn_Left_x2+trunc((step0+YockLiang_Suo)*shiyong_bl);
-       if StrToFloat(temp1[3])>0 then begin
-            Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(temp1[3])-StrToFloat(temp1[1]))/StrToFloat(temp1[3]));
+       if StrToFloat(ReturnZCYL[3])>0 then begin
+            Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))/StrToFloat(ReturnZCYL[3]));
        end else begin
             Point_Six_P[3].Y :=inn_right_y2;
        end;
@@ -1497,7 +1614,7 @@ var
 begin
    with pDrawRecord do begin
        while_j:=true; j:=1;
-       while_j_sup_jinchi:=jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(temp1[1])-2*YockLiang_Suo - Step0 ;
+       while_j_sup_jinchi:=jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(ReturnZCYL[1])-2*YockLiang_Suo - Step0 ;
        Point_Six_P[3].X :=inn_Left_x2+trunc((step0+YockLiang_Suo)*shiyong_bl);
        //第一次来压结束，进行多次循环
        while while_j do begin
@@ -1555,6 +1672,7 @@ end;
 procedure TDraw_init.Draw_Old_Left_Two_FirstComePress_Prev(YcId:integer;var YKid:integer);
 {
  // 3-1-3 -2 -2 老顶多次循环 的岩石块数  周期来压 前面N块
+ Sink_leixing =0 正在来压状态   1 来压  完成状态
 }
 begin
    with pDrawRecord do begin
@@ -1579,6 +1697,9 @@ begin
        Y_min :=Public_Basic.FindPointY(Pointxy[3].X,Pointxy[3].Y,t_str_sec,Sink_leixing);
        Pointxy[2].Y:=Pointxy[2].Y -(Pointxy[3].Y-Y_min);
        Pointxy[3].Y:=Y_min;
+       // 把老顶周期来压步距记录下来
+       if Sink_leixing=0 then
+          WriteOldRockComePress(YCid,3,Pointxy[0],Jinchi);
        //
        Draw_Old_Left_Two_FirstComePress_Prev_Second(YcId,YKid); // 3-1-3 -2-2 -1 老顶周期来前面N 块  第二块
        Draw_Old_Left_Two_FirstComePress_Prev_Other(YcId,YKid); // 3-1-3 -2-2 -2 老顶周期来前面N 块  第二块
@@ -1726,16 +1847,7 @@ begin
         inn_left_y0:=Pointxy[0].Y;
 
         //制作柱状图与斜面
-        Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(0)),YcId);
-         // 累计图形高度 煤
-         if YcId<old.yl_max_End -2  then    begin
-            Set_TU_H(trunc(used_h*hcd_bl*shiyong_bl));
-            Set_Text_H(trunc(used_h*hcd_bl*Y_Text_Bl));
-         end else begin
-            Set_TU_H(trunc(used_h*shiyong_bl));
-            Set_Text_H(trunc(used_h*Y_Text_Bl));
-         end;
-
+        Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(-1)),YcId,used_h);
 
     end;
 end;
@@ -1748,10 +1860,10 @@ var
 begin
    with pDrawRecord do begin
      YockLiang_Suo:=0; Rock_sa:=0; //老顶岩梁的缩进与 下沉初值为0
-     inn_Left_x2:= trunc(gzm.ZCYL_sx[2]*shiyong_bl)-trunc(StrToFloat(temp1[1])*shiyong_bl);
-     inn_Right_x2:= trunc((gzm.ZCYL_sx[2]+Jinchi+zhijia.Zj_KongdingJU+StrToFloat(temp1[3]))*shiyong_bl);
+     inn_Left_x2:= trunc(gzm.ZCYL_sx[2]*shiyong_bl)-trunc(StrToFloat(ReturnZCYL[1])*shiyong_bl);
+     inn_Right_x2:= trunc((gzm.ZCYL_sx[2]+Jinchi+zhijia.Zj_KongdingJU+StrToFloat(ReturnZCYL[3]))*shiyong_bl);
      ganshi_y2:=0; break_i_105:=0;
-     zcyl_l_P1.X:=0;   zcyl_l_P1.Y:=zcyl_l_P2.Y-trunc(gzm.S_Cg_h*gzm.Mc_FdBs*strtofloat(temp1[2])*shiyong_bl);
+     zcyl_l_P1.X:=0;   zcyl_l_P1.Y:=zcyl_l_P2.Y-trunc(gzm.S_Cg_h*gzm.Mc_FdBs*strtofloat(ReturnZCYL[2])*shiyong_bl);
      zcyl_R_P1.X:=Image_inn.Width;   zcyl_R_P1.Y:=zcyl_l_P1.Y;
 
      Sink_leixing:=1;
@@ -1779,7 +1891,7 @@ begin
 
          if Ycid<old.yl_max_End then   break;
 
-         if jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(temp1[1])-2*YockLiang_Suo< Step0 * 0.95  then  begin
+         if jinChi+zhijia.Zj_KongdingJU+2*StrToFloat(ReturnZCYL[1])-2*YockLiang_Suo< Step0 * 0.95  then  begin
             // 没有形成老顶
              break;
          end else  begin
@@ -1791,8 +1903,8 @@ begin
              //draw 右侧 老顶
              Point_Six_P[5].X :=Image_inn.Width;
                   Point_Six_P[5].Y :=inn_left_y0;
-             if StrToFloat(temp1[3])>0 then begin
-                  Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(temp1[3])-StrToFloat(temp1[1]))/StrToFloat(temp1[3]));
+             if StrToFloat(ReturnZCYL[3])>0 then begin
+                  Point_Six_P[3].Y :=inn_right_y2-trunc((inn_left_y2-inn_left_y0)*(StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))/StrToFloat(ReturnZCYL[3]));
              end else begin
                   Point_Six_P[3].Y :=inn_right_y2;
              end;
@@ -1801,10 +1913,8 @@ begin
         // 老顶岩梁第二块
         Draw_old_Two(Ycid); // 3-2  老顶周期第二块
         //制作柱状图与斜面
-        Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(0)),Ycid);
-        // 累计图形高度 煤
-        Set_TU_H(trunc(used_h*shiyong_bl));
-        Set_Text_H(trunc(used_h*Y_Text_Bl));
+        Draw_RockNameAndThreeBord(trunc(Set_TU_H(0)),trunc(Set_Text_H(-1)),Ycid,used_h);
+
      end;
 
      // 画老顶在当前推进条件下不动的岩层
@@ -1852,6 +1962,14 @@ end;
 procedure TDraw_init.Draw_old_Two_left(YcId: integer);
 {
   3-2-1  老顶周期第二块 左侧
+  左侧岩石 六个点序号排列方式
+                             5          4
+                                            3
+                            0          1    2
+  左侧岩梁 四个点 序号排列方式
+                           3             2
+
+                           0             1
 }
 var
   k:integer;
@@ -1886,6 +2004,15 @@ end;
 procedure TDraw_init.Draw_old_Two_Right(YcId: integer);
 {
   3-2-2  老顶周期第二块 右侧
+  右侧岩石 六个点序号排列方式
+                                4            5
+                           3
+
+                           2    1            0
+  右侧岩梁 四个点 序号排列方式
+                           2             3
+
+                           1             0
 }
 var
   k:integer;
@@ -1896,7 +2023,7 @@ begin
              Point_Six_P[0].Y :=Point_Six_P[5].Y-trunc(used_h*shiyong_bl);
        Point_Six_P[2].X :=Point_Six_P[3].X;
              Point_Six_P[2].Y :=Point_Six_P[3].Y-trunc(used_h*shiyong_bl);
-        Point_Six_P[4].X :=Point_Six_P[3].X + trunc((StrToFloat(temp1[3])-StrToFloat(temp1[1]))*shiyong_bl);
+        Point_Six_P[4].X :=Point_Six_P[3].X + trunc((StrToFloat(ReturnZCYL[3])-StrToFloat(ReturnZCYL[1]))*shiyong_bl);
              Point_Six_P[4].Y :=Point_Six_P[5].Y;
         Point_Six_P[1].X :=Point_Six_P[4].X;
              Point_Six_P[1].Y :=Point_Six_P[0].Y;
@@ -1913,7 +2040,7 @@ begin
        Image_inn.Canvas.Brush.Bitmap:=nil;
           //填写右侧压力拱数据
         YLG_R1.Insert(0,InttoStr(Point_Six_P[2].X)+','+InttoStr(Point_Six_P[2].Y) );
-        YLG_R2.insert(0,InttoStr(Point_Six_P[2].X+trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
+        YLG_R2.insert(0,InttoStr(Point_Six_P[2].X+trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
 
         //如果是最后一层， //顶层画立体外壳
         Draw_SanWei_Waike( Point_Six_P[2],Point_Six_P[0]);
@@ -1921,38 +2048,45 @@ begin
    end;
 end;
 
-procedure TDraw_init.Draw_RockNameAndThreeBord(tu_Y,Text_Y, Ycid: integer);
+procedure TDraw_init.Draw_RockNameAndThreeBord(tu_iY,Text_iY, Ycid: integer;UsedH:Double);
 {  分层制作柱状图与斜面函数
    tu_Y ：图形开始的 Y坐标
    Text_Y： 柱状图开始的 Y 坐标
    Ycid： 岩层的编号
 }
+var
+  tu_Y,Text_Y:integer;
 begin
 
    with pDrawRecord do begin
-        tu_Y:=Ex_Image.Height-BottomBlank-X_Text_height-tu_Y;
-        Text_Y:=Ex_Image.Height-BottomBlank-X_Text_height-Text_Y;
+        tu_Y:=Ex_Image.Height-BottomBlank-X_Text_height-tu_iY;
+        Text_Y:=Ex_Image.Height-BottomBlank-X_Text_height-Text_iY;
         //标注柱状图
          if Ycid<old.yl_max_End-2 then  begin
-            Ex_Image.Canvas.MoveTo(LeftBlank-120,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*hcd_bl*Y_Text_Bl));
-            Ex_Image.Canvas.LineTo(LeftBlank-30,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*hcd_bl*Y_Text_Bl));
+            Ex_Image.Canvas.MoveTo(LeftBlank-120,trunc(Text_Y-hanziheight-UsedH*hcd_bl*Y_Text_Bl));
+            Ex_Image.Canvas.LineTo(LeftBlank-30,trunc(Text_Y-hanziheight-UsedH*hcd_bl*Y_Text_Bl));
             //写岩层的名字
-            Ex_Image.Canvas.TextOut(LeftBlank-118,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*hcd_bl*Y_Text_Bl/2),zk.Yc_Rock[Ycid].R_Name);
-            Ex_Image.Canvas.TextOut(LeftBlank-58,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*hcd_bl*Y_Text_Bl/2),FormatFloat('0.0',zk.Yc_Rock[Ycid].R_h));
+            Ex_Image.Canvas.TextOut(LeftBlank-118,trunc(Text_Y-hanziheight-UsedH*hcd_bl*Y_Text_Bl/2),zk.Yc_Rock[Ycid].R_Name);
+            Ex_Image.Canvas.TextOut(LeftBlank-58,trunc(Text_Y-hanziheight-UsedH*hcd_bl*Y_Text_Bl/2),FormatFloat('0.0',zk.Yc_Rock[Ycid].R_h));
             //画斜线
-            Ex_Image.Canvas.MoveTo(LeftBlank-30,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*hcd_bl*Y_Text_Bl));
-            Ex_Image.Canvas.LineTo(LeftBlank, tu_Y-trunc(zk.Yc_Rock[Ycid].R_h*hcd_bl*shiyong_bl));
+            Ex_Image.Canvas.MoveTo(LeftBlank-30,trunc(Text_Y-hanziheight-UsedH*hcd_bl*Y_Text_Bl));
+            Ex_Image.Canvas.LineTo(LeftBlank, tu_Y-trunc(UsedH*hcd_bl*shiyong_bl));
+             // 累计图形高度 煤
+            Set_TU_H(trunc(UsedH*hcd_bl*shiyong_bl));
+            Set_Text_H(trunc(UsedH*hcd_bl*Y_Text_Bl));
 
          end else begin
-            Ex_Image.Canvas.MoveTo(LeftBlank-120,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*Y_Text_Bl));
-            Ex_Image.Canvas.LineTo(LeftBlank-30,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*Y_Text_Bl));
+            Ex_Image.Canvas.MoveTo(LeftBlank-120,trunc(Text_Y-hanziheight-UsedH*Y_Text_Bl));
+            Ex_Image.Canvas.LineTo(LeftBlank-30,trunc(Text_Y-hanziheight-UsedH*Y_Text_Bl));
            //写岩层的名字
-            Ex_Image.Canvas.TextOut(LeftBlank-118,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*Y_Text_Bl/2),zk.Yc_Rock[Ycid].R_Name);
-            Ex_Image.Canvas.TextOut(LeftBlank-58,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*Y_Text_Bl/2),FormatFloat('0.0',zk.Yc_Rock[Ycid].R_h));
+            Ex_Image.Canvas.TextOut(LeftBlank-118,trunc(Text_Y-hanziheight-UsedH*Y_Text_Bl/2),zk.Yc_Rock[Ycid].R_Name);
+            Ex_Image.Canvas.TextOut(LeftBlank-58,trunc(Text_Y-hanziheight-UsedH*Y_Text_Bl/2),FormatFloat('0.0',zk.Yc_Rock[Ycid].R_h));
             //画斜线
-            Ex_Image.Canvas.MoveTo(LeftBlank-30,trunc(Text_Y-hanziheight-zk.Yc_Rock[Ycid].R_h*Y_Text_Bl));
-            Ex_Image.Canvas.LineTo(LeftBlank, tu_Y-trunc(zk.Yc_Rock[Ycid].R_h*shiyong_bl));
-
+            Ex_Image.Canvas.MoveTo(LeftBlank-30,trunc(Text_Y-hanziheight-UsedH*Y_Text_Bl));
+            Ex_Image.Canvas.LineTo(LeftBlank, tu_Y-trunc(UsedH*shiyong_bl));
+              // 累计图形高度 煤
+            Set_TU_H(trunc(UsedH*shiyong_bl));
+            Set_Text_H(trunc(UsedH*Y_Text_Bl));
          end;// end if
 
            // 画斜面
@@ -1960,9 +2094,9 @@ begin
           Pointxy[3].Y := tu_Y;
           Pointxy[0].X := Pointxy[3].X;
           if Ycid<old.yl_max_End-2 then  begin
-               Pointxy[0].Y := Pointxy[3].Y -trunc(zk.Yc_Rock[Ycid].R_h*hcd_bl*shiyong_bl);
+               Pointxy[0].Y := Pointxy[3].Y -trunc(UsedH*hcd_bl*shiyong_bl);
           end else begin
-               Pointxy[0].Y := Pointxy[3].Y -trunc(zk.Yc_Rock[Ycid].R_h*shiyong_bl);
+               Pointxy[0].Y := Pointxy[3].Y -trunc(UsedH*shiyong_bl);
           end;
 
           Pointxy[1].X := Pointxy[0].X+40 ;
@@ -2117,7 +2251,7 @@ begin
                        Point_Six_P[5].Y :=inn_left_y0;
                     Point_Six_P[3].X :=Point_Six_P[5].X +trunc(gzm.ZCYL_sx[2]*shiyong_bl);
                          Point_Six_P[3].Y :=inn_left_y2;
-                    Point_Six_P[4].X :=Point_Six_P[3].X -trunc(StrToFloat(temp1[1])*shiyong_bl);
+                    Point_Six_P[4].X :=Point_Six_P[3].X -trunc(StrToFloat(ReturnZCYL[1])*shiyong_bl);
                          Point_Six_P[4].Y :=Point_Six_P[5].Y;
                     Point_Six_P[0].X :=Point_Six_P[5].X;
                          Point_Six_P[0].Y :=Point_Six_P[5].Y-trunc((zk.Yc_Rock[zk.main_coal].R_h-Gzm.S_Cg_h)*gzm.Mc_FdBs*shiyong_bl);
@@ -2133,7 +2267,7 @@ begin
                           Image_inn.Canvas.FloodFill(Trunc((Point_Six_P[0].X+Point_Six_P[3].X)/2),Trunc((Point_Six_P[1].Y+Point_Six_P[4].Y)/2),clBlack,fsBorder);
                      //填写左侧压力拱数据
                     YLG_L1.Add(InttoStr(Point_Six_P[1].X)+','+InttoStr(Point_Six_P[1].Y) );
-                    YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y));
+                    YLG_L2.Add(InttoStr(Point_Six_P[1].X-trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[1].Y));
 
                       //右侧顶煤
                      //支架上方部分
@@ -2141,7 +2275,7 @@ begin
                           Point_Six_P[5].Y := inn_left_y0;
                     Point_Six_P[3].X :=Point_Six_P[2].X+trunc((Jinchi+zhijia.Zj_KongdingJU/60*22)*shiyong_bl);
                          Point_Six_P[3].Y :=Point_Six_P[3].Y;
-                    Point_Six_P[4].X :=Point_Six_P[3].X +trunc(StrToFloat(temp1[1])*shiyong_bl);
+                    Point_Six_P[4].X :=Point_Six_P[3].X +trunc(StrToFloat(ReturnZCYL[1])*shiyong_bl);
                          Point_Six_P[4].Y :=Point_Six_P[5].Y;
                     Point_Six_P[0].X :=Point_Six_P[5].X;
                          Point_Six_P[0].Y :=Point_Six_P[5].Y-trunc((zk.Yc_Rock[zk.main_coal].R_h-Gzm.S_Cg_h)*gzm.Mc_FdBs*shiyong_bl);
@@ -2154,7 +2288,7 @@ begin
                    Image_inn.Canvas.Brush.Bitmap:=nil;
                     Image_inn.Canvas.Polygon(Point_Six_P) ;
                     Image_inn.Canvas.Brush.Bitmap:=bitM;    //煤层的 图例
-                       if   (Point_Six_P[4].Y-Point_Six_P[1].Y>4)  then
+                       if   (Point_Six_P[4].Y-Point_Six_P[1].Y>2)  then
                             Image_inn.Canvas.FloodFill(Trunc((Point_Six_P[0].X+Point_Six_P[3].X)/2),Trunc((Point_Six_P[1].Y+Point_Six_P[4].Y)/2),clBlack,fsBorder);
                     Image_inn.Canvas.Brush.Bitmap:=nil;
 
@@ -2177,17 +2311,17 @@ begin
                       Point_Six_P_2[3].X :=Point_Six_P_2[2].X-trunc((zk.Yc_Rock[zk.main_coal].R_h-gzm.S_Cg_h)*0.95*0.2*shiyong_bl);
                           Point_Six_P_2[3].Y :=Point_Six_P_2[2].Y-trunc((zk.Yc_Rock[zk.main_coal].R_h-gzm.S_Cg_h)*0.95*shiyong_bl);
 
-                       Image_inn.Canvas.Brush.Bitmap:=nil;
+                    Image_inn.Canvas.Brush.Bitmap:=nil;
                     Image_inn.Canvas.Polygon(Point_Six_P_2) ;
                     Image_inn.Canvas.Brush.Bitmap:=bitM;    //煤层的 图例
-                       if   (Point_Six_P_2[1].Y-Point_Six_P_2[4].Y>3)  then
+                       if   (Point_Six_P_2[1].Y-Point_Six_P_2[4].Y>2)  then
                             Image_inn.Canvas.FloodFill(Trunc((Point_Six_P_2[0].X+Point_Six_P_2[3].X)/2),Trunc((Point_Six_P_2[1].Y+Point_Six_P_2[4].Y)/2),clBlack,fsBorder);
                     Image_inn.Canvas.Brush.Bitmap:=nil;
 
 
                      //填写右侧压力拱数据
                       YLG_R1.Insert(0,InttoStr(Point_Six_P[4].X)+','+InttoStr(Point_Six_P[2].Y) );
-                      YLG_R2.insert(0,InttoStr(Point_Six_P[4].X+trunc(StrToFloat(temp1[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
+                      YLG_R2.insert(0,InttoStr(Point_Six_P[4].X+trunc(StrToFloat(ReturnZCYL[4])*shiyong_bl))+','+InttoStr(Point_Six_P[2].Y) );
 
                      inn_left_y0:=Point_Six_P[0].Y ;inn_left_y2:=Point_Six_P[2].Y;
                      ganshi_Count:=1;  ganshi_h :=zk.Yc_Rock[zk.main_coal].R_h-Gzm.S_Cg_h-Gzm.S_Fm_h;
@@ -2274,7 +2408,7 @@ begin
           t_Str_sec.Clear;
 
           //初始化压力拱 数据
-          YLG_L1.Clear ; YLG_L2.Clear ;YLG_R2.Clear ;YLG_R2.Clear ;
+          YLG_L1.Clear ; YLG_L2.Clear ;YLG_R1.Clear ;YLG_R2.Clear ;
           //初始化支架阻力系数
           if JinChi<zk.Yc_Rock[old.YL_start].Step0 then  begin
               ZhiJIa_Zl_xs:=1;
@@ -2350,7 +2484,7 @@ begin
 end;
 
 procedure TDraw_init.SetDrawClass_canshu(JChi, X_pan: double; Tu, disp_two,
-  ylg: integer; NQstep: String);
+  ylg,ComPress: integer; NQstep: String);
 begin
      {*------
    画推进方模拟开采
@@ -2374,7 +2508,7 @@ begin
      disp_two_tu:=disp_two;
      disp_ylg:=ylg;
      NQ_step:=NQstep;
-
+     Come_int:=ComPress;
 end;
 
 procedure TDraw_init.SetDrawZhulei(tgzm: TG_stope; tZk: Tzk_bore;
@@ -2410,6 +2544,30 @@ begin
     end;
 end;
 
+procedure TDraw_init.WriteOldRockComePress(YCid, C_State: integer; pt: TPoint;
+                JN:double);
+var
+  i:integer;
+begin
+    with pDrawRecord do begin
+       for I := 0 to 3 do begin
+           if Old_Beam[i].Start_YC_No = YCid then begin
+               // 把老顶来压运动的方式进行记录
+              with ComePress.AddChlidNode do  begin
+                  C_Ycid:= Ycid;
+                  MyState:=C_State;
+                  ComePoint:=pt;
+                  C_JinChi:= JN;
+              end;
+              break;
+           end;
+          if Old_Beam[i].Start_YC_No <1 then   break;
+
+       end;
+
+    end;
+end;
+
 procedure TDraw_init.SetZoom(Value: double);
 begin
     Zomm_D:=Value;
@@ -2418,7 +2576,7 @@ end;
 function TDraw_init.Set_Text_H(Value: integer): Double;
 begin
    with pDrawRecord do begin
-       if Value >0  then
+       if Value >=0  then
           Use_Text_H := Use_Text_H+Value+HanziHeight;
        Result:=Use_Text_H;
     end;
@@ -2461,6 +2619,121 @@ begin
      if  Assigned(YLG_R2) then   FreeAndNil(YLG_R2);
      if  Assigned(Image_inn) then FreeAndNil(Image_inn);
   inherited;
+end;
+
+{ TComePressRecord }
+
+function TComePressRecord.AddChlidNode: TComePressRecord;
+begin
+   inc(FChlidCount);
+   setlength(Chlids,NodeCount);
+   Chlids[NodeCount-1]:=TComePressRecord.Create ;
+   Result:=Chlids[NodeCount-1];
+end;
+
+procedure TComePressRecord.ClearChlid;
+var
+  i:integer;
+begin
+     for I := NodeCount-1 downto 0 do
+         if Assigned(Chlids[i]) then  FreeAndNil(Chlids[i]);
+     setlength(Chlids,0);
+     FChlidCount:=0;
+end;
+
+constructor TComePressRecord.Create;
+begin
+   FChlidCount:=0;
+end;
+
+destructor TComePressRecord.Destroy;
+begin
+  ClearChlid;
+  inherited;
+end;
+
+procedure TComePressRecord.DispLayChildInfo(zk: Tzk_bore;
+                img:TImage;Left_B,TOP_B:integer);
+var
+  i:integer;
+begin
+    for I := 0 to NodeCount-1 do  begin
+        Chlids[i].DrawArrow(img);
+
+    end;
+end;
+
+procedure TComePressRecord.DrawArrow(Img: TImage);
+var
+   PtY :Array [0..6] of TPoint;
+   FC:TColor;
+   Pt:TPoint;
+begin
+    pt:=FComePoint;
+    PtY[0]:=pt;
+    PtY[1].X := PtY[0].X + trunc(10*cos(45/180*3.14159)); PtY[1].Y := PtY[0].Y - trunc(10*cos(45/180*3.14159));
+    PtY[2].X := PtY[1].X  -2; PtY[2].Y := PtY[1].Y ;
+    PtY[3].X := PtY[2].X ; PtY[3].Y := PtY[2].Y -20 ;
+
+    PtY[6].X := PtY[0].X - trunc(10*cos(45/180*3.14159)); PtY[6].Y := PtY[0].Y - trunc(10*cos(45/180*3.14159));
+    PtY[5].X := PtY[6].X  +2; PtY[5].Y := PtY[6].Y ;
+    PtY[4].X := PtY[5].X ; PtY[4].Y := PtY[5].Y -20 ;
+    FC:=Img.Canvas.Brush.Color;
+    if MyState=1 then  begin
+       Img.Canvas.Brush.Color:=ClYellow;
+    end else if MyState= 2 then  begin
+       Img.Canvas.Brush.Color:=ClRed;
+    end else  begin
+       Img.Canvas.Brush.Color:=ClGreen;
+    end;
+
+    Img.Canvas.Polygon(PtY);
+    Img.Canvas.Brush.Color:=FC;
+end;
+
+function TComePressRecord.GetCount: Integer;
+begin
+   Result:=FChlidCount;
+end;
+
+function TComePressRecord.GetJinChi: double;
+begin
+   Result:=FJinChi;
+end;
+
+function TComePressRecord.GetPoint: TPoint;
+begin
+   Result:=FComePoint;
+end;
+
+function TComePressRecord.GetState: Integer;
+begin
+   Result:=FComeState;
+end;
+
+function TComePressRecord.GetYCid: Integer;
+begin
+  Result:=FYCid;
+end;
+
+procedure TComePressRecord.SetJinChi(Value: double);
+begin
+   FJinChi:=Value;
+end;
+
+procedure TComePressRecord.SetPoint(Value: TPoint);
+begin
+  FComePoint:=Value;
+end;
+
+procedure TComePressRecord.SetState(Value: integer);
+begin
+   FComeState:=Value;
+end;
+
+procedure TComePressRecord.SetYCid(Value: integer);
+begin
+   FYCid:=Value;
 end;
 
 end.

@@ -2,7 +2,7 @@ object MonitorForm: TMonitorForm
   Left = 0
   Top = 0
   Caption = 'Form5'
-  ClientHeight = 845
+  ClientHeight = 765
   ClientWidth = 1312
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -21,7 +21,7 @@ object MonitorForm: TMonitorForm
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 826
+    Top = 746
     Width = 1312
     Height = 19
     Panels = <
@@ -155,7 +155,7 @@ object MonitorForm: TMonitorForm
     DrawingStyle = dsTransparent
     Left = 548
     Bitmap = {
-      494C01014600AC041C0510001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
+      494C01014600AC04400510001000C0C0C000FF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002001000001002000000000000020
       0100000000000000000000000000000000000A588E9F1090E9FF1090E9FF1090
       E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090E9FF1090

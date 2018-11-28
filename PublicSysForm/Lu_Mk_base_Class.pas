@@ -398,22 +398,22 @@ type
                          if S_f_PS<1.1 then  begin
                              self.S_M_mcj:=20;
                              self.S_Bsb:=0.35;
-                             self.S_M_njl:=10;
+                             self.S_M_njl:=1;
                              self.S_K_zcfz:=1.7-0.1*(self.S_Cg_h-4);
                           end else if S_f_PS<2.1 then  begin
                              self.S_M_mcj:=24;
                              self.S_Bsb:=0.3;
-                             self.S_M_njl:=23;
+                             self.S_M_njl:=2.3;
                              self.S_K_zcfz:=2.0-0.1*(self.S_Cg_h-4);
                          end else if S_f_PS<3.1 then  begin
                              self.S_M_mcj:=28;
                              self.S_Bsb:=0.25;
-                             self.S_M_njl:=40;
+                             self.S_M_njl:=4;
                              self.S_K_zcfz:=2.3-0.1*(self.S_Cg_h-4);
                          end else begin
                              self.S_M_mcj:=32;
                              self.S_Bsb:=0.2;
-                             self.S_M_njl:=60;
+                             self.S_M_njl:=6;
                              self.S_K_zcfz:=2.6-0.1*(self.S_Cg_h-4);
 
                          end;

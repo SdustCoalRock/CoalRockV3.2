@@ -10,7 +10,7 @@ unit UIPStopeGuidUnit;
 
 interface
 
-uses  Classes;
+uses  Classes,Vcl.Grids,Vcl.ExtCtrls;
 
 type
 
@@ -41,7 +41,12 @@ type
         function  Get_Zcyl(const Version: Pansichar; JinChi: Double): Pansichar;virtual;abstract;
         function  VerFityUserName(Var DWName:Pansichar):Boolean;virtual;abstract;
         function GetWinFormIsExsit(WinName:Pansichar):Boolean;virtual;abstract;
-         procedure CloseActiveForm(FormStr:Pansichar); virtual;abstract;
+        procedure CloseActiveForm(FormStr:Pansichar); virtual;abstract;
+        //-----------
+        //向为外部传输文件
+        function GetWorkFaceInfo(Grid1:TStringGrid): Boolean; virtual;abstract;
+        function GetZkYcInfo(Grid1:TStringGrid):Boolean;virtual;abstract;
+        function GetYcZKT(Image:TImage):Boolean;virtual;abstract;
          //系统函数
         constructor Create; virtual;abstract;
    end;

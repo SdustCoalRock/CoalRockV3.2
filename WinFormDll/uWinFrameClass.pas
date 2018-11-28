@@ -446,7 +446,8 @@ begin
       if Assigned(ZkDetail_inn) then  Result:=true;
    if WinStr='OPENWORD' then  //'OPENWORD'
       if Assigned(FromOpenFile) then  Result:=true;
-
+    if WinStr='ZKBASIC' then  //'ZkBasicForm'
+      if Assigned(ZkBasicForm) then  Result:=true;
 end;
 
 function TWinFrameBasicClass.GEtWorkFaceBhList(Mkid: integer): Pansichar;

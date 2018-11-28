@@ -3,7 +3,7 @@ object UFormCdmn: TUFormCdmn
   Top = 0
   Caption = 'UFormCdmn'
   ClientHeight = 697
-  ClientWidth = 949
+  ClientWidth = 1305
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -35,7 +35,7 @@ object UFormCdmn: TUFormCdmn
   object StatusBar1: TStatusBar
     Left = 0
     Top = 678
-    Width = 949
+    Width = 1305
     Height = 19
     Panels = <
       item
@@ -44,12 +44,12 @@ object UFormCdmn: TUFormCdmn
       item
         Width = 200
       end>
-    ExplicitWidth = 1062
+    ExplicitWidth = 1253
   end
   object CoolBar1: TCoolBar
-    Left = 842
+    Left = 1200
     Top = 0
-    Width = 107
+    Width = 105
     Height = 678
     Align = alRight
     Bands = <
@@ -57,14 +57,13 @@ object UFormCdmn: TUFormCdmn
         Control = ToolBar1
         ImageIndex = -1
         MinHeight = 671
-        Width = 101
+        Width = 99
       end>
     Visible = False
-    ExplicitLeft = 955
     object ToolBar1: TToolBar
       Left = 11
       Top = 0
-      Width = 92
+      Width = 90
       Height = 671
       Align = alRight
       ButtonWidth = 87
@@ -212,9 +211,17 @@ object UFormCdmn: TUFormCdmn
         Wrap = True
         OnClick = TB_NQ_stepClick
       end
-      object TB_Disp_ZCYL: TToolButton
+      object But_ComePress: TToolButton
         Left = 0
         Top = 374
+        Caption = '  '#26469#21387#26631#27880
+        ImageIndex = 39
+        Wrap = True
+        OnClick = But_ComePressClick
+      end
+      object TB_Disp_ZCYL: TToolButton
+        Left = 0
+        Top = 396
         Caption = '  '#26174#21387#21147#25329
         ImageIndex = 64
         Wrap = True
@@ -222,7 +229,7 @@ object UFormCdmn: TUFormCdmn
       end
       object TB_Set_Parm: TToolButton
         Left = 0
-        Top = 396
+        Top = 418
         Caption = '  '#21442#25968#35774#32622
         ImageIndex = 32
         Wrap = True
@@ -230,7 +237,7 @@ object UFormCdmn: TUFormCdmn
       end
       object TB_SaveBMP: TToolButton
         Left = 0
-        Top = 418
+        Top = 440
         Caption = '  '#22270#29255#23384#20648
         ImageIndex = 2
         Wrap = True
@@ -238,9 +245,10 @@ object UFormCdmn: TUFormCdmn
       end
       object TB_Close: TToolButton
         Left = 0
-        Top = 440
+        Top = 462
         Caption = '  '#36864#20986#30028#38754
         ImageIndex = 38
+        Wrap = True
         OnClick = TB_CloseClick
       end
     end
@@ -249,7 +257,7 @@ object UFormCdmn: TUFormCdmn
     Left = 432
     Top = 48
     Bitmap = {
-      494C010142004500880010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010142004500900010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001001000001002000000000000010
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2617,6 +2625,10 @@ object UFormCdmn: TUFormCdmn
       Caption = #25376#26354#31639#27861#26174#31034
       ImageIndex = 28
       OnClick = Pop_NaoQuClick
+    end
+    object Pop_comePress: TMenuItem
+      Caption = #26174#31034#26469#21387#20449#24687
+      ImageIndex = 39
     end
     object N5: TMenuItem
       Caption = '-'

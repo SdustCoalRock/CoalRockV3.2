@@ -68,6 +68,8 @@ type
     Pop_MoveLeft: TMenuItem;
     Pop_MoveRight: TMenuItem;
     ApplicationEvents1: TApplicationEvents;
+    But_ComePress: TToolButton;
+    Pop_comePress: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure TB_StepToStepClick(Sender: TObject);
     procedure TB_Tuli_1Click(Sender: TObject);
@@ -118,6 +120,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure Image_DCFZEndDrag(Sender, Target: TObject; X, Y: Integer);
     procedure ApplicationEvents1Message(var Msg: tagMSG; var Handled: Boolean);
+    procedure But_ComePressClick(Sender: TObject);
   private
     { Private declarations }
      ShowScreen:integer;
@@ -129,6 +132,7 @@ type
     { Public declarations }
     Leiji_Jinchi,X_move_Pix,Step_x:double;// 累计进尺、X 移动距离 ,模拟步长
     Tu_li:integer;// 图例
+    ComePress:integer;// 是否标注来压步距
     NQ_step:string;// 挠曲与 步距
     Zoom_max,Zoom_min,Step_start,Step_end:double; //放大倍数， 缩小倍数， 开始进尺，终止进尺
     pause_Step:bool;
@@ -244,6 +248,21 @@ begin
     end;
 end;
 
+procedure TUFormCdmn.But_ComePressClick(Sender: TObject);
+begin
+    if ComePress=1 then begin
+         ComePress:=0; // 0 隐藏来压  1 显示来压
+         But_ComePress.Caption:='  显示来压';
+         Pop_NaoQu.Caption :='显示来压信息';
+    end else begin
+         ComePress:=1; // 0 隐藏来压  1 显示来压
+         But_ComePress.Caption:='  隐藏来压';
+         Pop_ComePress.Caption :='隐藏来压信息';
+    end;
+
+     self.Draw_Fyyd_DTFZ_new;
+end;
+
 procedure TUFormCdmn.DispDTFZPop(Px, Py: Integer);
 begin
    DispPopMemu.Popup(px,py);
@@ -258,7 +277,7 @@ begin
       JinChi:=JChi;     X_pan_move:=X_pan;    Tuxing:=Tu;   disp_two_tu:=disp_two;
      disp_ylg:=ylg;         NQ_step:=NQstep;}
     ExPstopeClass.Ex_Cal_Show.SetDrawClass_canshu(self.Leiji_Jinchi,self.X_move_Pix,self.Tu_li,
-                     self.disp_two_tu,self.disp_ylg,self.NQ_step);
+                     self.disp_two_tu,self.disp_ylg,ComePress,self.NQ_step);
     {2\设置主要 类库}
     ExPstopeClass.Ex_Cal_Show.SetDrawZhulei(ExPstopeClass.Ex_Gzm,ExPstopeClass.Ex_zk,
             ExPstopeClass.Ex_ZhiJia,ExPstopeClass.Ex_imm_r,ExPstopeClass.Ex_old);
@@ -289,7 +308,7 @@ begin
     Leiji_Jinchi:=ExPstopeClass.Ex_Gzm.S_Jc_L;  // 累计进尺
     X_move_Pix:=0;   // 累计进尺、X 移动距离
     Step_x:=0.8;;//  ,模拟步长
-    Tu_li :=1; // 1  仿真图例   0 简单图例
+    Tu_li :=0; // 1  仿真图例   0 简单图例
 //    self.ToolButton_tu.Caption :='仿真图例';
     NQ_step:='1'; // 1 挠曲 算法  0 步距算法
 //    self.ToolButton_NQ_step.Caption:='挠曲算法';
@@ -304,7 +323,8 @@ begin
     ExPstopeClass.Ex_Cal_Show.model_l:=Model_l;
     ExPstopeClass.Ex_Cal_Show.hcd_bl:= hcd_bl;
     disp_two_tu:=0;
-    disp_ylg:=0;
+    disp_ylg:=0;   // 是否显示压力拱
+    ComePress:=1;// 显示来压信息
 
 end;
 

@@ -34,6 +34,7 @@ type
     Label5: TLabel;
     JiTuanCombo: TComboBox;
     StatusBar1: TStatusBar;
+    But_AddYc: TToolButton;
     procedure ExitButtonClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -51,6 +52,7 @@ type
     procedure EditZkBasicClick(Sender: TObject);
     procedure JiTuanComboChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure But_AddYcClick(Sender: TObject);
   private
     { Private declarations }
      MySqlDataSet1:TMyDataSet;
@@ -60,6 +62,7 @@ type
      i_Zid:integer; // 选中的NO
      KARow:integer;
      Save_Lx:string;
+     ExHandle:THandle;
     procedure SetCellHead; //设置Cell表头
     procedure FillCell(id :integer); //填充表格
     procedure OptionTip(Str:String);
@@ -75,7 +78,7 @@ var
 
 implementation
 
-uses UnEditGzk, uWinFrameClass,  Lu_Public_BasicModual;
+uses UnEditGzk, uWinFrameClass,  Lu_Public_BasicModual, UnDetail;
 
 
 
@@ -88,6 +91,7 @@ begin
                Caption:=ACaption;
                WindowState:= wsNormal;
                ParentWindow:=Ahandle;
+               ExHandle:=Ahandle;
 
                if Hi >Height then
                    Top :=Round((Hi-Height)/3)  else   Top :=0;
@@ -185,6 +189,11 @@ begin
     i_zid:=0;
     Save_Lx:='Insert'; //
     OptionTip('正在进行【添加】操作!');
+end;
+
+procedure TZkBasicForm.But_AddYcClick(Sender: TObject);
+begin
+  CreateDrillDetail_inn(ExHandle,'钻孔岩层信息维护界面',0,0);
 end;
 
 procedure TZkBasicForm.ComboGzmChange(Sender: TObject);
@@ -407,6 +416,7 @@ begin
      self.EditButton.Enabled :=true;
      self.DeleteButton.Enabled :=true;
      self.SaveButton.Enabled:=false;//13-3-22-9-zry 增加
+     self.But_AddYc.Enabled :=True;
 end;
 
 procedure TZkBasicForm.FillCell(id :integer); //填充表格
